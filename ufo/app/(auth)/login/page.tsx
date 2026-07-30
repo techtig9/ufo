@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -10,7 +10,7 @@ import { Panel } from '@/components/ui/panel';
 import { Button } from '@/components/ui/button';
 import { TurnstileWidget } from '@/components/ui/turnstile-widget';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -20,8 +20,6 @@ export default function LoginPage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // MFA challenge step — only shown if the signed-in account has TOTP
-  // enrolled and this session hasn't completed the second factor yet.
   const [needsMfa, setNeedsMfa] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [factorId, setFactorId] = useState<string | null>(null);
@@ -137,54 +135,3 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <label className="text-sm text-white/60" htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
-            />
-          </div>
-          <div>
-            <div className="flex items-center justify-between">
-              <label className="text-sm text-white/60" htmlFor="password">Password</label>
-              <Link href="/forgot-password" className="text-xs text-studio-coral hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
-            />
-          </div>
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Logging in\u2026' : 'Log in'}
-          </Button>
-          {unconfirmed && (
-            <p className="text-center text-xs text-studio-coral">
-              Your email isn&rsquo;t verified yet.{' '}
-              <button type="button" onClick={handleResend} className="underline">
-                Resend the link
-              </button>
-            </p>
-          )}
-          <TurnstileWidget onVerify={setCaptchaToken} />
-        </form>
-        <div className="my-4 flex items-center gap-3 text-xs text-white/30">
-          <span className="h-px flex-1 bg-white/10" /> or <span className="h-px flex-1 bg-white/10" />
-        </div>
-        <Button variant="secondary" onClick={handleGoogle} className="w-full">
-          Continue with Google
-        </Button>
-        <p className="mt-6 text-center text-sm text-white/50">
-          No account? <Link href="/signup" className="text-studio-coral hover:underline">Sign up</Link>
-        </p>
-      </Panel>
-    </div>
-  );
-}
