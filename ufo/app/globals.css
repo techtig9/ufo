@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+html.light {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-ink text-white;
+}
+html.light body {
+  @apply bg-paper text-ink;
+}
+
+::selection {
+  background: #d4ff4f;
+  color: #101114;
+}
+
+/* ---------- Dot-grid canvas ---------- */
+/* The signature background: a faint dot grid, like a design tool's
+   artboard. Applied via <GridField /> (components/ui/grid-field.tsx),
+   which layers in crop-marks and a slow scan-line — no blurred gradient
+   blobs, no glass; the "canvas" reads as a tool, not decoration. */
+.dot-canvas {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+html.light .dot-canvas {
+  background-image: radial-gradient(rgba(16, 17, 20, 0.12) 1px, transparent 1px);
+}
+
+/* Crop-mark corner brackets — registration marks framing a signature
+   element (the hero artboard, featured pricing card). */
+.crop-marks {
+  position: relative;
+}
+.crop-marks::before,
+.crop-marks::after,
+.crop-marks > .corner-tl,
+.crop-marks > .corner-br {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: #d4ff4f;
+  pointer-events: none;
+}
+.crop-marks::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid #d4ff4f;
+  border-left: 2px solid #d4ff4f;
+}
+.crop-marks::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid #d4ff4f;
+  border-right: 2px solid #d4ff4f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Panel (flat card, replaces the old glassmorphism) ---------- */
+.panel {
+  @apply rounded-panel border border-line;
+  background: #17181d;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+}
+html.light .panel {
+  background: #ffffff;
+  border-color: rgba(16, 17, 20, 0.08);
+}
+.panel-hover {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), border-color 220ms ease, box-shadow 220ms ease;
+}
+.panel-hover:hover {
+  transform: translateY(-3px);
+  border-color: rgba(212, 255, 79, 0.4);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Shimmer skeleton (AI generation loading state) ---------- */
+.shimmer {
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0.14) 40%,
+    rgba(255, 255, 255, 0.05) 60%
+  );
+  background-size: 200% 100%;
+  @apply animate-shimmer rounded-panel;
+}
+
+/* ---------- Marching-ants dashed border ---------- */
+/* Used on the hero's "live selection" signature element — literally the
+   marching-ants selection style from design tools like Figma/Photoshop. */
+.marching-ants {
+  background-image: repeating-linear-gradient(
+      90deg,
+      #d4ff4f 0 8px,
+      transparent 8px 16px
+    ),
+    repeating-linear-gradient(90deg, #d4ff4f 0 8px, transparent 8px 16px),
+    repeating-linear-gradient(0deg, #d4ff4f 0 8px, transparent 8px 16px),
+    repeating-linear-gradient(0deg, #d4ff4f 0 8px, transparent 8px 16px);
+  background-size: 16px 2px, 16px 2px, 2px 16px, 2px 16px;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  animation: marquee 1.2s linear infinite;
+}
+
+/* ---------- Ruler ticks (decorative divider) ---------- */
+.ruler-ticks {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.15) 0,
+    rgba(255, 255, 255, 0.15) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+  height: 6px;
+}
+
+/* ---------- Scroll reveal (toggled by components/ui/reveal.tsx) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- Magnetic tilt (components/ui/tilt-card.tsx) ---------- */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 120ms ease-out;
+  will-change: transform;
+}
+
+/* ---------- View Transitions (native browser API, progressive enhancement) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 280ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
