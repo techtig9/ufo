@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -10,7 +10,7 @@ import { Panel } from '@/components/ui/panel';
 import { Button } from '@/components/ui/button';
 import { TurnstileWidget } from '@/components/ui/turnstile-widget';
 
-export default function SignupPage() {
+function SignupForm() {
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan');
   const ref = searchParams.get('ref');
@@ -147,5 +147,13 @@ export default function SignupPage() {
         </p>
       </Panel>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   );
 }
