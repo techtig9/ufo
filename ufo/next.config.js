@@ -7,12 +7,12 @@
 // at all — worth knowing if you tighten this further later).
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://*.supabase.co",
   "connect-src 'self' https://*.supabase.co https://api.paddle.com https://generativelanguage.googleapis.com",
-  "frame-src 'self' https://checkout.paddle.com",
+  "frame-src 'self' https://checkout.paddle.com https://challenges.cloudflare.com",
   "frame-ancestors 'none'",
 ].join('; ');
 
