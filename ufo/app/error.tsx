@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    // Hook this up to your error monitoring tool (Sentry, etc.) before launch.
-    console.error(error);
+    import('@sentry/nextjs').then((Sentry) => Sentry.captureException(error));
   }, [error]);
 
   return (
