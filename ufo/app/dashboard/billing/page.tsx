@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Panel } from '@/components/ui/panel';
 import { PLAN_CARDS } from '@/lib/plan-features';
 import { PaddleCheckoutButton } from '@/components/dashboard/paddle-checkout-button';
+import { CancelSubscriptionButton } from '@/components/dashboard/cancel-subscription-button';
 
 const PLAN_PRICE_IDS: Record<string, string | undefined> = {
   starter: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER,
@@ -107,15 +108,19 @@ export default async function BillingPage() {
         {!payments?.length ? (
           <p className="text-sm text-white/40">No payments yet.</p>
         ) : (
-          <Panel hover={false} className="divide-y divide-white/5 p-0">
-            {payments.map((p) => (
-              <div key={p.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                <span className="text-white/60">{new Date(p.created_at).toLocaleDateString()}</span>
-                <span className="capitalize text-white/40">{p.status}</span>
-                <span>${p.amount}</span>
-              </div>
-            ))}
-          </Panel>
+          <Panel hover={false}>
+        <p className="text-sm text-white/60">Current plan</p>
+        <p className="mt-1 text-xl font-medium capitalize">{subscription?.plan ?? 'free'}</p>
+        <p className="mt-2 text-sm text-white/40">
+          {subscription?.credits_remaining?.toLocaleString() ?? 0} credits remaining this cycle
+          {subscription?.renews_at ? ` \u00b7 renews ${new Date(subscription.renews_at).toLocaleDateString()}` : ''}
+        </p>
+        {subscription?.plan && subscription.plan !== 'free' && (
+          <div className="mt-4">
+            <CancelSubscriptionButton />
+          </div>
+        )}
+      </Panel>
         )}
       </div>
     </div>
