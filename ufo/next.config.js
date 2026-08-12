@@ -54,4 +54,10 @@ const nextConfig = {
   // component execution here, so no special webpack config is needed.
 };
 
-module.exports = nextConfig;
+const { withSentryConfig } = require('@sentry/nextjs');
+
+module.exports = withSentryConfig(nextConfig, {
+  silent: true,
+  org: 'your-sentry-org-slug',
+  project: 'ufo',
+});
