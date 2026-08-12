@@ -63,7 +63,7 @@ export default async function BillingPage() {
                   {isCurrent ? (
                     <span className="text-xs text-studio-coral">Current plan</span>
                   ) : card.plan === 'free' ? (
-                    <span className="text-xs text-white/30">Downgrade from Settings</span>
+                    <span className="text-xs text-white/30">Cancel above to move to Free</span>
                   ) : priceId ? (
                     <PaddleCheckoutButton
                       priceId={priceId}
