@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { CompassChatIcon } from './compass-chat-icon';
-import type { ChatMessage } from '@/lib/gemini';
+import type { ChatMessage } from '@/lib/ai';
 
 const GREETING = "Hi \u2014 I'm Compass. Ask me which plan fits, what a feature does, or what project type suits what you're building.";
 
