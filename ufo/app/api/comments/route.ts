@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { commentSchema } from '@/lib/schemas';
 
 // No auth required — RLS policy "anyone can add a comment on a public
 // share" is what actually enforces that this only works for published
 // shares, not an app-level check here.
 export async function POST(request: Request) {
-  const { shareId, screenId, authorName, body } = await request.json();
-
-  if (!body?.trim()) {
-    return NextResponse.json({ error: 'Comment can\u2019t be empty' }, { status: 400 });
+  const parsed = commentSchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? 'Invalid comment' },
+      { status: 400 }
+    );
   }
+  const { shareId, screenId, authorName, body } = parsed.data;
 
   const supabase = createClient();
   const { data, error } = await supabase
