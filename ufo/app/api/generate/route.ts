@@ -3,11 +3,12 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { canUseFeature } from '@/lib/credits';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { generateFullProject, importAndRedesign } from '@/lib/gemini';
+import { generateFullProject, importAndRedesign } from '@/lib/ai';
+import { generateRequestSchema } from '@/lib/schemas';
 import { hashGenerationRequest, getCachedGeneration, storeCachedGeneration } from '@/lib/generation-cache';
 import { sendLowCreditsEmail } from '@/lib/email';
 import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
-import type { FollowUpAnswers, ProjectType } from '@/lib/types';
+import type { ProjectType } from '@/lib/types';
 
 function randomSlug(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 10);
@@ -25,9 +26,7 @@ export async function POST(request: Request) {
 
   // Fair Usage Policy: cap generation requests independent of credit
   // balance, so a script burning through credits fast can't also hammer
-  // Gemini faster than a human would. 20/10min is generous for real usage
-  // (a human answering the multi-step form can't realistically exceed it)
-  // but stops obvious abuse.
+  // the AI providers faster than a human would.
   const rateLimit = await checkRateLimit(user.id, 'generate', 20, 600, { mode: undefined });
   if (!rateLimit.allowed) {
     return NextResponse.json(
@@ -36,14 +35,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json();
-  const mode: 'scratch' | 'import' = body.mode;
-  const answers: FollowUpAnswers = body.answers;
-  const projectName: string = body.projectName?.trim();
-
-  if (!projectName) {
-    return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
+  const parsed = generateRequestSchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? 'Invalid request' },
+      { status: 400 }
+    );
   }
+  const { mode, projectName, answers, description, importSource, importInstruction } = parsed.data;
 
   const admin = createAdminClient();
 
@@ -69,29 +68,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: gate.reason }, { status: 402 });
   }
 
-  // --- Check the cache before spending anything. Same user, identical
-  // inputs, within the window = a double-click or a retry, not a new
-  // request. This is the "duplicate requests are free" rule from the
-  // pricing doc's Credit Rules / Fair Usage Policy — reused, not just
-  // documented. ---
   const requestHash = hashGenerationRequest(
     mode === 'scratch'
-      ? { mode, projectName, description: body.description ?? '', answers }
-      : { mode, projectName, importSource: body.importSource ?? '', importInstruction: body.importInstruction ?? '', answers }
+      ? { mode, projectName, description: description ?? '', answers }
+      : { mode, projectName, importSource: importSource ?? '', importInstruction: importInstruction ?? '', answers }
   );
 
   let generated = await getCachedGeneration(user.id, requestHash);
   let servedFromCache = !!generated;
 
   if (!generated) {
-    // --- Call Gemini. Credits are only deducted after this succeeds. ---
     try {
       generated =
         mode === 'scratch'
-          ? await generateFullProject(projectName, body.description ?? '', answers)
-          : await importAndRedesign(body.importSource ?? '', body.importInstruction ?? '', answers);
+          ? await generateFullProject(projectName, description ?? '', answers)
+          : await importAndRedesign(importSource ?? '', importInstruction ?? '', answers);
     } catch (err) {
-      console.error('Gemini generation failed', err);
+      console.error('Generation failed', err);
       return NextResponse.json(
         { error: 'Generation failed — no credits were charged. Please try again.' },
         { status: 502 }
@@ -110,7 +103,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // --- Persist project + screens ---
   const { data: project, error: projectError } = await admin
     .from('projects')
     .insert({
@@ -139,8 +131,6 @@ export async function POST(request: Request) {
   await admin.from('screens').insert(screenRows);
   await admin.from('shares').insert({ project_id: project.id, slug: randomSlug(), is_public: false });
 
-  // --- Deduct credits (skip entirely for admins, and for a cache hit —
-  // nothing was actually generated, so nothing is owed). ---
   if (!servedFromCache && profile?.role !== 'admin' && gate.creditsRequired) {
     const newBalance = subscription.credits_remaining - gate.creditsRequired;
     await admin
@@ -148,8 +138,6 @@ export async function POST(request: Request) {
       .update({ credits_remaining: newBalance })
       .eq('user_id', user.id);
 
-    // One-time low-balance warning: fire only on the cycle where this
-    // generation crossed the 10% line, not on every request while low.
     const planTotal = PLAN_MONTHLY_CREDITS[subscription.plan as keyof typeof PLAN_MONTHLY_CREDITS];
     const threshold = planTotal * 0.1;
     if (subscription.credits_remaining > threshold && newBalance <= threshold) {
