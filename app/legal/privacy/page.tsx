@@ -1,10 +1,11 @@
 import { LegalPage } from '@/components/legal/legal-page';
+import { companyValue } from '@/lib/company';
 
 export const metadata = { title: 'Privacy Policy' };
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" updated="[date]">
+    <LegalPage title="Privacy Policy" updated={companyValue('legalEffectiveDate')}>
       <p>
         This explains what data ufo collects, why, and who it&rsquo;s shared with. We collect the
         minimum needed to run the Service.
@@ -50,7 +51,7 @@ export default function PrivacyPage() {
       <p>
         You can export a copy of your data or delete your account at any time from Settings. If
         you&rsquo;re in the EU/UK, you have rights under GDPR (access, correction, deletion,
-        portability, objection) — contact us at [your contact email] for anything Settings
+        portability, objection) — contact us at {companyValue('contactEmail')} for anything Settings
         doesn&rsquo;t cover directly.
       </p>
 

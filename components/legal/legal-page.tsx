@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { companyValue } from '@/lib/company';
 import { Nav } from '@/components/landing/nav';
 import { Footer } from '@/components/landing/footer';
 
@@ -22,7 +23,7 @@ export function LegalPage({
           {children}
         </div>
         <p className="mt-12 text-xs text-fg-faint">
-          Questions? <Link href="/legal/privacy" className="text-brand-text hover:underline">Contact us</Link> at [your contact email].
+          Questions? <Link href="/legal/privacy" className="text-brand-text hover:underline">Contact us</Link> at {companyValue('contactEmail')}.
         </p>
       </main>
       <Footer />

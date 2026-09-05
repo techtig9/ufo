@@ -1,10 +1,11 @@
 import { LegalPage } from '@/components/legal/legal-page';
+import { companyValue } from '@/lib/company';
 
 export const metadata = { title: 'Cookie Policy' };
 
 export default function CookiesPage() {
   return (
-    <LegalPage title="Cookie Policy" updated="[date]">
+    <LegalPage title="Cookie Policy" updated={companyValue('legalEffectiveDate')}>
       <p>ufo uses a small number of cookies and similar local storage:</p>
 
       <h2>Essential (always on)</h2>

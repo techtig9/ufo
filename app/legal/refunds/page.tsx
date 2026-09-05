@@ -1,14 +1,15 @@
 import { LegalPage } from '@/components/legal/legal-page';
+import { companyValue } from '@/lib/company';
 
 export const metadata = { title: 'Refund Policy' };
 
 export default function RefundsPage() {
   return (
-    <LegalPage title="Refund Policy" updated="[date]">
+    <LegalPage title="Refund Policy" updated={companyValue('legalEffectiveDate')}>
       <h2>Subscriptions</h2>
       <p>
         We offer a [7-day] money-back guarantee on a customer&rsquo;s first paid subscription
-        payment on any plan — email [your contact email] within that window and we&rsquo;ll
+        payment on any plan — email {companyValue('contactEmail')} within that window and we&rsquo;ll
         refund it in full, no questions asked. After that window, subscription payments are
         non-refundable for the current billing period, but you can cancel anytime to stop future
         renewals — you keep access through the end of the period you&rsquo;ve already paid for.
@@ -25,7 +26,7 @@ export default function RefundsPage() {
       <h2>Failed or duplicate charges</h2>
       <p>
         If you&rsquo;re charged in error — a duplicate charge, a charge after cancellation, or a
-        processing mistake — contact us at [your contact email] and we&rsquo;ll correct it.
+        processing mistake — contact us at {companyValue('contactEmail')} and we&rsquo;ll correct it.
       </p>
 
       <h2>How refunds are processed</h2>

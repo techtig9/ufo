@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { companyValue } from '@/lib/company';
 import { Logo } from '@/components/ui/logo';
 
 const LEGAL_LINKS = [
@@ -14,8 +15,8 @@ export function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row md:items-start">
         <div>
           <Logo />
-          <p className="mt-2 text-sm text-fg-faint">Built by [Your Name / Agency Name]</p>
-          <p className="text-sm text-fg-faint">Email: [your contact email]</p>
+          <p className="mt-2 text-sm text-fg-faint">Built by {companyValue('displayName')}</p>
+          <p className="text-sm text-fg-faint">Email: {companyValue('contactEmail')}</p>
         </div>
         <div className="flex flex-col items-center gap-2 text-sm text-fg-muted md:items-end">
           <div className="flex gap-4">

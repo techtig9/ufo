@@ -1,4 +1,5 @@
 import { Panel } from '@/components/ui/panel';
+import { companyValue } from '@/lib/company';
 import { Reveal } from '@/components/ui/reveal';
 
 // TODO: replace the bracketed placeholders with your real branding before shipping.
@@ -9,7 +10,7 @@ export function About() {
         <Panel>
           <h2 className="font-display text-2xl font-semibold tracking-tight">About Us</h2>
           <p className="mt-4 text-fg-muted">
-            ufo is built by <strong className="text-fg">[Your Name / Agency Name]</strong>,
+            ufo is built by <strong className="text-fg">{companyValue('displayName')}</strong>,
             [a solo developer / a small team] focused on making polished UI/UX design accessible
             to anyone with an idea — no design background required. We specialize in AI-powered
             design generation, rapid prototyping, and MVP delivery, helping founders and small

@@ -1,11 +1,12 @@
 import { Nav } from '@/components/landing/nav';
+import { companyValue } from '@/lib/company';
 import { Footer } from '@/components/landing/footer';
 import { Panel } from '@/components/ui/panel';
 
 const ENTRIES = [
   {
     version: 'v0.1',
-    date: '[launch date]',
+    date: companyValue('launchDate'),
     title: 'Initial release',
     items: [
       'AI Designer: describe a project, answer a few multiple-choice questions, get a full clickable prototype',

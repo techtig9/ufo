@@ -31,4 +31,31 @@ if (bad.length) {
   console.error(bad.join("\n"));
   process.exit(1);
 }
+// ---------------------------------------------------------------------------
+// Company details must be filled before a production build.
+//
+// The legal pages, footer and contact copy previously shipped hardcoded
+// placeholders ("[Your Name / Agency Name]", "[your contact email]"). Those are
+// now centralised in lib/company.ts, and this check keeps an unfilled build
+// from reaching production unnoticed. It is a warning locally and an error in
+// CI/production, so local development is not blocked by details a developer
+// cannot supply.
+// ---------------------------------------------------------------------------
+const companySrc = fs.readFileSync(path.join(root, "lib/company.ts"), "utf8");
+const unset = [...companySrc.matchAll(/^\s*(\w+):\s*'TODO_[A-Z_]+'/gm)].map((m) => m[1]);
+
+if (unset.length) {
+  const isProduction = process.env.CI === "true" || process.env.NODE_ENV === "production";
+  const message =
+    `Company details are still unset in lib/company.ts: ${unset.join(", ")}.\n` +
+    "These appear on the Terms, Privacy, Refunds and Cookie pages, the footer " +
+    "and the contact page. Fill them in before launch.";
+
+  if (isProduction) {
+    console.error("Preflight failed:", message);
+    process.exit(1);
+  }
+  console.warn("Preflight warning:", message);
+}
+
 console.log("UFO static preflight passed.");

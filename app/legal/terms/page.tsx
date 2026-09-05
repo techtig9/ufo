@@ -1,13 +1,14 @@
 import { LegalPage } from '@/components/legal/legal-page';
+import { companyValue } from '@/lib/company';
 
 export const metadata = { title: 'Terms of Service' };
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of Service" updated="[date]">
+    <LegalPage title="Terms of Service" updated={companyValue('legalEffectiveDate')}>
       <p>
-        These Terms govern your use of ufo (&ldquo;the Service&rdquo;), operated by [Your Name /
-        Company Legal Name] (&ldquo;we&rdquo;, &ldquo;us&rdquo;). By creating an account, you agree
+        These Terms govern your use of ufo (&ldquo;the Service&rdquo;), operated by {companyValue('legalName')}{' '}
+        (&ldquo;we&rdquo;, &ldquo;us&rdquo;). By creating an account, you agree
         to these Terms.
       </p>
 
@@ -22,8 +23,8 @@ export default function TermsPage() {
       <h2>2. Accounts</h2>
       <p>
         You must provide a valid email and keep your credentials secure. You&rsquo;re
-        responsible for all activity under your account. Tell us immediately at [your contact
-        email] if you suspect unauthorized access.
+        responsible for all activity under your account. Tell us immediately at {companyValue('contactEmail')}{' '}
+        if you suspect unauthorized access.
       </p>
 
       <h2>3. Plans, credits &amp; billing</h2>
@@ -73,7 +74,7 @@ export default function TermsPage() {
       <p>We may update these Terms; continued use after a change means you accept the update.</p>
 
       <h2>10. Governing law</h2>
-      <p>These Terms are governed by the laws of [your jurisdiction].</p>
+      <p>These Terms are governed by the laws of {companyValue('jurisdiction')}.</p>
     </LegalPage>
   );
 }

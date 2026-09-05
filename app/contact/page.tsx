@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { companyValue } from '@/lib/company';
 import toast from 'react-hot-toast';
 import { Nav } from '@/components/landing/nav';
 import { Footer } from '@/components/landing/footer';
@@ -85,7 +86,7 @@ export default function ContactPage() {
             )}
           </Panel>
           <p className="mt-6 text-center text-sm text-fg-faint">
-            Prefer email? [your contact email]
+            Prefer email? {companyValue('contactEmail')}
           </p>
         </div>
       </main>
