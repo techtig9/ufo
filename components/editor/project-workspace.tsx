@@ -8,6 +8,7 @@ import { DesignHandoffPanel } from '@/components/editor/design-handoff-panel';
 import { ProjectToolbar } from '@/components/editor/project-toolbar';
 import { AssetLibrary } from '@/components/editor/asset-library';
 import { VisualInspector } from '@/components/editor/visual-inspector';
+import { PublishingPanel } from '@/components/editor/publishing-panel';
 import { annotateForPreview, buildTree, parseScreen, type TreeNode } from '@/lib/inspector-dom';
 import { ScreenPanel } from '@/components/editor/screen-panel';
 import { CanvasToolbar } from '@/components/editor/canvas-toolbar';
@@ -283,6 +284,15 @@ export function ProjectWorkspace({
               disabled={savingStyles}
             />
           )}
+          <PublishingPanel
+            projectId={project.id}
+            share={{
+              is_public: share.isPublic,
+              expires_at: share.expiresAt,
+              hasPassword: share.hasPassword,
+              published_at: share.publishedAt,
+            }}
+          />
           <AssetLibrary projectId={project.id} />
         </div>
       </div>

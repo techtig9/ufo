@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { hashSharePassword } from '@/lib/share-access';
+import { recordPublishEvent } from '@/lib/publishing';
 
 /**
  * Publish settings for a project's share link.
@@ -76,17 +77,40 @@ export async function POST(request: Request) {
     update.password_hash = password ? hashSharePassword(password) : null;
   }
 
+  // The previous visibility, so the log can tell a genuine publish/unpublish
+  // apart from a settings change that left visibility alone.
+  const { data: before } = await supabase
+    .from('shares')
+    .select('is_public')
+    .eq('project_id', projectId)
+    .maybeSingle();
+
   const { data: share, error } = await supabase
     .from('shares')
     .update(update)
     .eq('project_id', projectId)
-    .select('slug, is_public, published_at, expires_at, allow_comments, password_hash')
+    .select('id, slug, is_public, published_at, expires_at, allow_comments, password_hash')
     .single();
 
   if (error || !share) {
     console.error('[shares] publish failed', error?.message);
     return NextResponse.json({ error: 'Could not update the share link' }, { status: 500 });
   }
+
+  await recordPublishEvent({
+    shareId: share.id,
+    projectId,
+    actorId: user.id,
+    action:
+      before?.is_public === isPublic
+        ? 'settings_changed'
+        : isPublic
+          ? 'published'
+          : 'unpublished',
+    hadPassword: !!share.password_hash,
+    expiresAt: share.expires_at,
+    allowComments: share.allow_comments ?? true,
+  });
 
   if (project.workspace_id) {
     const admin = createAdminClient();

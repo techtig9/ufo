@@ -30,8 +30,10 @@ export function CookieConsent() {
       // Storage blocked — the banner still dismisses for this session.
     }
     setChosenThisSession(true);
-    // Wire this up to your analytics tool's consent API (e.g. gtag('consent', 'update', ...))
-    // once analytics is connected — see the Launch Checklist in README.md.
+    // Nothing else to signal: the only cookies UFO sets are the Supabase auth
+    // session, the theme preference, and a share-link grant after a password is
+    // entered — all strictly necessary or user-chosen. If a third-party
+    // analytics tool is ever added, its consent API is called from here.
   }
 
   if (!visible) return null;
@@ -39,7 +41,11 @@ export function CookieConsent() {
   return (
     <div className="fixed inset-x-4 bottom-4 z-[100] mx-auto max-w-xl animate-fade-up rounded-panel border border-edge bg-elevated p-4 shadow-lift backdrop-blur-sm sm:inset-x-auto sm:right-4">
       <p className="text-sm text-fg-secondary">
-        We use cookies for login sessions and basic analytics. See our{' '}
+        {/* Says only what is true today. UFO runs no third-party analytics and
+            sets no analytics cookie: prototype view counts are recorded
+            server-side and store nothing that identifies a viewer. */}
+        We use cookies to keep you signed in and to remember your preferences. We do not use
+        advertising or third-party analytics cookies. See our{' '}
         <Link href="/legal/cookies" className="text-brand-text hover:underline">
           Cookie Policy
         </Link>

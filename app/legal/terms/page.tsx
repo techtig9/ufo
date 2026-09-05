@@ -1,3 +1,4 @@
+import { aiProviderSentence } from '@/lib/subprocessors';
 import { LegalPage } from '@/components/legal/legal-page';
 import { companyValue } from '@/lib/company';
 
@@ -15,7 +16,7 @@ export default function TermsPage() {
       <h2>1. The Service</h2>
       <p>
         ufo generates UI/UX designs and clickable prototypes from a description you provide,
-        using AI models (currently Google Gemini) to do so. You&rsquo;re responsible for the
+        using AI models from {aiProviderSentence()} to do so. You&rsquo;re responsible for the
         descriptions and content you submit, and for reviewing generated output before relying
         on it commercially.
       </p>
@@ -53,7 +54,7 @@ export default function TermsPage() {
       <h2>6. Third-party AI processing</h2>
       <p>
         Generating a design sends your description and any imported design source to Google
-        Gemini for processing. Don&rsquo;t submit content you don&rsquo;t have the right to share
+        those providers for processing. Don&rsquo;t submit content you don&rsquo;t have the right to share
         with a third-party AI provider.
       </p>
 

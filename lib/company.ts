@@ -19,6 +19,14 @@
  * All are read at build/render time on the server. They are NOT prefixed
  * NEXT_PUBLIC_ because none of them need to reach the browser as variables —
  * they are rendered into the markup server-side.
+ *
+ * SERVER COMPONENTS ONLY. Calling this from a 'use client' component produces
+ * the real value during SSR and `— not set —` in the browser, because Next only
+ * inlines NEXT_PUBLIC_ variables into the client bundle. That is a hydration
+ * mismatch (React #418), and it silently broke every render of /contact until
+ * the browser suite caught it — the page had passed while the variables were
+ * unset on both sides and therefore happened to agree. Pass the value down as a
+ * prop instead, as app/contact/page.tsx now does.
  */
 
 const UNSET = '';

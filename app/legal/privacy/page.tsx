@@ -1,3 +1,4 @@
+import { aiProviderSentence, INFRASTRUCTURE_SUBPROCESSORS } from '@/lib/subprocessors';
 import { LegalPage } from '@/components/legal/legal-page';
 import { companyValue } from '@/lib/company';
 
@@ -16,14 +17,22 @@ export default function PrivacyPage() {
         <li><strong>Account data:</strong> name, email, hashed password (or OAuth identity) via Supabase Auth.</li>
         <li><strong>Project data:</strong> project names, descriptions, generated screens/code, and any URL, screenshot, or Figma link you submit for import &amp; redesign.</li>
         <li><strong>Billing data:</strong> plan, credit usage, and payment status. Card details are handled entirely by Paddle — we never see or store them.</li>
-        <li><strong>Usage data:</strong> basic analytics (pages viewed, feature usage) to improve the product.</li>
+        <li><strong>Prototype view counts:</strong> when someone opens a published prototype link we record the time, a coarse device type (mobile/tablet/desktop) and the referring site&rsquo;s hostname, so the project&rsquo;s owner can see whether it is being looked at. We do not store IP addresses, browser fingerprints, or any identifier that would let us tell one viewer from another, and this needs no cookie.</li>
       </ul>
 
       <h2>2. Who we share it with</h2>
       <ul>
-        <li><strong>Google Gemini</strong> — receives your project description and any imported design source to generate screens. Subject to Google&rsquo;s API data-handling terms.</li>
-        <li><strong>Supabase</strong> — hosts our database, authentication, and file storage.</li>
-        <li><strong>Paddle</strong> — our Merchant of Record for billing; handles your payment details directly.</li>
+        <li>
+          <strong>AI model providers</strong> — your project description, and any design source
+          you import, are sent to {aiProviderSentence()} to generate screens. A given request
+          goes to one of them: the first that is available. Each is subject to its own API
+          data-handling terms.
+        </li>
+        {INFRASTRUCTURE_SUBPROCESSORS.map((entry) => (
+          <li key={entry.name}>
+            <strong>{entry.name}</strong> — {entry.purpose}.
+          </li>
+        ))}
         <li>We don&rsquo;t sell your data, and we don&rsquo;t share it with advertisers.</li>
       </ul>
 
@@ -36,7 +45,9 @@ export default function PrivacyPage() {
 
       <h2>4. Cookies</h2>
       <p>
-        We use essential cookies for login sessions and optional analytics cookies — see our{' '}
+        We use cookies to keep you signed in, to remember your theme preference and cookie
+        choice, and to remember that you have entered the password for a protected prototype
+        link. We do not use advertising or third-party analytics cookies. See our{' '}
         <a href="/legal/cookies">Cookie Policy</a> for details and how to opt out.
       </p>
 

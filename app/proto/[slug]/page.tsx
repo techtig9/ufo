@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
@@ -7,6 +7,7 @@ import { PublicPrototype } from '@/components/prototype-viewer/public-prototype'
 import { SharePasswordGate } from '@/components/prototype-viewer/share-password-gate';
 import { GridField } from '@/components/ui/grid-field';
 import { verifyShareGrant, SHARE_GRANT_COOKIE_PREFIX } from '@/lib/share-access';
+import { recordShareView } from '@/lib/publishing';
 
 /**
  * Public prototype.
@@ -129,6 +130,22 @@ export default async function PublicProtoPage({ params }: { params: Promise<{ sl
     data: { user },
   } = await supabase.auth.getUser();
   const isOwner = !!user && user.id === project?.user_id;
+
+  // Record the view. Deliberately not awaited into the render path beyond the
+  // insert itself, never throws, and stores nothing identifying — no IP, no
+  // user agent string, only a coarse device bucket and the referrer's host.
+  // That is why prototype analytics needs no cookie and no consent entry.
+  // The owner's own visits are excluded so the number means "someone else
+  // looked at this", which is the question a designer is actually asking.
+  if (!isOwner) {
+    const requestHeaders = await headers();
+    await recordShareView({
+      shareId: share.id,
+      projectId: share.project_id,
+      userAgent: requestHeaders.get('user-agent'),
+      referrer: requestHeaders.get('referer'),
+    });
+  }
 
   return (
     <div className="relative min-h-screen px-6 py-12">

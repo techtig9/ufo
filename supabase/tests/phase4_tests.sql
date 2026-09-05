@@ -488,3 +488,71 @@ values ('c0000000-0000-0000-0000-000000000004','a0000000-0000-0000-0000-00000000
 delete from projects where id='c0000000-0000-0000-0000-000000000004';
 select count(*) as orphan_assets_expect_0 from project_assets
   where project_id='c0000000-0000-0000-0000-000000000004';
+
+-- ===========================================================================
+-- Migration 013 — the publish log and prototype view analytics.
+-- ===========================================================================
+
+\echo ''
+\echo '=== P4-42: the publish log is collaborator-read, service-role write ==='
+insert into share_publish_events (share_id, project_id, actor_id, action, had_password)
+values ('e0000000-0000-0000-0000-000000000009','c0000000-0000-0000-0000-000000000001',
+        'a0000000-0000-0000-0000-000000000001','published', false);
+
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000004';
+select count(*) as viewer_reads_log_expect_1 from share_publish_events;
+insert into share_publish_events (share_id, project_id, action)
+values ('e0000000-0000-0000-0000-000000000009','c0000000-0000-0000-0000-000000000001','published');
+\echo '   ^ expect: ERROR — a publish log a client can write is not a log'
+reset role; reset request.jwt.claim.sub;
+
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000005';
+select count(*) as outsider_reads_log_expect_0 from share_publish_events;
+reset role; reset request.jwt.claim.sub;
+
+\echo ''
+\echo '=== P4-43: only the recorded actions are accepted ==='
+insert into share_publish_events (share_id, project_id, action)
+values ('e0000000-0000-0000-0000-000000000009','c0000000-0000-0000-0000-000000000001','deployed');
+\echo '   ^ expect: ERROR check constraint — the log cannot claim an action UFO does not perform'
+
+\echo ''
+\echo '=== P4-44: a visitor cannot forge or inflate view counts ==='
+insert into share_views (share_id, project_id, device, referrer_host)
+values ('e0000000-0000-0000-0000-000000000009','c0000000-0000-0000-0000-000000000001','desktop','slack.com'),
+       ('e0000000-0000-0000-0000-000000000009','c0000000-0000-0000-0000-000000000001','mobile',null);
+
+set role anon;
+insert into share_views (share_id, project_id, device)
+values ('e0000000-0000-0000-0000-000000000009','c0000000-0000-0000-0000-000000000001','desktop');
+\echo '   ^ expect: ERROR — views are recorded server-side only'
+select count(*) as anon_reads_views_expect_0 from share_views;
+reset role;
+
+\echo ''
+\echo '=== P4-45: view stats are readable by a collaborator ==='
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000004';
+select total_views as expect_2, active_days as expect_1
+  from share_view_stats('c0000000-0000-0000-0000-000000000001', 30);
+reset role; reset request.jwt.claim.sub;
+
+\echo ''
+\echo '=== P4-46: view stats do NOT leak to an outsider ==='
+-- share_view_stats is SECURITY DEFINER, so it bypasses RLS: without the
+-- explicit access check inside it, this would hand over someone else's numbers.
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000005';
+select total_views as expect_0, last_viewed_at as expect_null
+  from share_view_stats('c0000000-0000-0000-0000-000000000001', 30);
+reset role; reset request.jwt.claim.sub;
+set role anon;
+select total_views as anon_expect_0 from share_view_stats('c0000000-0000-0000-0000-000000000001', 30);
+reset role;
+
+\echo ''
+\echo '=== P4-47: views store nothing that identifies a visitor ==='
+-- The columns are the privacy guarantee: no IP (raw or hashed), no user agent,
+-- no session id. Adding one later would need this assertion changed on purpose.
+select string_agg(column_name, ', ' order by column_name) as columns
+from information_schema.columns
+where table_schema='public' and table_name='share_views';
+\echo '   ^ expect: device, id, project_id, referrer_host, share_id, viewed_at'
