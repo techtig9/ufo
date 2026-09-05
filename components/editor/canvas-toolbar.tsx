@@ -13,6 +13,8 @@ export function CanvasToolbar({
   canRedo,
   zoom,
   onZoomChange,
+  inspecting,
+  onToggleInspect,
 }: {
   device: DeviceMode;
   onDeviceChange: (device: DeviceMode) => void;
@@ -22,6 +24,8 @@ export function CanvasToolbar({
   canRedo: boolean;
   zoom: number;
   onZoomChange: (zoom: number) => void;
+  inspecting: boolean;
+  onToggleInspect: () => void;
 }) {
   return (
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-edge bg-surface-subtle p-2">
@@ -31,6 +35,18 @@ export function CanvasToolbar({
         </button>
         <button onClick={onRedo} disabled={!canRedo} className="rounded-lg px-2.5 py-1.5 text-xs text-fg-muted hover:bg-surface-raised hover:text-fg disabled:opacity-25">
           ↷ Redo
+        </button>
+        <button
+          onClick={onToggleInspect}
+          aria-pressed={inspecting}
+          title="Select elements in the preview and edit their styles"
+          className={`rounded-lg px-2.5 py-1.5 text-xs transition-colors duration-micro ${
+            inspecting
+              ? 'bg-studio-citron/15 text-brand-text'
+              : 'text-fg-muted hover:bg-surface-raised hover:text-fg'
+          }`}
+        >
+          ⌗ Inspect
         </button>
       </div>
 

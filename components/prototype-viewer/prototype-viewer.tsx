@@ -2,9 +2,72 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DeviceFrame, type DeviceMode } from './device-frame';
+import { parsePath } from '@/lib/inspector';
 import type { Screen } from '@/lib/types';
 
-function buildSrcDoc(bodyHtml: string): string {
+/**
+ * Click-to-select support for the editor's visual inspector.
+ *
+ * Injected only when `inspect` is on, so the public prototype view never
+ * carries it — a share-link visitor has no inspector and should not have their
+ * clicks intercepted.
+ *
+ * The frame is sandboxed without allow-same-origin, so the parent cannot reach
+ * into its DOM at all: the element path has to be computed in here and sent
+ * out by postMessage. `data-ufo-path` is written by the parent before the HTML
+ * is handed over, so this script only reads it.
+ */
+const INSPECT_AGENT = `
+<style>
+  [data-ufo-selected] { outline: 2px solid #D4FF4F !important; outline-offset: 1px; }
+  [data-ufo-hover]    { outline: 1px dashed rgba(212,255,79,.7) !important; outline-offset: 1px; }
+</style>
+<script>
+(function () {
+  function pathOf(el) {
+    var node = el;
+    while (node && !node.hasAttribute('data-ufo-path')) node = node.parentElement;
+    return node ? node.getAttribute('data-ufo-path') : null;
+  }
+
+  document.addEventListener('mouseover', function (e) {
+    var previous = document.querySelector('[data-ufo-hover]');
+    if (previous) previous.removeAttribute('data-ufo-hover');
+    var node = e.target;
+    while (node && !node.hasAttribute('data-ufo-path')) node = node.parentElement;
+    if (node) node.setAttribute('data-ufo-hover', '');
+  });
+
+  document.addEventListener('click', function (e) {
+    var path = pathOf(e.target);
+    if (path === null) return;
+    /* Selecting must not follow a link or submit a form out of the frame. */
+    e.preventDefault();
+    e.stopPropagation();
+    /* targetOrigin '*' is unavoidable here for the same reason as the hotspot
+       message below: this frame's origin is "null". The payload is only a
+       path, and the parent validates both the origin and the path's shape. */
+    window.parent.postMessage(
+      { type: 'ufo-inspect-select', path: path, additive: e.shiftKey || e.metaKey || e.ctrlKey },
+      '*'
+    );
+  }, true);
+
+  window.addEventListener('message', function (e) {
+    var data = e.data;
+    if (!data || data.type !== 'ufo-inspect-highlight') return;
+    document.querySelectorAll('[data-ufo-selected]').forEach(function (el) {
+      el.removeAttribute('data-ufo-selected');
+    });
+    (data.paths || []).forEach(function (path) {
+      var el = document.querySelector('[data-ufo-path="' + String(path).replace(/["\\]/g, '') + '"]');
+      if (el) el.setAttribute('data-ufo-selected', '');
+    });
+  });
+})();
+<\/script>`;
+
+function buildSrcDoc(bodyHtml: string, inspect = false): string {
   return `<!doctype html>
 <html>
 <head>
@@ -15,6 +78,7 @@ function buildSrcDoc(bodyHtml: string): string {
 </head>
 <body>
 ${bodyHtml}
+${inspect ? INSPECT_AGENT : ''}
 <script>
 document.addEventListener('click', function (e) {
   var el = e.target.closest('[data-hotspot]');
@@ -43,6 +107,10 @@ export function PrototypeViewer({
   onPin,
   pins,
   onPinClick,
+  inspect = false,
+  inspectHtml,
+  selectedPaths,
+  onInspectSelect,
 }: {
   screens: Screen[];
   initialScreenId?: string;
@@ -57,12 +125,19 @@ export function PrototypeViewer({
   /** Existing pins for the active screen, rendered as markers. */
   pins?: { id: string; x: number; y: number; resolved?: boolean }[];
   onPinClick?: (commentId: string) => void;
+  /** Editor-only: inject the click-to-select agent. Never set on a public share. */
+  inspect?: boolean;
+  /** The active screen's HTML with data-ufo-path attributes, when inspecting. */
+  inspectHtml?: string;
+  selectedPaths?: string[];
+  onInspectSelect?: (path: string, additive: boolean) => void;
 }) {
   const sorted = useMemo(() => [...screens].sort((a, b) => a.order_index - b.order_index), [screens]);
   const [activeId, setActiveId] = useState(initialScreenId ?? sorted[0]?.id);
   const [internalDevice, setInternalDevice] = useState<DeviceMode>('mobile');
   const [presentation, setPresentation] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const device = controlledDevice ?? internalDevice;
   const setDevice = (mode: DeviceMode) => {
@@ -91,8 +166,18 @@ export function PrototypeViewer({
       if (e.origin !== 'null' && e.origin !== window.location.origin) return;
       if (e.source === window) return;
 
-      const data = e.data as { type?: unknown; target?: unknown } | null;
-      if (!data || data.type !== 'ufo-hotspot') return;
+      const data = e.data as { type?: unknown; target?: unknown; path?: unknown; additive?: unknown } | null;
+      if (!data) return;
+
+      // Element selected inside the preview. The path is untrusted input from a
+      // sandboxed frame, so its shape is validated before it is acted on.
+      if (data.type === 'ufo-inspect-select') {
+        if (typeof data.path !== 'string' || parsePath(data.path) === null) return;
+        onInspectSelect?.(data.path, data.additive === true);
+        return;
+      }
+
+      if (data.type !== 'ufo-hotspot') return;
       if (typeof data.target !== 'string') return;
 
       // The target is matched against this project's own screen names, so an
@@ -103,7 +188,24 @@ export function PrototypeViewer({
     }
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [sorted]);
+  }, [sorted, onInspectSelect]);
+
+  // Push the current selection into the frame so it can draw the outline.
+  // Re-sent whenever the HTML changes too, since a reloaded frame has lost it.
+  useEffect(() => {
+    if (!inspect) return;
+    const frame = iframeRef.current;
+    if (!frame) return;
+    const send = () =>
+      frame.contentWindow?.postMessage(
+        { type: 'ufo-inspect-highlight', paths: selectedPaths ?? [] },
+        '*'
+      );
+    // The frame may not have parsed its srcDoc yet on first paint.
+    send();
+    frame.addEventListener('load', send);
+    return () => frame.removeEventListener('load', send);
+  }, [inspect, selectedPaths, inspectHtml]);
 
   if (!sorted.length) {
     return <p className="text-center text-fg-faint">No screens yet.</p>;
@@ -158,7 +260,8 @@ export function PrototypeViewer({
         <div className="relative h-full w-full">
           <iframe
             title={active.name}
-            srcDoc={buildSrcDoc(active.code)}
+            ref={iframeRef}
+            srcDoc={buildSrcDoc(inspect && inspectHtml ? inspectHtml : active.code, inspect)}
             sandbox="allow-scripts"
             className="h-full w-full border-0"
           />
