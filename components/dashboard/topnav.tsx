@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { NotificationCenter } from '@/components/notifications/notification-center';
 import { Dropdown, type DropdownItem } from '@/components/ui/dropdown';
 import { MobileNav } from '@/components/dashboard/mobile-nav';
+import { CommandPalette } from '@/components/ui/command-palette';
 
 interface TopnavProps { userName: string | null; plan: string; creditsRemaining: number; }
 
@@ -14,22 +15,21 @@ export function Topnav({ userName, plan, creditsRemaining }: TopnavProps) {
   const supabase = createClient();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  /**
+   * Clicking the search field raises the same shortcut the palette listens
+   * for, so the keyboard path and the pointer path cannot drift apart.
+   */
+  function openCommandPalette() {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true })
+    );
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push('/');
     router.refresh();
   }
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        router.push('/dashboard/projects');
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [router]);
 
   const menuItems: DropdownItem[] = [
     { id: 'settings', label: 'Settings', onSelect: () => router.push('/dashboard/settings') },
@@ -46,12 +46,15 @@ export function Topnav({ userName, plan, creditsRemaining }: TopnavProps) {
       >
         ☰
       </button>
+      {/* Opens the real command palette. This previously routed to
+          /dashboard/projects while advertising ⌘K — a dead control. */}
       <button
-        onClick={() => router.push('/dashboard/projects')}
-        className="hidden w-full max-w-md items-center gap-3 rounded-xl border border-edge bg-surface-subtle px-3.5 py-2.5 text-left text-xs text-fg-faint sm:flex"
+        onClick={openCommandPalette}
+        aria-keyshortcuts="Meta+K Control+K"
+        className="hidden w-full max-w-md items-center gap-3 rounded-xl border border-edge bg-surface-subtle px-3.5 py-2.5 text-left text-xs text-fg-faint transition-colors duration-micro hover:border-edge-strong hover:text-fg-muted sm:flex"
       >
-        <span className="text-sm">⌕</span>
-        <span>Search projects, templates and screens…</span>
+        <span aria-hidden="true" className="text-sm">⌕</span>
+        <span>Search projects, pages and actions…</span>
         <kbd className="ml-auto rounded-md border border-edge px-1.5 py-0.5 text-[9px] text-fg-faint">⌘ K</kbd>
       </button>
       <div className="ml-auto flex items-center gap-2.5">
@@ -71,6 +74,7 @@ export function Topnav({ userName, plan, creditsRemaining }: TopnavProps) {
         />
       </div>
       <MobileNav open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+      <CommandPalette />
     </header>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import clsx from 'clsx';
 import { PrototypeViewer } from '@/components/prototype-viewer/prototype-viewer';
@@ -70,6 +70,14 @@ export function ProjectWorkspace({
     ));
   }
 
+  /**
+   * Editor keyboard shortcuts (spec: "Keyboard shortcuts: Cmd/Ctrl+Z,
+   * Cmd/Ctrl+Shift+Z, Escape").
+   *
+   * Deliberately inert while focus is in a text field or the Monaco editor —
+   * Cmd+Z there must undo the user's typing, not the screen history. Cmd+K is
+   * left alone so the command palette keeps it.
+   */
   function redo() {
     if (!activeScreen || !future.length) return;
     const next = future[future.length - 1];
@@ -80,9 +88,38 @@ export function ProjectWorkspace({
     ));
   }
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const typing =
+        !!target &&
+        (target.isContentEditable ||
+          ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
+          // Monaco renders its own editable surface.
+          !!target.closest('.monaco-editor'));
+      if (typing) return;
+
+      const mod = e.metaKey || e.ctrlKey;
+
+      if (mod && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (e.key === 'Escape') {
+        // Leaves presentation/zoom state and returns to a neutral view.
+        setZoom(1);
+      }
+    }
+
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-edge bg-[#101116]/80 p-4 shadow-[0_12px_40px_rgba(0,0,0,.18)] backdrop-blur-xl">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-edge bg-surface/80 p-4 shadow-[0_12px_40px_rgba(0,0,0,.18)] backdrop-blur-xl">
         <div>
           <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-violet-500/15 text-accent-alt-text">✦</span><div><p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-accent-alt-text">UFO Studio</p>
           <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
