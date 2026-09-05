@@ -223,7 +223,7 @@ alter table request_log enable row level security;
 -- Backs the "duplicate requests return cached responses at no extra
 -- credit cost" rule stated in the Credit Rules / Fair Usage Policy
 -- sections of the pricing doc — /api/generate hashes the request and
--- checks here before calling Gemini or deducting credits.
+-- checks here before calling a provider or reserving credits.
 create table if not exists generation_cache (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references users(id) not null,

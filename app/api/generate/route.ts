@@ -8,6 +8,7 @@ import { generateRequestSchema } from '@/lib/schemas';
 import { hashGenerationRequest, getCachedGeneration, storeCachedGeneration } from '@/lib/generation-cache';
 import { sendLowCreditsEmail } from '@/lib/email';
 import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
+import { reserveCredits, refundCredits } from '@/lib/credits-server';
 import type { ProjectType } from '@/lib/types';
 
 function randomSlug(): string {
@@ -15,6 +16,11 @@ function randomSlug(): string {
 }
 
 export async function POST(request: Request) {
+  // Correlates the credit reservation, every AI provider attempt, and any
+  // refund for this generation. Surfaced to the client so a support request
+  // can be traced end to end.
+  const requestId = crypto.randomUUID().slice(0, 8);
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -75,25 +81,70 @@ export async function POST(request: Request) {
   );
 
   let generated = await getCachedGeneration(user.id, requestHash);
-  let servedFromCache = !!generated;
+  const servedFromCache = !!generated;
+
+  // A cache hit is the same request again inside the dedup window — the
+  // "duplicate requests return cached responses at no extra credit cost" rule.
+  // Nothing is reserved for it.
+  const action = mode === 'scratch' ? 'generate_full_project' : 'import_redesign';
+  const cost = servedFromCache || profile?.role === 'admin' ? 0 : (gate.creditsRequired ?? 0);
+  let reserved = false;
+
+  if (cost > 0) {
+    // Reserve BEFORE generating. Charging only on success lets two concurrent
+    // requests both pass the affordability check and both generate, so one is
+    // free. Reserving first makes the charge authoritative; the refunds below
+    // keep "a failed generation costs nothing" true.
+    const reservation = await reserveCredits(user.id, cost, action, requestId);
+    if (!reservation.ok) {
+      return NextResponse.json(
+        {
+          error: `You need ${cost.toLocaleString()} credits for this and have ${reservation.creditsRemaining.toLocaleString()} left this cycle.`,
+          requestId,
+        },
+        { status: 402 }
+      );
+    }
+    reserved = true;
+  }
+
+  /** Hands the credits back exactly once, whatever failure path we are on. */
+  async function refund(reason: string) {
+    if (!reserved) return;
+    reserved = false;
+    await refundCredits(user!.id, cost, action, requestId, reason);
+  }
 
   if (!generated) {
     try {
       generated =
         mode === 'scratch'
-          ? await generateFullProject(projectName, description ?? '', answers)
-          : await importAndRedesign(importSource ?? '', importInstruction ?? '', answers);
+          ? await generateFullProject(projectName, description ?? '', answers, {
+              requestId,
+              userId: user.id,
+              signal: request.signal,
+            })
+          : await importAndRedesign(importSource ?? '', importInstruction ?? '', answers, {
+              requestId,
+              userId: user.id,
+              signal: request.signal,
+            });
     } catch (err) {
-      console.error('Generation failed', err);
+      console.error('Generation failed', { requestId, error: String(err) });
+      await refund('refund_generation_failed');
       return NextResponse.json(
-        { error: 'Generation failed — no credits were charged. Please try again.' },
+        { error: 'Generation failed — no credits were charged. Please try again.', requestId },
         { status: 502 }
       );
     }
 
     if (!generated?.screens?.length) {
+      await refund('refund_empty_result');
       return NextResponse.json(
-        { error: 'The generator returned an empty result — no credits were charged. Please try again.' },
+        {
+          error: 'The generator returned an empty result — no credits were charged. Please try again.',
+          requestId,
+        },
         { status: 502 }
       );
     }
@@ -117,8 +168,12 @@ export async function POST(request: Request) {
     .single();
 
   if (projectError || !project) {
-    console.error(projectError);
-    return NextResponse.json({ error: 'Could not save the project' }, { status: 500 });
+    console.error('Failed to create project', { requestId, error: projectError?.message });
+    await refund('refund_project_insert_failed');
+    return NextResponse.json(
+      { error: 'Could not save the project — no credits were charged.', requestId },
+      { status: 500 }
+    );
   }
 
   const screenRows = generated.screens.map((s) => ({
@@ -130,10 +185,14 @@ export async function POST(request: Request) {
 
   const { error: screensError } = await admin.from('screens').insert(screenRows);
   if (screensError) {
-    console.error('Failed to create generated screens', screensError);
+    console.error('Failed to create generated screens', { requestId, error: screensError.message });
     await admin.from('projects').delete().eq('id', project.id);
+    await refund('refund_screens_insert_failed');
     return NextResponse.json(
-      { error: 'The project was created but its screens could not be saved. No credits were charged.' },
+      {
+        error: 'The project was created but its screens could not be saved. No credits were charged.',
+        requestId,
+      },
       { status: 500 }
     );
   }
@@ -143,37 +202,46 @@ export async function POST(request: Request) {
     .insert({ project_id: project.id, slug: randomSlug(), is_public: false });
 
   if (shareError) {
-    console.error('Failed to create project share record', shareError);
+    console.error('Failed to create project share record', { requestId, error: shareError.message });
     await admin.from('screens').delete().eq('project_id', project.id);
     await admin.from('projects').delete().eq('id', project.id);
+    await refund('refund_share_insert_failed');
     return NextResponse.json(
-      { error: 'The project could not be initialized completely. No credits were charged.' },
+      {
+        error: 'The project could not be initialized completely. No credits were charged.',
+        requestId,
+      },
       { status: 500 }
     );
   }
 
-  if (!servedFromCache && profile?.role !== 'admin' && gate.creditsRequired) {
-    const newBalance = subscription.credits_remaining - gate.creditsRequired;
-    await admin
+  // Credits were already charged atomically by reserveCredits() above, before
+  // the generation ran. All that remains is the low-balance courtesy email.
+  if (cost > 0) {
+    const { data: sub } = await admin
       .from('subscriptions')
-      .update({ credits_remaining: newBalance })
-      .eq('user_id', user.id);
+      .select('credits_remaining, plan')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-    const planTotal = PLAN_MONTHLY_CREDITS[subscription.plan as keyof typeof PLAN_MONTHLY_CREDITS];
+    const planTotal = PLAN_MONTHLY_CREDITS[sub?.plan as keyof typeof PLAN_MONTHLY_CREDITS];
     const threshold = planTotal * 0.1;
-    if (subscription.credits_remaining > threshold && newBalance <= threshold) {
-      admin
+    const balanceNow = sub?.credits_remaining ?? 0;
+
+    // Only on the crossing, so the user is warned once per cycle rather than
+    // on every generation once they are below the line.
+    if (planTotal && balanceNow <= threshold && balanceNow + cost > threshold) {
+      const { data: prefs } = await admin
         .from('users')
         .select('notify_low_credits')
         .eq('id', user.id)
-        .single()
-        .then(({ data }) => {
-          if (data?.notify_low_credits !== false) {
-            sendLowCreditsEmail(user.email!, newBalance, subscription.plan).catch(() => {});
-          }
-        });
+        .maybeSingle();
+
+      if (prefs?.notify_low_credits !== false) {
+        sendLowCreditsEmail(user.email!, balanceNow, sub!.plan, user.id).catch(() => undefined);
+      }
     }
   }
 
-  return NextResponse.json({ projectId: project.id });
+  return NextResponse.json({ projectId: project.id, requestId });
 }

@@ -168,12 +168,14 @@ export async function recordAuthEvent(params: {
   }
 
   const status = params.sendWelcomeInstead
-    ? await sendWelcomeEmail(email, name ?? '')
+    ? await sendWelcomeEmail(email, name ?? '', userId)
     : await sendSecurityNotificationEmail(email, {
         headline: COPY[type].headline,
         detail: COPY[type].detail,
         whenIso: new Date().toISOString(),
         context: [context?.userAgentSummary, context?.ipPrefix].filter(Boolean).join(' · ') || undefined,
+        eventType: type.toLowerCase(),
+        userId,
       });
 
   await markStatus(dedupKey, status);

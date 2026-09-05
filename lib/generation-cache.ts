@@ -6,7 +6,7 @@ const CACHE_WINDOW_MS = 10 * 60 * 1000; // 10 minutes — long enough to dedupe 
                                           // or a retry-after-timeout, short enough that a
                                           // deliberate second identical request later still runs.
 
-/** Stable hash of the exact inputs that determine Gemini's output. */
+/** Stable hash of the exact inputs that determine the model's output. */
 export function hashGenerationRequest(payload: Record<string, unknown>): string {
   const normalized = JSON.stringify(payload, Object.keys(payload).sort());
   return crypto.createHash('sha256').update(normalized).digest('hex');

@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.tests.json",
     "preflight": "node scripts/preflight.mjs",
-    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "test": "node --experimental-strip-types --import ./tests/ts-resolver.mjs --test tests/*.test.ts",
     "test:db": "./supabase/tests/run.sh",
     "test:browser": "node tests/browser/phase1.mjs && node tests/browser/responsive.mjs && node tests/browser/a11y.mjs"
   },

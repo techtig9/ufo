@@ -1,5 +1,7 @@
+import { createHash } from 'crypto';
 import { PLAN_MONTHLY_CREDITS } from './credits';
 import { escapeHtml } from './escape-html';
+import { createAdminClient } from './supabase/admin';
 
 // Re-exported so existing importers of '@/lib/email' are unaffected.
 export { escapeHtml };
@@ -9,9 +11,74 @@ const FROM = process.env.EMAIL_FROM || 'ufo <hello@yourdomain.com>';
 
 export type EmailStatus = 'sent' | 'failed' | 'skipped_unconfigured';
 
-async function send(to: string, subject: string, html: string): Promise<EmailStatus> {
+/**
+ * Delivery log (Master Command 2.F): "an email event log so admins can
+ * diagnose delivery attempts without exposing sensitive data".
+ *
+ * Hence a salted hash of the recipient rather than the address, and a coarse
+ * error class rather than the provider's raw string — enough to answer "are
+ * welcome emails failing" without turning this table into a mailing list or a
+ * copy of the message bodies. Best-effort: logging must never fail a send.
+ */
+function recipientHash(to: string): string {
+  const salt = process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'ufo-fallback-salt';
+  return createHash('sha256').update(`${salt}:${to.toLowerCase().trim()}`).digest('hex').slice(0, 32);
+}
+
+/** Buckets a provider failure so it is groupable without storing raw text. */
+function errorClass(status: number | undefined, body: string): string {
+  if (status === 401 || status === 403) return 'auth';
+  if (status === 422) return 'invalid_recipient';
+  if (status === 429) return 'rate_limited';
+  if (status && status >= 500) return 'provider_error';
+  if (/domain is not verified/i.test(body)) return 'domain_unverified';
+  return 'unknown';
+}
+
+function logEmailEvent(row: {
+  userId?: string | null;
+  template: string;
+  to: string;
+  status: EmailStatus;
+  providerMessageId?: string | null;
+  errorClass?: string | null;
+}): void {
+  console.log(
+    JSON.stringify({
+      scope: 'email',
+      template: row.template,
+      status: row.status,
+      errorClass: row.errorClass ?? undefined,
+    })
+  );
+
+  void (async () => {
+    try {
+      const admin = createAdminClient();
+      await admin.from('email_events').insert({
+        user_id: row.userId ?? null,
+        template: row.template,
+        recipient_hash: recipientHash(row.to),
+        status: row.status,
+        provider_message_id: row.providerMessageId ?? null,
+        error_class: row.errorClass ?? null,
+      });
+    } catch {
+      // Best-effort by design.
+    }
+  })();
+}
+
+async function send(
+  to: string,
+  subject: string,
+  html: string,
+  template: string,
+  userId?: string | null
+): Promise<EmailStatus> {
   if (!process.env.RESEND_API_KEY) {
-    console.warn(`RESEND_API_KEY not set — would have emailed ${to}: "${subject}"`);
+    console.warn(`RESEND_API_KEY not set — would have emailed a ${template} to a recipient.`);
+    logEmailEvent({ userId, template, to, status: 'skipped_unconfigured' });
     return 'skipped_unconfigured';
   }
 
@@ -23,14 +90,34 @@ async function send(to: string, subject: string, html: string): Promise<EmailSta
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ from: FROM, to, subject, html }),
+      signal: AbortSignal.timeout(15_000),
     });
+
     if (!res.ok) {
-      console.error('Resend send failed', await res.text());
+      const body = (await res.text().catch(() => '')).slice(0, 300);
+      console.error('Resend send failed', res.status, body);
+      logEmailEvent({
+        userId,
+        template,
+        to,
+        status: 'failed',
+        errorClass: errorClass(res.status, body),
+      });
       return 'failed';
     }
+
+    const payload = await res.json().catch(() => ({}) as { id?: string });
+    logEmailEvent({
+      userId,
+      template,
+      to,
+      status: 'sent',
+      providerMessageId: payload?.id ?? null,
+    });
     return 'sent';
   } catch (err) {
     console.error('Email send error', err);
+    logEmailEvent({ userId, template, to, status: 'failed', errorClass: 'transport' });
     return 'failed';
   }
 }
@@ -41,7 +128,11 @@ const wrapper = (body: string) => `
   ${body}
 </div>`;
 
-export async function sendWelcomeEmail(to: string, name: string): Promise<EmailStatus> {
+export async function sendWelcomeEmail(
+  to: string,
+  name: string,
+  userId?: string | null
+): Promise<EmailStatus> {
   // Reads the real plan configuration. This previously hardcoded "150 free
   // credits" while the Free plan actually grants PLAN_MONTHLY_CREDITS.free
   // (1,500) — a number that was wrong by 10x in the first email a user ever
@@ -56,14 +147,17 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<EmailS
       <p style="color:#B5B7C0;line-height:1.6;">You've got ${freeCredits} free credits to try the
       generator. Head to AI Designer and describe your first project — most people have a
       clickable prototype in under a minute.</p>
-    `)
+    `),
+    'welcome',
+    userId
   );
 }
 
 export async function sendLowCreditsEmail(
   to: string,
   creditsRemaining: number,
-  plan: string
+  plan: string,
+  userId?: string | null
 ): Promise<EmailStatus> {
   return send(
     to,
@@ -73,11 +167,16 @@ export async function sendLowCreditsEmail(
       <p style="color:#B5B7C0;line-height:1.6;">You have ${creditsRemaining.toLocaleString()}
       credits left on the ${escapeHtml(plan)} plan this cycle. Upgrade or grab a top-up pack to keep
       generating without interruption.</p>
-    `)
+    `),
+    'low_credits',
+    userId
   );
 }
 
-export async function sendPaymentFailedEmail(to: string): Promise<EmailStatus> {
+export async function sendPaymentFailedEmail(
+  to: string,
+  userId?: string | null
+): Promise<EmailStatus> {
   return send(
     to,
     'Your ufo payment didn’t go through',
@@ -85,11 +184,16 @@ export async function sendPaymentFailedEmail(to: string): Promise<EmailStatus> {
       <h1 style="font-size:20px;">Payment failed</h1>
       <p style="color:#B5B7C0;line-height:1.6;">We couldn't process your last payment. Update
       your card from Billing in your dashboard to avoid losing access to your plan.</p>
-    `)
+    `),
+    'payment_failed',
+    userId
   );
 }
 
-export async function sendSubscriptionCanceledEmail(to: string): Promise<EmailStatus> {
+export async function sendSubscriptionCanceledEmail(
+  to: string,
+  userId?: string | null
+): Promise<EmailStatus> {
   return send(
     to,
     'Your ufo subscription was canceled',
@@ -97,7 +201,9 @@ export async function sendSubscriptionCanceledEmail(to: string): Promise<EmailSt
       <h1 style="font-size:20px;">Subscription canceled</h1>
       <p style="color:#B5B7C0;line-height:1.6;">You're back on the Free plan. Your projects are
       still there — upgrade anytime from Billing to pick up where you left off.</p>
-    `)
+    `),
+    'subscription_canceled',
+    userId
   );
 }
 
@@ -112,7 +218,9 @@ export async function sendContactFormEmail(fromEmail: string, message: string): 
       <h1 style="font-size:18px;">New support message</h1>
       <p style="color:#B5B7C0;">From: ${escapeHtml(fromEmail)}</p>
       <p style="color:#fff;white-space:pre-wrap;line-height:1.6;">${escapeHtml(message)}</p>
-    `)
+    `),
+    'contact_form',
+    null
   );
 }
 
@@ -126,7 +234,15 @@ export async function sendContactFormEmail(fromEmail: string, message: string): 
  */
 export async function sendSecurityNotificationEmail(
   to: string,
-  params: { headline: string; detail: string; whenIso: string; context?: string }
+  params: {
+    headline: string;
+    detail: string;
+    whenIso: string;
+    context?: string;
+    /** Event name, used only to label the row in the delivery log. */
+    eventType?: string;
+    userId?: string | null;
+  }
 ): Promise<EmailStatus> {
   const when = new Date(params.whenIso).toUTCString();
 
@@ -154,6 +270,8 @@ export async function sendSecurityNotificationEmail(
       <p style="color:#737D8F;line-height:1.6;font-size:12px;margin-top:16px;">
         You can turn these security notifications off under Settings → Notifications.
       </p>
-    `)
+    `),
+    `security_${params.eventType ?? 'notification'}`,
+    params.userId
   );
 }

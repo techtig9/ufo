@@ -58,6 +58,21 @@ for migration in "$REPO"/supabase/migrations/*.sql; do
 done
 
 echo
-echo "==> running RLS suite as anon / authenticated"
+echo "==> running Phase 1 RLS suite as anon / authenticated"
 $PSQL -d $DB -f "$REPO/supabase/tests/rls_tests.sql" 2>&1 |
   grep -vE '^SET$|^RESET$|^-+$|^\(1 row\)$|Pager usage'
+
+# Phase 2 tests need their own clean database: the Phase 1 suite leaves rows
+# behind that would collide with its fixtures.
+if [[ $STOP_AT_006 -eq 0 ]]; then
+  echo
+  echo "==> running Phase 2 suite (atomic credits, webhook idempotency)"
+  DB2=${DB}_p2
+  $PSQL -q -c "drop database if exists $DB2;" -c "create database $DB2;"
+  APPLY2="$PSQL -d $DB2 -v ON_ERROR_STOP=1 -q"
+  $APPLY2 -f "$REPO/supabase/tests/00_supabase_harness.sql"
+  $APPLY2 -f "$REPO/supabase/schema.sql"
+  for migration in "$REPO"/supabase/migrations/*.sql; do $APPLY2 -f "$migration"; done
+  $PSQL -d $DB2 -f "$REPO/supabase/tests/phase2_tests.sql" 2>&1 |
+    grep -vE '^SET$|^RESET$|^-+$|^\(1 row\)$|Pager usage'
+fi
