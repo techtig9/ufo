@@ -58,8 +58,15 @@ const ALLOWED_FIELDS: (keyof AuthLogFields)[] = [
  * Belt-and-braces: even an allow-listed field must not carry something that
  * looks like a credential. `errorMessage` comes from Supabase and is the one
  * field whose content we do not fully control.
+ *
+ * The separator after a prefix is `[-_]`, not `-`. Supabase's own tokens use an
+ * underscore — `sbp_…` for a personal access token, `sb_secret_…` and
+ * `sb_publishable_…` for the newer API keys — so a hyphen-only pattern let
+ * every one of them through. Legacy anon/service keys are JWTs and are caught
+ * by the `eyJ` branch.
  */
-const SECRET_SHAPED = /(eyJ[A-Za-z0-9_-]{10,})|(sb[ap]-[A-Za-z0-9_-]{10,})|(sk-[A-Za-z0-9_-]{10,})|(bearer\s+\S+)/i;
+const SECRET_SHAPED =
+  /(eyJ[A-Za-z0-9_-]{10,})|(sb[ap][-_][A-Za-z0-9_-]{10,})|(sb_(secret|publishable)_[A-Za-z0-9_-]{10,})|(sk[-_][A-Za-z0-9_-]{10,})|(bearer\s+\S+)/i;
 
 function scrub(value: string): string {
   return SECRET_SHAPED.test(value) ? '[redacted]' : value;

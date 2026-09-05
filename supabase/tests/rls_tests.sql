@@ -140,3 +140,72 @@ select relname as table_without_rls
 from pg_class c join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity = false;
 \echo '   ^ expect: 0 rows'
+
+-- ===========================================================================
+-- Project authorization — WRITES, not just reads.
+--
+-- Phase 5.B lists "project authorization" and "RLS-sensitive operations".
+-- TESTS 4 and 5 above cover reads; these cover the writes, which are what
+-- actually destroy someone's work if the policies are wrong. A read leak is
+-- serious; a write leak is unrecoverable.
+-- ===========================================================================
+
+\echo ''
+\echo '=== TEST 14: a non-owner cannot UPDATE another user project or screens ==='
+set role authenticated; set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+update projects set name = 'stolen';
+\echo '   ^ expect: UPDATE 0'
+update screens set code = '<script>owned</script>';
+\echo '   ^ expect: UPDATE 0'
+reset role; reset request.jwt.claim.sub;
+select count(*) as projects_renamed_expect_0 from projects where name = 'stolen';
+select count(*) as screens_defaced_expect_0 from screens where code like '%owned%';
+
+\echo ''
+\echo '=== TEST 15: a non-owner cannot DELETE another user project or screens ==='
+set role authenticated; set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+delete from screens;
+\echo '   ^ expect: DELETE 0'
+delete from projects;
+\echo '   ^ expect: DELETE 0'
+reset role; reset request.jwt.claim.sub;
+select count(*) as projects_survived_expect_1 from projects;
+select count(*) as screens_survived_expect_1 from screens;
+
+\echo ''
+\echo '=== TEST 16: a user cannot INSERT a project owned by someone else ==='
+-- Otherwise an attacker could plant content into a victim's dashboard.
+set role authenticated; set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into projects (user_id, name)
+  values ('11111111-1111-1111-1111-111111111111', 'planted');
+\echo '   ^ expect: ERROR — with check (user_id = auth.uid())'
+reset role; reset request.jwt.claim.sub;
+select count(*) as planted_expect_0 from projects where name = 'planted';
+
+\echo ''
+\echo '=== TEST 17: an ANON caller can write nothing to projects or screens ==='
+-- The anon key ships in the browser bundle, so this is the exposure that
+-- matters most.
+set role anon;
+insert into projects (user_id, name)
+  values ('11111111-1111-1111-1111-111111111111', 'anon-planted');
+\echo '   ^ expect: ERROR'
+update projects set name = 'anon-renamed';
+\echo '   ^ expect: UPDATE 0'
+delete from projects;
+\echo '   ^ expect: DELETE 0'
+reset role;
+select count(*) as anon_damage_expect_0 from projects
+  where name in ('anon-planted', 'anon-renamed');
+
+\echo ''
+\echo '=== TEST 18: the owner CAN still do all of it (the policies are not just "deny") ==='
+set role authenticated; set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+update projects set name = 'renamed by owner' where user_id = '11111111-1111-1111-1111-111111111111';
+\echo '   ^ expect: UPDATE 1'
+insert into projects (user_id, name)
+  values ('11111111-1111-1111-1111-111111111111', 'second project');
+\echo '   ^ expect: INSERT 0 1'
+delete from projects where name = 'second project';
+\echo '   ^ expect: DELETE 1'
+reset role; reset request.jwt.claim.sub;

@@ -99,3 +99,88 @@ test('escapeHtml leaves ordinary text untouched', () => {
   const plain = 'Hi, I would like a quote for a 12-screen dashboard. Budget: 5000 USD.';
   assert.equal(escapeHtml(plain), plain);
 });
+
+// ---------------------------------------------------------------------------
+// Duplicate suppression.
+//
+// The Master Command requires that one authentication produces one email. A
+// login cascade — password, then MFA, then a token refresh, then a remount —
+// reports the same event several times within seconds, and without this every
+// sign-in would send a small burst of "new sign-in" warnings, which is both
+// annoying and the fastest way to train someone to ignore them.
+// ---------------------------------------------------------------------------
+
+import { DEDUP_WINDOW_SECONDS, dedupKeyFor } from '../lib/auth-events.ts';
+
+const USER = 'c0ffee00-0000-4000-8000-000000000001';
+const T0 = 1_700_000_000_000; // a fixed instant, so bucket edges are exact
+
+test('every event type has a dedup window', () => {
+  for (const type of AUTH_EVENT_TYPES) {
+    assert.ok(DEDUP_WINDOW_SECONDS[type] > 0, type);
+  }
+});
+
+test('reports of one authentication share a key, so they collide', () => {
+  // Same bucket -> same string -> UNIQUE violation on the second insert. That
+  // collision is the suppression; a read-then-write check would let two
+  // concurrent reports both past the SELECT.
+  const first = dedupKeyFor(USER, 'PASSWORD_LOGIN', T0);
+  const secondsLater = dedupKeyFor(USER, 'PASSWORD_LOGIN', T0 + 4_000);
+  assert.equal(first, secondsLater);
+});
+
+test('a genuine later login gets a different key', () => {
+  const window = DEDUP_WINDOW_SECONDS.PASSWORD_LOGIN * 1000;
+  // Two full windows on, so the result cannot depend on where T0 sits inside
+  // its bucket.
+  assert.notEqual(dedupKeyFor(USER, 'PASSWORD_LOGIN', T0), dedupKeyFor(USER, 'PASSWORD_LOGIN', T0 + 2 * window));
+});
+
+test('different users never share a key', () => {
+  const other = 'c0ffee00-0000-4000-8000-000000000002';
+  assert.notEqual(dedupKeyFor(USER, 'PASSWORD_LOGIN', T0), dedupKeyFor(other, 'PASSWORD_LOGIN', T0));
+});
+
+test('different event types never share a key', () => {
+  // Otherwise a sign-in would suppress the password-changed warning that
+  // follows it — the one email a victim most needs to see.
+  const keys = AUTH_EVENT_TYPES.map((type) => dedupKeyFor(USER, type, T0));
+  assert.equal(new Set(keys).size, keys.length);
+});
+
+test('the key encodes user, type and bucket, and nothing else', () => {
+  const key = dedupKeyFor(USER, 'GOOGLE_SIGN_IN', T0);
+  const [user, type, bucket] = key.split(':');
+  assert.equal(user, USER);
+  assert.equal(type, 'GOOGLE_SIGN_IN');
+  assert.match(bucket, /^\d+$/);
+});
+
+test('a login cascade across a whole window collapses to at most two keys', () => {
+  // Bucketing has edges: a cascade straddling a boundary yields two keys. That
+  // is why recordAuthEvent also does a look-back for an already-sent event of
+  // the same type. This asserts the bound the look-back has to cover.
+  const window = DEDUP_WINDOW_SECONDS.MFA_LOGIN_SUCCESS;
+  for (let start = 0; start < window; start += 37) {
+    const at = T0 + start * 1000;
+    const cascade = [0, 800, 2_000, 4_500].map((offset) =>
+      dedupKeyFor(USER, 'MFA_LOGIN_SUCCESS', at + offset)
+    );
+    assert.ok(new Set(cascade).size <= 2, `cascade starting at +${start}s produced ${new Set(cascade).size} keys`);
+  }
+});
+
+test('one-per-flow events get a much longer window than logins', () => {
+  // Signup and a password change should happen once; a login legitimately
+  // recurs, so its window has to stay short enough to report a real second one.
+  assert.ok(DEDUP_WINDOW_SECONDS.SIGNUP > DEDUP_WINDOW_SECONDS.PASSWORD_LOGIN);
+  assert.ok(DEDUP_WINDOW_SECONDS.PASSWORD_CHANGED > DEDUP_WINDOW_SECONDS.PASSWORD_LOGIN);
+});
+
+test('the login window is long enough for a cascade but short enough to be useful', () => {
+  for (const type of ['PASSWORD_LOGIN', 'GOOGLE_SIGN_IN', 'MFA_LOGIN_SUCCESS'] as const) {
+    assert.ok(DEDUP_WINDOW_SECONDS[type] >= 60, `${type} must outlast a login cascade`);
+    assert.ok(DEDUP_WINDOW_SECONDS[type] <= 3600, `${type} must not hide a real second sign-in for an hour`);
+  }
+});

@@ -43,7 +43,7 @@ export type { AuthEventType, RequestContext } from './auth-event-types';
  * SIGNUP and PASSWORD_CHANGED get a long window because they should only ever
  * happen once per flow.
  */
-const DEDUP_WINDOW_SECONDS: Record<AuthEventType, number> = {
+export const DEDUP_WINDOW_SECONDS: Record<AuthEventType, number> = {
   SIGNUP: 86_400,
   EMAIL_VERIFIED: 86_400,
   PASSWORD_LOGIN: 300,
@@ -52,6 +52,23 @@ const DEDUP_WINDOW_SECONDS: Record<AuthEventType, number> = {
   PASSWORD_RESET_REQUESTED: 900,
   PASSWORD_CHANGED: 900,
 };
+
+/**
+ * The key that makes duplicate suppression work.
+ *
+ * Time is bucketed rather than compared, so two reports of one authentication
+ * produce the *same* string and collide on the UNIQUE index — which is what
+ * makes this safe against two concurrent reports, where a read-then-write
+ * check would let both past the SELECT and send twice.
+ *
+ * Exported so the bucketing can be asserted directly; `now` is a parameter for
+ * the same reason.
+ */
+export function dedupKeyFor(userId: string, type: AuthEventType, now: number = Date.now()): string {
+  const windowSeconds = DEDUP_WINDOW_SECONDS[type];
+  const bucket = Math.floor(now / 1000 / windowSeconds);
+  return `${userId}:${type}:${bucket}`;
+}
 
 interface Copy {
   headline: string;
@@ -114,8 +131,7 @@ export async function recordAuthEvent(params: {
   const admin = createAdminClient();
 
   const windowSeconds = DEDUP_WINDOW_SECONDS[type];
-  const bucket = Math.floor(Date.now() / 1000 / windowSeconds);
-  const dedupKey = `${userId}:${type}:${bucket}`;
+  const dedupKey = dedupKeyFor(userId, type);
 
   const { error: insertError } = await admin.from('auth_events').insert({
     user_id: userId,
