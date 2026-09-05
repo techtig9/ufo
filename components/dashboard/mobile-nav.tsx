@@ -23,10 +23,10 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
         onClick={onClose}
         className={clsx(
           'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition',
-          active ? 'bg-white/[0.08] text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
+          active ? 'bg-surface-raised text-fg' : 'text-fg-muted hover:bg-surface-subtle hover:text-fg'
         )}
       >
-        <span className={clsx('grid h-7 w-7 place-items-center rounded-lg text-xs', active ? 'bg-white/10 text-studio-citron' : 'bg-white/[0.03]')}>
+        <span className={clsx('grid h-7 w-7 place-items-center rounded-lg text-xs', active ? 'bg-surface-raised text-brand-text' : 'bg-surface-subtle')}>
           {link.icon}
         </span>
         {link.label}
@@ -36,15 +36,15 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
 
   return (
     <Drawer open={open} onClose={onClose} title="Menu" side="left" widthClassName="max-w-xs">
-      <Link href="/dashboard/ai-designer" onClick={onClose} className="mb-6 flex items-center justify-center gap-2 rounded-xl bg-studio-citron px-4 py-3 text-sm font-semibold text-black">
+      <Link href="/dashboard/ai-designer" onClick={onClose} className="mb-6 flex items-center justify-center gap-2 rounded-xl bg-studio-citron px-4 py-3 text-sm font-semibold text-brand-ink">
         <span>✦</span> Create with AI
       </Link>
       <nav className="space-y-1">
-        <p className="px-3 pb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-white/25">Workspace</p>
+        <p className="px-3 pb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-fg-faint">Workspace</p>
         {LINKS.map(renderLink)}
       </nav>
       <nav className="mt-6 space-y-1">
-        <p className="px-3 pb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-white/25">Account</p>
+        <p className="px-3 pb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-fg-faint">Account</p>
         {SECONDARY.map(renderLink)}
       </nav>
     </Drawer>

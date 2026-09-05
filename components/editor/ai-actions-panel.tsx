@@ -234,13 +234,13 @@ export function AIActionsPanel({
         onClick={() => run(def)}
         disabled={disabled}
         title={def.description}
-        className="group flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left text-xs transition hover:border-studio-citron/40 hover:bg-white/[0.06] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-studio-citron"
+        className="group flex w-full items-center justify-between gap-2 rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-left text-xs transition hover:border-studio-citron/40 hover:bg-surface-raised disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-studio-citron"
       >
         <span className="min-w-0">
-          <span className="block truncate font-medium text-white/85">{def.label}</span>
-          <span className="mt-0.5 block truncate text-[10px] text-white/40">{def.description}</span>
+          <span className="block truncate font-medium text-fg-secondary">{def.label}</span>
+          <span className="mt-0.5 block truncate text-[10px] text-fg-faint">{def.description}</span>
         </span>
-        <span className="shrink-0 rounded-full border border-white/10 px-1.5 py-0.5 text-[9px] text-white/35">
+        <span className="shrink-0 rounded-full border border-edge px-1.5 py-0.5 text-[9px] text-fg-faint">
           {CREDIT_COSTS[def.credit]}
         </span>
       </button>
@@ -252,13 +252,13 @@ export function AIActionsPanel({
       {upgradeReason && <UpgradeModal reason={upgradeReason} onClose={() => setUpgradeReason(null)} />}
 
       <section className="panel rounded-panel p-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-studio-citron">UFO AI</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text">UFO AI</p>
         <h3 className="mt-1 font-display text-lg font-semibold">AI actions</h3>
-        <p className="mt-1 text-xs leading-5 text-white/45">
+        <p className="mt-1 text-xs leading-5 text-fg-muted">
           {screen ? `Working on ${screen.name}` : 'Select a screen for screen-level actions'}
         </p>
 
-        <label className="mt-4 block text-[10px] font-semibold uppercase tracking-wide text-white/40">
+        <label className="mt-4 block text-[10px] font-semibold uppercase tracking-wide text-fg-faint">
           Direction (optional for most actions)
         </label>
         <textarea
@@ -267,7 +267,7 @@ export function AIActionsPanel({
           rows={2}
           disabled={running}
           placeholder="e.g. “calmer, more editorial, less neon”"
-          className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-studio-citron disabled:opacity-40"
+          className="mt-1 w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none transition-colors focus:border-studio-citron disabled:opacity-40"
         />
         <div className="mt-2 flex gap-2">
           <Button size="sm" variant="secondary" onClick={savePrompt} disabled={running || !instruction.trim()}>
@@ -282,14 +282,14 @@ export function AIActionsPanel({
 
         {prompts.length > 0 && (
           <div className="mt-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-white/35">Saved prompts</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-fg-faint">Saved prompts</p>
             <ul className="mt-1.5 space-y-1">
               {prompts.slice(0, 5).map((p) => (
                 <li key={p.id} className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setInstruction(p.body)}
-                    className="min-w-0 flex-1 truncate rounded px-2 py-1 text-left text-[11px] text-white/55 hover:bg-white/5 hover:text-white"
+                    className="min-w-0 flex-1 truncate rounded px-2 py-1 text-left text-[11px] text-fg-muted hover:bg-surface-subtle hover:text-fg"
                   >
                     {p.title}
                   </button>
@@ -297,7 +297,7 @@ export function AIActionsPanel({
                     type="button"
                     onClick={() => deletePrompt(p.id)}
                     aria-label={`Delete saved prompt ${p.title}`}
-                    className="rounded px-1.5 py-1 text-[11px] text-white/25 hover:text-status-error"
+                    className="rounded px-1.5 py-1 text-[11px] text-fg-faint hover:text-status-error"
                   >
                     ×
                   </button>
@@ -308,11 +308,11 @@ export function AIActionsPanel({
         )}
 
         {actions.length === 0 ? (
-          <p className="mt-4 text-xs text-white/30">Loading actions…</p>
+          <p className="mt-4 text-xs text-fg-faint">Loading actions…</p>
         ) : (
           <div className="mt-4 space-y-4">
             <div>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/35">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-fg-faint">
                 Rewrite this screen
               </p>
               <div className="space-y-1.5">
@@ -320,7 +320,7 @@ export function AIActionsPanel({
               </div>
             </div>
             <div>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/35">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-fg-faint">
                 Review (changes nothing)
               </p>
               <div className="space-y-1.5">
@@ -328,7 +328,7 @@ export function AIActionsPanel({
               </div>
             </div>
             <div>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/35">Create</p>
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-fg-faint">Create</p>
               <div className="space-y-1.5">
                 {creators.map((a) => <ActionButton key={a.id} def={a} />)}
               </div>
@@ -337,7 +337,7 @@ export function AIActionsPanel({
         )}
 
         {running && (
-          <p className="mt-4 animate-pulse text-xs text-studio-citron" role="status">
+          <p className="mt-4 animate-pulse text-xs text-brand-text" role="status">
             Running {active?.label ?? 'action'}…
           </p>
         )}
@@ -345,7 +345,7 @@ export function AIActionsPanel({
         {outcome?.kind === 'screen_rewrite' && (
           <div className="mt-4 rounded-lg border border-studio-citron/30 bg-studio-citron/5 p-3">
             <p className="text-xs font-medium">{active?.label} — proposed</p>
-            <p className="mt-1 text-[11px] text-white/45">
+            <p className="mt-1 text-[11px] text-fg-muted">
               Nothing has changed yet. Applying saves a version you can restore.
             </p>
             <div className="mt-3 flex gap-2">
@@ -364,8 +364,8 @@ export function AIActionsPanel({
               {Object.entries(
                 (outcome.result as { colors?: Record<string, string> }).colors ?? {}
               ).map(([role, value]) => (
-                <span key={role} className="flex items-center gap-1 rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-white/60">
-                  <span aria-hidden="true" className="h-3 w-3 rounded-sm border border-white/20" style={{ background: String(value) }} />
+                <span key={role} className="flex items-center gap-1 rounded border border-edge px-1.5 py-0.5 text-[10px] text-fg-muted">
+                  <span aria-hidden="true" className="h-3 w-3 rounded-sm border border-edge-strong" style={{ background: String(value) }} />
                   {role}
                 </span>
               ))}
@@ -388,26 +388,26 @@ export function AIActionsPanel({
         )}
 
         {outcome?.kind === 'analysis' && (
-          <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+          <div className="mt-4 rounded-lg border border-edge bg-surface-subtle p-3">
             <p className="text-xs font-medium">{active?.label}</p>
-            <p className="mt-1 text-[11px] leading-5 text-white/55">{outcome.result.summary}</p>
+            <p className="mt-1 text-[11px] leading-5 text-fg-muted">{outcome.result.summary}</p>
 
             {outcome.result.findings && outcome.result.findings.length > 0 ? (
               <ul className="mt-3 space-y-2">
                 {outcome.result.findings.map((f, i) => (
-                  <li key={i} className="rounded border border-white/[0.06] bg-white/[0.02] p-2">
+                  <li key={i} className="rounded border border-edge bg-surface-subtle p-2">
                     <div className="flex items-center gap-2">
                       <Badge variant={severityVariant[f.severity] ?? 'neutral'} size="sm">{f.severity}</Badge>
-                      <span className="text-[11px] font-medium text-white/80">{f.title}</span>
+                      <span className="text-[11px] font-medium text-fg-secondary">{f.title}</span>
                     </div>
-                    <p className="mt-1 text-[11px] leading-5 text-white/50">{f.detail}</p>
-                    {f.location && <p className="mt-1 text-[10px] text-white/30">Where: {f.location}</p>}
-                    {f.suggestion && <p className="mt-1 text-[10px] text-studio-citron/80">Fix: {f.suggestion}</p>}
+                    <p className="mt-1 text-[11px] leading-5 text-fg-muted">{f.detail}</p>
+                    {f.location && <p className="mt-1 text-[10px] text-fg-faint">Where: {f.location}</p>}
+                    {f.suggestion && <p className="mt-1 text-[10px] text-brand-text/80">Fix: {f.suggestion}</p>}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 text-[11px] text-white/35">No issues reported.</p>
+              <p className="mt-2 text-[11px] text-fg-faint">No issues reported.</p>
             )}
 
             <Button size="sm" variant="ghost" className="mt-3" onClick={() => setOutcome(null)}>Close</Button>

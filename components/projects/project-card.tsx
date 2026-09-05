@@ -118,28 +118,28 @@ export function ProjectCard({ project }: { project: ProjectCardProject }) {
     <>
       <div className="group relative">
         <Link href={`/dashboard/projects/${project.id}`} className="block">
-          <Panel className="h-full overflow-hidden border-white/[0.08] bg-[#111218] p-0 transition duration-300 group-hover:-translate-y-1 group-hover:border-violet-400/20 group-hover:shadow-[0_24px_60px_rgba(0,0,0,.28)]">
-            <div className="relative aspect-[16/9] overflow-hidden border-b border-white/[0.08] bg-gradient-to-br from-violet-500/20 via-[#171923] to-studio-citron/10 p-4">
+          <Panel className="h-full overflow-hidden border-edge bg-[#111218] p-0 transition duration-300 group-hover:-translate-y-1 group-hover:border-violet-400/20 group-hover:shadow-[0_24px_60px_rgba(0,0,0,.28)]">
+            <div className="relative aspect-[16/9] overflow-hidden border-b border-edge bg-gradient-to-br from-violet-500/20 via-[#171923] to-studio-citron/10 p-4">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(139,92,246,.28),transparent_35%)]" />
-              <div className="relative h-full rounded-lg border border-white/10 bg-white/[0.04] p-3 shadow-2xl">
+              <div className="relative h-full rounded-lg border border-edge bg-surface-subtle p-3 shadow-2xl">
                 <div className="flex gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-surface-strong" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-surface-strong" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-surface-strong" />
                 </div>
-                <div className="mt-4 h-2 w-1/2 rounded-full bg-white/20" />
-                <div className="mt-2 h-1.5 w-3/4 rounded-full bg-white/10" />
+                <div className="mt-4 h-2 w-1/2 rounded-full bg-surface-strong" />
+                <div className="mt-2 h-1.5 w-3/4 rounded-full bg-surface-raised" />
                 <div className="mt-5 grid grid-cols-3 gap-2">
                   <span className="h-14 rounded-md bg-violet-400/10" />
-                  <span className="h-14 rounded-md bg-white/5" />
+                  <span className="h-14 rounded-md bg-surface-subtle" />
                   <span className="h-14 rounded-md bg-studio-citron/10" />
                 </div>
               </div>
-              <span className="absolute bottom-5 left-5 rounded-full border border-white/10 bg-black/50 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-wider text-white/60 backdrop-blur">
+              <span className="absolute bottom-5 left-5 rounded-full border border-edge bg-black/60 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-wider text-white/85 backdrop-blur">
                 {project.project_type}
               </span>
               {project.archived_at && (
-                <span className="absolute bottom-5 right-5 rounded-full border border-white/10 bg-black/50 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-wider text-white/40 backdrop-blur">
+                <span className="absolute bottom-5 right-5 rounded-full border border-edge bg-black/60 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-wider text-white/75 backdrop-blur">
                   Archived
                 </span>
               )}
@@ -147,15 +147,15 @@ export function ProjectCard({ project }: { project: ProjectCardProject }) {
             <div className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white/90">{project.name}</p>
-                  <p className="mt-1 text-[10px] text-white/30">Updated {new Date(project.created_at).toLocaleDateString()}</p>
+                  <p className="truncate text-sm font-semibold text-fg-secondary">{project.name}</p>
+                  <p className="mt-1 text-[10px] text-fg-faint">Updated {new Date(project.created_at).toLocaleDateString()}</p>
                 </div>
-                {project.is_favorite && <span className="text-studio-citron">★</span>}
+                {project.is_favorite && <span className="text-brand-text">★</span>}
               </div>
               {!!project.tags?.length && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {project.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="rounded-full bg-white/5 px-2 py-1 text-[8px] text-white/35">{tag}</span>
+                    <span key={tag} className="rounded-full bg-surface-subtle px-2 py-1 text-[8px] text-fg-faint">{tag}</span>
                   ))}
                 </div>
               )}
@@ -166,7 +166,7 @@ export function ProjectCard({ project }: { project: ProjectCardProject }) {
         <div className="absolute right-3 top-3 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
           <Dropdown
             trigger={
-              <span className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-black/60 text-white/70 backdrop-blur hover:text-white">
+              <span className="grid h-8 w-8 place-items-center rounded-lg border border-edge bg-black/60 text-white/80 backdrop-blur hover:text-white">
                 ⋯
               </span>
             }

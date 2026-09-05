@@ -151,18 +151,18 @@ export function AIDesignCopilot({
       <section className="panel rounded-panel p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-studio-citron">UFO AI</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text">UFO AI</p>
             <h3 className="mt-1 font-display text-lg font-semibold">Design Copilot</h3>
-            <p className="mt-1 text-xs leading-5 text-white/45">
+            <p className="mt-1 text-xs leading-5 text-fg-muted">
               {screen ? `Editing ${screen.name}` : 'Select a screen to start'}
             </p>
           </div>
           <div className="text-right">
-            <span className="block rounded-full border border-white/10 px-2 py-1 text-[10px] text-white/35">
+            <span className="block rounded-full border border-edge px-2 py-1 text-[10px] text-fg-faint">
               {CREDIT_COSTS.update_screen} credits/edit
             </span>
             {creditsRemaining !== null && (
-              <span className="mt-1 block text-[10px] text-white/30">{creditsRemaining.toLocaleString()} remaining</span>
+              <span className="mt-1 block text-[10px] text-fg-faint">{creditsRemaining.toLocaleString()} remaining</span>
             )}
           </div>
         </div>
@@ -173,7 +173,7 @@ export function AIDesignCopilot({
           disabled={!screen || loading}
           placeholder="Try: “Make this dashboard feel more premium and improve hierarchy.”"
           rows={3}
-          className="mt-4 w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-studio-citron/60 disabled:opacity-50"
+          className="mt-4 w-full resize-none rounded-xl border border-edge bg-surface-subtle px-3 py-2.5 text-sm text-fg outline-none placeholder:text-fg-faint focus:border-studio-citron/60 disabled:opacity-50"
         />
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -187,7 +187,7 @@ export function AIDesignCopilot({
               key={suggestion}
               onClick={() => setInstruction(suggestion)}
               disabled={!screen || loading}
-              className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-white/45 hover:border-white/20 hover:text-white disabled:opacity-30"
+              className="rounded-full border border-edge px-2.5 py-1 text-[10px] text-fg-muted hover:border-edge-strong hover:text-fg disabled:opacity-30"
             >
               {suggestion}
             </button>
@@ -214,10 +214,10 @@ export function AIDesignCopilot({
 
         {proposal && (
           <div className="mt-4 rounded-xl border border-studio-citron/20 bg-studio-citron/5 p-3">
-            <p className="text-xs font-medium text-white/80">Proposed changes</p>
+            <p className="text-xs font-medium text-fg-secondary">Proposed changes</p>
             <ul className="mt-2 space-y-1">
               {proposal.changes.map((change) => (
-                <li key={change} className="text-xs text-white/50">✓ {change}</li>
+                <li key={change} className="text-xs text-fg-muted">✓ {change}</li>
               ))}
             </ul>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -231,8 +231,8 @@ export function AIDesignCopilot({
         )}
 
         {(history.length > 0 || historyLoading) && (
-          <div className="mt-5 border-t border-white/10 pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
+          <div className="mt-5 border-t border-edge pt-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fg-faint">
               AI history {historyLoading && '\u00b7 loading\u2026'}
             </p>
             <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto">
@@ -241,11 +241,11 @@ export function AIDesignCopilot({
                   <button
                     onClick={() => editPreviousPrompt(entry)}
                     disabled={loading}
-                    className="w-full rounded-lg px-2 py-1.5 text-left text-xs text-white/50 hover:bg-white/5 hover:text-white disabled:opacity-40"
+                    className="w-full rounded-lg px-2 py-1.5 text-left text-xs text-fg-muted hover:bg-surface-subtle hover:text-fg disabled:opacity-40"
                     title="Click to edit and re-run this prompt"
                   >
                     <span className="line-clamp-1">{entry.instruction}</span>
-                    <span className="text-[9px] text-white/25">{new Date(entry.appliedAt).toLocaleString()}</span>
+                    <span className="text-[9px] text-fg-faint">{new Date(entry.appliedAt).toLocaleString()}</span>
                   </button>
                 </li>
               ))}

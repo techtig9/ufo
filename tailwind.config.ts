@@ -18,6 +18,50 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ---------------------------------------------------------------
+        // Semantic tokens. Every value resolves to a CSS variable defined in
+        // app/globals.css, so a component names the ROLE it wants and both
+        // themes follow automatically. See that file for the palette itself.
+        //
+        // The literal `ink`/`paper`/`studio` names below are kept because the
+        // AI-generated prototype markup and a few brand-specific surfaces
+        // legitimately want a fixed colour regardless of theme.
+        // ---------------------------------------------------------------
+        canvas: 'var(--canvas)',
+        surface: {
+          DEFAULT: 'var(--surface)',
+          subtle: 'var(--surface-subtle)',
+          raised: 'var(--surface-raised)',
+          strong: 'var(--surface-strong)',
+        },
+        elevated: 'var(--elevated)',
+        chrome: {
+          DEFAULT: 'var(--chrome)',
+          translucent: 'var(--chrome-translucent)',
+        },
+        edge: {
+          DEFAULT: 'var(--edge)',
+          strong: 'var(--edge-strong)',
+        },
+        fg: {
+          DEFAULT: 'var(--fg)',
+          secondary: 'var(--fg-secondary)',
+          muted: 'var(--fg-muted)',
+          faint: 'var(--fg-faint)',
+        },
+        brand: {
+          DEFAULT: 'var(--brand)',
+          ink: 'var(--brand-ink)',
+          text: 'var(--brand-text)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          alt: 'var(--accent-alt)',
+          'alt-text': 'var(--accent-alt-text)',
+          text: 'var(--accent-text)',
+        },
+
+        // Fixed brand colours — theme-independent by design.
         ink: {
           DEFAULT: '#101114',
           soft: '#17181D',
@@ -28,15 +72,13 @@ const config: Config = {
           coral: '#FF5A3C',
           indigo: '#6E7BFF',
         },
-        line: 'rgba(255,255,255,0.08)',
-        // Semantic status colors — used for Badge/Input/EmptyState/ErrorState/Toast.
-        // `error` intentionally reuses the studio.coral value (single source of truth
-        // for "this is bad" across the whole product, not a second red).
+        line: 'var(--edge)',
+
         status: {
-          success: '#4ADE80',
-          warning: '#FBBF24',
-          error: '#FF5A3C',
-          info: '#6E7BFF',
+          success: 'var(--success)',
+          warning: 'var(--warning)',
+          error: 'var(--error)',
+          info: 'var(--info)',
         },
       },
       fontFamily: {
@@ -45,14 +87,29 @@ const config: Config = {
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
-        panel: '16px',
+        panel: 'var(--radius-xl)',
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
+      },
+      transitionDuration: {
+        // The spec's motion tiers, so a component picks an intent rather than
+        // inventing a duration: micro (press/hover), standard (cards/tabs),
+        // overlay (modal/drawer), reveal (section entrance).
+        micro: 'var(--motion-micro)',
+        standard: 'var(--motion-standard)',
+        overlay: 'var(--motion-overlay)',
+        reveal: 'var(--motion-reveal)',
       },
       boxShadow: {
         lift: '0 1px 0 rgba(255,255,255,0.06) inset, 0 12px 32px rgba(0,0,0,0.35)',
         glow: '0 0 0 1px rgba(212,255,79,0.4), 0 8px 24px rgba(212,255,79,0.12)',
+        palette: '0 24px 64px rgba(0,0,0,0.45)',
       },
       backgroundImage: {
-        'dot-grid': 'radial-gradient(rgba(255,255,255,0.09) 1px, transparent 1px)',
+        'dot-grid': 'radial-gradient(var(--grid-dot) 1px, transparent 1px)',
       },
       backgroundSize: {
         'dot-grid': '22px 22px',
@@ -107,7 +164,8 @@ const config: Config = {
         'slide-in-right': 'slide-in-right 0.28s cubic-bezier(0.16,1,0.3,1) both',
       },
       transitionTimingFunction: {
-        snap: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        snap: 'var(--ease-snap)',
+        soft: 'var(--ease-out)',
       },
     },
   },

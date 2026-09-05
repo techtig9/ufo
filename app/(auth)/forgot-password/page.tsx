@@ -42,21 +42,21 @@ export default function ForgotPasswordPage() {
       <Panel className="relative w-full max-w-sm" hover={false}>
         <h1 className="font-display text-xl font-semibold">Reset your password</h1>
         {sent ? (
-          <p className="mt-4 text-sm text-white/60">
-            If an account exists for <span className="text-white">{email}</span>, a reset link is
+          <p className="mt-4 text-sm text-fg-muted">
+            If an account exists for <span className="text-fg">{email}</span>, a reset link is
             on its way.
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
-              <label className="text-sm text-white/60" htmlFor="email">Email</label>
+              <label className="text-sm text-fg-muted" htmlFor="email">Email</label>
               <input
                 id="email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+                className="mt-1 w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
               />
             </div>
             <Button type="submit" disabled={loading} className="w-full">
@@ -64,8 +64,8 @@ export default function ForgotPasswordPage() {
             </Button>
           </form>
         )}
-        <p className="mt-6 text-center text-sm text-white/50">
-          <Link href="/login" className="text-studio-coral hover:underline">Back to login</Link>
+        <p className="mt-6 text-center text-sm text-fg-muted">
+          <Link href="/login" className="text-accent-text hover:underline">Back to login</Link>
         </p>
       </Panel>
     </div>

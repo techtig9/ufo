@@ -96,11 +96,11 @@ export function Modal({
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 id={titleId} className="font-display text-lg font-medium text-white">
+            <h2 id={titleId} className="font-display text-lg font-medium text-fg">
               {title}
             </h2>
             {description && (
-              <p id={descId} className="mt-1 text-sm text-white/50">
+              <p id={descId} className="mt-1 text-sm text-fg-muted">
                 {description}
               </p>
             )}
@@ -109,7 +109,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="shrink-0 rounded-md p-1 text-white/40 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-studio-citron"
+            className="shrink-0 rounded-md p-1 text-fg-faint transition-colors hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-studio-citron"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M4.5 4.5l9 9m0-9l-9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

@@ -22,21 +22,21 @@ export default function ChangelogPage() {
     <div className="min-h-screen">
       <Nav />
       <main className="mx-auto max-w-2xl px-6 py-16">
-        <p className="font-mono text-xs uppercase tracking-wider text-studio-citron">Changelog</p>
+        <p className="font-mono text-xs uppercase tracking-wider text-brand-text">Changelog</p>
         <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">What&rsquo;s new</h1>
-        <p className="mt-2 text-white/50">Every shipped change, newest first.</p>
+        <p className="mt-2 text-fg-muted">Every shipped change, newest first.</p>
 
         <div className="mt-10 space-y-6">
           {ENTRIES.map((e) => (
             <Panel key={e.version} hover={false}>
               <div className="flex items-baseline gap-3">
-                <span className="rounded border border-studio-citron/40 px-2 py-0.5 font-mono text-xs text-studio-citron">
+                <span className="rounded border border-studio-citron/40 px-2 py-0.5 font-mono text-xs text-brand-text">
                   {e.version}
                 </span>
-                <span className="text-xs text-white/40">{e.date}</span>
+                <span className="text-xs text-fg-faint">{e.date}</span>
               </div>
               <h2 className="mt-3 font-display text-lg font-medium">{e.title}</h2>
-              <ul className="mt-2 space-y-1.5 text-sm text-white/60">
+              <ul className="mt-2 space-y-1.5 text-sm text-fg-muted">
                 {e.items.map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-studio-coral" />

@@ -13,15 +13,15 @@ export default async function AdminOverviewPage() {
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       <Panel>
-        <p className="text-sm text-white/50">Total users</p>
+        <p className="text-sm text-fg-muted">Total users</p>
         <p className="mt-2 text-3xl font-semibold">{userCount ?? 0}</p>
       </Panel>
       <Panel>
-        <p className="text-sm text-white/50">Paid subscriptions</p>
+        <p className="text-sm text-fg-muted">Paid subscriptions</p>
         <p className="mt-2 text-3xl font-semibold">{activeSubs ?? 0}</p>
       </Panel>
       <Panel>
-        <p className="text-sm text-white/50">Total payments logged</p>
+        <p className="text-sm text-fg-muted">Total payments logged</p>
         <p className="mt-2 text-3xl font-semibold">{paymentCount ?? 0}</p>
       </Panel>
     </div>

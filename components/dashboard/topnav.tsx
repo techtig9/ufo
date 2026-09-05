@@ -38,33 +38,33 @@ export function Topnav({ userName, plan, creditsRemaining }: TopnavProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/[0.08] bg-[#090a0e]/80 px-4 backdrop-blur-xl md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-edge bg-chrome-translucent px-4 backdrop-blur-xl md:px-6">
       <button
         onClick={() => setMobileNavOpen(true)}
         aria-label="Open menu"
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 text-white/60 hover:text-white md:hidden"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-edge text-fg-muted hover:text-fg md:hidden"
       >
         ☰
       </button>
       <button
         onClick={() => router.push('/dashboard/projects')}
-        className="hidden w-full max-w-md items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3.5 py-2.5 text-left text-xs text-white/30 sm:flex"
+        className="hidden w-full max-w-md items-center gap-3 rounded-xl border border-edge bg-surface-subtle px-3.5 py-2.5 text-left text-xs text-fg-faint sm:flex"
       >
         <span className="text-sm">⌕</span>
         <span>Search projects, templates and screens…</span>
-        <kbd className="ml-auto rounded-md border border-white/[0.08] px-1.5 py-0.5 text-[9px] text-white/20">⌘ K</kbd>
+        <kbd className="ml-auto rounded-md border border-edge px-1.5 py-0.5 text-[9px] text-fg-faint">⌘ K</kbd>
       </button>
       <div className="ml-auto flex items-center gap-2.5">
-        <div className="hidden rounded-full border border-white/[0.08] bg-white/[0.025] px-3 py-1.5 text-[10px] text-white/45 sm:block">
-          <span className="text-studio-citron">●</span> {creditsRemaining.toLocaleString()} credits · <span className="capitalize">{plan}</span>
+        <div className="hidden rounded-full border border-edge bg-surface-subtle px-3 py-1.5 text-[10px] text-fg-muted sm:block">
+          <span className="text-brand-text">●</span> {creditsRemaining.toLocaleString()} credits · <span className="capitalize">{plan}</span>
         </div>
         <NotificationCenter />
         <Dropdown
           triggerLabel={`Account menu${userName ? ` for ${userName}` : ''}`}
           items={menuItems}
-          header={userName && <p className="truncate text-xs text-white/40">{userName}</p>}
+          header={userName && <p className="truncate text-xs text-fg-faint">{userName}</p>}
           trigger={
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 text-xs font-semibold !text-white ring-2 ring-white/10">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 text-xs font-semibold !text-fg ring-2 ring-edge">
               {(userName ?? 'U').charAt(0).toUpperCase()}
             </span>
           }

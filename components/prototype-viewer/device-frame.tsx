@@ -47,7 +47,7 @@ export function DeviceFrame({
               onClick={() => onModeChange(m)}
               className={clsx(
                 'rounded-full px-4 py-1.5 text-xs capitalize transition-colors',
-                mode === m ? 'bg-white/15 text-white' : 'text-white/50 hover:text-white'
+                mode === m ? 'bg-surface-strong text-fg' : 'text-fg-muted hover:text-fg'
               )}
             >
               {m}

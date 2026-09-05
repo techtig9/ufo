@@ -33,7 +33,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <label
             htmlFor={selectId}
             className={clsx(
-              'mb-1.5 block text-xs font-medium text-white/60',
+              'mb-1.5 block text-xs font-medium text-fg-muted',
               hideLabel && 'sr-only'
             )}
           >
@@ -49,11 +49,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             aria-invalid={!!error}
             aria-describedby={clsx(hintId, errorId) || undefined}
             className={clsx(
-              'w-full appearance-none rounded-lg border bg-white/5 px-3 py-2 pr-9 text-sm outline-none transition-colors duration-150',
+              'w-full appearance-none rounded-lg border bg-surface-subtle px-3 py-2 pr-9 text-sm outline-none transition-colors duration-150',
               'disabled:opacity-40 disabled:pointer-events-none',
               error
                 ? 'border-status-error/50 focus:border-status-error'
-                : 'border-white/10 focus:border-studio-citron',
+                : 'border-edge focus:border-studio-citron',
               className
             )}
             {...props}
@@ -71,7 +71,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
           <svg
             aria-hidden="true"
-            className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40"
+            className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-faint"
             viewBox="0 0 12 12"
             fill="none"
           >
@@ -83,7 +83,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             {error}
           </p>
         ) : hint ? (
-          <p id={hintId} className="mt-1.5 text-xs text-white/40">
+          <p id={hintId} className="mt-1.5 text-xs text-fg-faint">
             {hint}
           </p>
         ) : null}

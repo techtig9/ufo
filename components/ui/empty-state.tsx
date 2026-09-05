@@ -15,13 +15,13 @@ export function EmptyState({ icon, title, description, action, className }: Empt
       {icon && (
         <div
           aria-hidden="true"
-          className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/40"
+          className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-edge bg-surface-subtle text-fg-faint"
         >
           {icon}
         </div>
       )}
-      <h3 className="font-display text-base font-medium text-white">{title}</h3>
-      {description && <p className="mt-1.5 max-w-sm text-sm text-white/50">{description}</p>}
+      <h3 className="font-display text-base font-medium text-fg">{title}</h3>
+      {description && <p className="mt-1.5 max-w-sm text-sm text-fg-muted">{description}</p>}
       {action && <div className="mt-6">{action}</div>}
     </div>
   );

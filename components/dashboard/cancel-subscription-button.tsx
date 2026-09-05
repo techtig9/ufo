@@ -31,7 +31,7 @@ export function CancelSubscriptionButton() {
     <>
       <button
         onClick={() => setConfirming(true)}
-        className="text-xs text-white/40 underline decoration-dotted hover:text-white/60"
+        className="text-xs text-fg-faint underline decoration-dotted hover:text-fg-muted"
       >
         Cancel subscription
       </button>

@@ -77,7 +77,7 @@ export function MfaEnrollment() {
   if (verifiedFactor) {
     return (
       <div className="flex items-center justify-between">
-        <p className="text-sm text-white/60">Two-factor authentication is on.</p>
+        <p className="text-sm text-fg-muted">Two-factor authentication is on.</p>
         <Button size="sm" variant="danger" onClick={() => unenroll(verifiedFactor.id)}>
           Turn off
         </Button>
@@ -88,7 +88,7 @@ export function MfaEnrollment() {
   if (enrolling && qrCode) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-white/60">Scan with Google Authenticator, 1Password, or similar.</p>
+        <p className="text-sm text-fg-muted">Scan with Google Authenticator, 1Password, or similar.</p>
         <div
           className="w-fit rounded-lg bg-white p-2"
           dangerouslySetInnerHTML={{ __html: qrCode }}
@@ -97,7 +97,7 @@ export function MfaEnrollment() {
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="6-digit code"
-          className="w-full max-w-[160px] rounded-lg border border-line bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+          className="w-full max-w-[160px] rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
         />
         <div className="flex gap-2">
           <Button size="sm" onClick={verifyEnroll}>Verify &amp; enable</Button>

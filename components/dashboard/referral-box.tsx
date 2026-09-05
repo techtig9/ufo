@@ -27,7 +27,7 @@ export function ReferralBox({ referralCode, userId }: { referralCode: string | n
 
   return (
     <div className="flex items-center gap-2">
-      <code className="flex-1 truncate rounded-lg border border-line bg-white/5 px-3 py-2 text-xs text-white/60">
+      <code className="flex-1 truncate rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-xs text-fg-muted">
         {link}
       </code>
       <Button size="sm" variant="secondary" onClick={copy}>Copy</Button>

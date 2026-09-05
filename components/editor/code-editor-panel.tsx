@@ -82,11 +82,11 @@ export function CodeEditorPanel({
   }));
 
   return (
-    <div className="flex h-[680px] flex-col overflow-hidden rounded-panel border border-white/10 bg-black/10">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/5 px-4 py-2">
+    <div className="flex h-[680px] flex-col overflow-hidden rounded-panel border border-edge bg-black/10">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-edge bg-surface-subtle px-4 py-2">
         <div>
-          <span className="text-sm text-white/70">{screen.name}.html</span>
-          <span className="ml-2 text-[10px] text-white/25">HTML + Tailwind</span>
+          <span className="text-sm text-fg-secondary">{screen.name}.html</span>
+          <span className="ml-2 text-[10px] text-fg-faint">HTML + Tailwind</span>
         </div>
         <div className="flex items-center gap-2">
           <Dropdown
@@ -94,7 +94,7 @@ export function CodeEditorPanel({
             triggerLabel="Insert a component"
             items={snippetItems}
             trigger={
-              <span className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-white/60 hover:border-studio-citron/50 hover:text-white">
+              <span className="rounded-lg border border-edge px-2.5 py-1.5 text-xs text-fg-muted hover:border-studio-citron/50 hover:text-fg">
                 + Insert component
               </span>
             }

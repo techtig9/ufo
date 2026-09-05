@@ -12,7 +12,7 @@ export default async function AdminPaymentsPage() {
   return (
     <Panel hover={false} className="overflow-x-auto p-0">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-white/10 text-white/40">
+        <thead className="border-b border-edge text-fg-faint">
           <tr>
             <th className="px-4 py-3 font-normal">User</th>
             <th className="px-4 py-3 font-normal">Amount</th>
@@ -21,14 +21,14 @@ export default async function AdminPaymentsPage() {
             <th className="px-4 py-3 font-normal">Date</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/5">
+        <tbody className="divide-y divide-edge">
           {payments?.map((p: any) => (
             <tr key={p.id}>
-              <td className="px-4 py-3 text-white/60">{p.users?.email}</td>
+              <td className="px-4 py-3 text-fg-muted">{p.users?.email}</td>
               <td className="px-4 py-3">${p.amount}</td>
               <td className="px-4 py-3 capitalize">{p.status}</td>
-              <td className="px-4 py-3 text-white/40">{p.paddle_transaction_id}</td>
-              <td className="px-4 py-3 text-white/40">{new Date(p.created_at).toLocaleDateString()}</td>
+              <td className="px-4 py-3 text-fg-faint">{p.paddle_transaction_id}</td>
+              <td className="px-4 py-3 text-fg-faint">{new Date(p.created_at).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>

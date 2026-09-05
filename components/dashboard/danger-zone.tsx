@@ -45,14 +45,14 @@ export function DangerZone() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm text-white/60">Download everything ufo has stored about your account.</p>
+        <p className="text-sm text-fg-muted">Download everything ufo has stored about your account.</p>
         <Button variant="secondary" size="sm" className="mt-3" onClick={handleExport}>
           Export my data
         </Button>
       </div>
 
-      <div className="border-t border-line pt-4">
-        <p className="text-sm text-white/60">
+      <div className="border-t border-edge pt-4">
+        <p className="text-sm text-fg-muted">
           Permanently delete your account, projects, and billing history. This cancels any active
           subscription and can&rsquo;t be undone.
         </p>
@@ -60,7 +60,7 @@ export function DangerZone() {
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
           placeholder="Type DELETE to confirm"
-          className="mt-3 w-full max-w-xs rounded-lg border border-line bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-coral"
+          className="mt-3 w-full max-w-xs rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-coral"
         />
         <Button
           variant="danger"

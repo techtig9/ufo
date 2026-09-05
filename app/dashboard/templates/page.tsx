@@ -23,7 +23,7 @@ export default async function TemplatesPage() {
     <div className="mx-auto max-w-6xl space-y-6 p-4">
       <div>
         <h1 className="font-display text-2xl font-semibold">Templates</h1>
-        <p className="mt-1 text-white/50">
+        <p className="mt-1 text-fg-muted">
           Start a new project from a ready-made template instead of a blank description — free, no AI credits used.
         </p>
       </div>

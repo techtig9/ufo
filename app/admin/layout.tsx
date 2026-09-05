@@ -18,15 +18,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Logo />
-            <span className="text-sm text-white/40">Admin</span>
+            <span className="text-sm text-fg-faint">Admin</span>
           </div>
-          <nav className="flex gap-4 text-sm text-white/60">
+          <nav className="flex gap-4 text-sm text-fg-muted">
             {LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-white">
+              <Link key={l.href} href={l.href} className="hover:text-fg">
                 {l.label}
               </Link>
             ))}
-            <Link href="/dashboard" className="text-white/30 hover:text-white">
+            <Link href="/dashboard" className="text-fg-faint hover:text-fg">
               &larr; Back to app
             </Link>
           </nav>

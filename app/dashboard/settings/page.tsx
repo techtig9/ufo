@@ -75,17 +75,17 @@ export default async function SettingsPage() {
         <h2 className="font-medium">Profile</h2>
         <form action={updateProfile} className="mt-4 space-y-4">
           <div>
-            <label className="text-sm text-white/60" htmlFor="name">Name</label>
+            <label className="text-sm text-fg-muted" htmlFor="name">Name</label>
             <input
               id="name"
               name="name"
               defaultValue={profile?.name ?? ''}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+              className="mt-1 w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
             />
           </div>
           <div>
-            <label className="text-sm text-white/60">Email</label>
-            <p className="mt-1 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-sm text-white/40">
+            <label className="text-sm text-fg-muted">Email</label>
+            <p className="mt-1 rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm text-fg-faint">
               {profile?.email}
             </p>
           </div>
@@ -95,7 +95,7 @@ export default async function SettingsPage() {
 
       <Panel hover={false}>
         <h2 className="font-medium">Appearance</h2>
-        <p className="mt-1 text-sm text-white/50">Studio Grid in dark or light.</p>
+        <p className="mt-1 text-sm text-fg-muted">Studio Grid in dark or light.</p>
         <div className="mt-4">
           <ThemeToggle />
         </div>
@@ -103,7 +103,7 @@ export default async function SettingsPage() {
 
       <Panel hover={false}>
         <h2 className="font-medium">Password</h2>
-        <p className="mt-1 text-sm text-white/50">Reset your password by email.</p>
+        <p className="mt-1 text-sm text-fg-muted">Reset your password by email.</p>
         <a href="/forgot-password" className="mt-4 inline-block">
           <Button variant="secondary" size="sm">Send reset link</Button>
         </a>
@@ -111,7 +111,7 @@ export default async function SettingsPage() {
 
       <Panel hover={false}>
         <h2 className="font-medium">Two-factor authentication</h2>
-        <p className="mt-1 text-sm text-white/50">Add an authenticator app for a second login step.</p>
+        <p className="mt-1 text-sm text-fg-muted">Add an authenticator app for a second login step.</p>
         <div className="mt-4">
           <MfaEnrollment />
         </div>
@@ -135,24 +135,24 @@ export default async function SettingsPage() {
           defaultChecked={profile?.notify_low_credits ?? true}
         />
 
-        <p className="mt-4 text-xs text-white/30">
+        <p className="mt-4 text-xs text-fg-faint">
           Payment and account emails are sent regardless {'\u2014'} those aren&rsquo;t optional.
         </p>
       </Panel>
 
       <Panel hover={false}>
         <h2 className="font-medium">Invite friends</h2>
-        <p className="mt-1 text-sm text-white/50">Share your link — you both get bonus cloud storage, not credits.</p>
+        <p className="mt-1 text-sm text-fg-muted">Share your link — you both get bonus cloud storage, not credits.</p>
         <div className="mt-4">
           <ReferralBox referralCode={profile?.referral_code ?? null} userId={user!.id} />
         </div>
-        <p className="mt-3 text-xs text-white/30">
+        <p className="mt-3 text-xs text-fg-faint">
           {referralCount ?? 0} successful referral{referralCount === 1 ? '' : 's'} so far.
         </p>
       </Panel>
 
       <Panel hover={false} className="border-studio-coral/20">
-        <h2 className="font-medium text-studio-coral">Danger zone</h2>
+        <h2 className="font-medium text-accent-text">Danger zone</h2>
         <div className="mt-4">
           <DangerZone />
         </div>

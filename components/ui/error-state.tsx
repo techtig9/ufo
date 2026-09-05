@@ -31,8 +31,8 @@ export function ErrorState({
           />
         </svg>
       </div>
-      <h3 className="font-display text-base font-medium text-white">{title}</h3>
-      <p className="mt-1.5 max-w-sm text-sm text-white/50">{description}</p>
+      <h3 className="font-display text-base font-medium text-fg">{title}</h3>
+      <p className="mt-1.5 max-w-sm text-sm text-fg-muted">{description}</p>
       {onRetry && (
         <div className="mt-6">
           <Button variant="secondary" onClick={onRetry}>

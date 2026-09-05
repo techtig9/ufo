@@ -33,7 +33,7 @@ export function FAQ() {
   return (
     <section id="faq" className="relative mx-auto max-w-3xl px-6 py-24">
       <Reveal>
-        <p className="text-center font-mono text-xs uppercase tracking-wider text-studio-citron">FAQ</p>
+        <p className="text-center font-mono text-xs uppercase tracking-wider text-brand-text">FAQ</p>
         <h2 className="mt-3 text-center font-display text-3xl font-semibold tracking-tight md:text-4xl">
           Questions
         </h2>
@@ -47,9 +47,9 @@ export function FAQ() {
               aria-expanded={open === i}
             >
               <span className="font-medium">{item.q}</span>
-              <span className="text-white/40">{open === i ? '\u2212' : '+'}</span>
+              <span className="text-fg-faint">{open === i ? '\u2212' : '+'}</span>
             </button>
-            {open === i && <p className="mt-3 text-sm text-white/60">{item.a}</p>}
+            {open === i && <p className="mt-3 text-sm text-fg-muted">{item.a}</p>}
           </Panel>
         ))}
       </div>

@@ -23,7 +23,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={inputId}
             className={clsx(
-              'mb-1.5 block text-xs font-medium text-white/60',
+              'mb-1.5 block text-xs font-medium text-fg-muted',
               hideLabel && 'sr-only'
             )}
           >
@@ -38,11 +38,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           aria-invalid={!!error}
           aria-describedby={clsx(hintId, errorId) || undefined}
           className={clsx(
-            'w-full rounded-lg border bg-white/5 px-3 py-2 text-sm outline-none transition-colors duration-150',
-            'placeholder:text-white/30 disabled:opacity-40 disabled:pointer-events-none',
+            'w-full rounded-lg border bg-surface-subtle px-3 py-2 text-sm outline-none transition-colors duration-150',
+            'placeholder:text-fg-faint disabled:opacity-40 disabled:pointer-events-none',
             error
               ? 'border-status-error/50 focus:border-status-error'
-              : 'border-white/10 focus:border-studio-citron',
+              : 'border-edge focus:border-studio-citron',
             className
           )}
           {...props}
@@ -52,7 +52,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {error}
           </p>
         ) : hint ? (
-          <p id={hintId} className="mt-1.5 text-xs text-white/40">
+          <p id={hintId} className="mt-1.5 text-xs text-fg-faint">
             {hint}
           </p>
         ) : null}

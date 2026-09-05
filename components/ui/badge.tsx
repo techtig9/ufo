@@ -11,8 +11,8 @@ interface BadgeProps {
 }
 
 const variants: Record<NonNullable<BadgeProps['variant']>, string> = {
-  neutral: 'bg-white/[0.06] text-white/70 border border-white/10',
-  primary: 'bg-studio-citron/15 text-studio-citron border border-studio-citron/30',
+  neutral: 'bg-surface-raised text-fg-secondary border border-edge',
+  primary: 'bg-studio-citron/15 text-brand-text border border-studio-citron/30',
   success: 'bg-status-success/15 text-status-success border border-status-success/30',
   warning: 'bg-status-warning/15 text-status-warning border border-status-warning/30',
   error: 'bg-status-error/15 text-status-error border border-status-error/30',
@@ -20,7 +20,7 @@ const variants: Record<NonNullable<BadgeProps['variant']>, string> = {
 };
 
 const dotColors: Record<NonNullable<BadgeProps['variant']>, string> = {
-  neutral: 'bg-white/50',
+  neutral: 'bg-fg-muted',
   primary: 'bg-studio-citron',
   success: 'bg-status-success',
   warning: 'bg-status-warning',

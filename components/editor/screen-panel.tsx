@@ -172,13 +172,13 @@ export function ScreenPanel({
     <aside className="panel flex min-h-[680px] w-full flex-col rounded-panel p-3 lg:w-60">
       <div className="mb-3 flex items-center justify-between px-2">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Screens</p>
-          <p className="mt-1 text-xs text-white/45">{sorted.length} screens</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fg-faint">Screens</p>
+          <p className="mt-1 text-xs text-fg-muted">{sorted.length} screens</p>
         </div>
         <button
           onClick={openAdd}
           disabled={busy === 'add'}
-          className="rounded-lg border border-white/10 px-2 py-1 text-xs text-white/60 hover:border-studio-citron/50 hover:text-white disabled:opacity-50"
+          className="rounded-lg border border-edge px-2 py-1 text-xs text-fg-muted hover:border-studio-citron/50 hover:text-fg disabled:opacity-50"
         >
           + Add
         </button>
@@ -191,7 +191,7 @@ export function ScreenPanel({
             className={`group rounded-xl border p-2 transition ${
               screen.id === activeScreenId
                 ? 'border-studio-citron/60 bg-studio-citron/10'
-                : 'border-white/10 bg-white/[0.02] hover:border-white/20'
+                : 'border-edge bg-surface-subtle hover:border-edge-strong'
             }`}
           >
             <button onClick={() => onSelect(screen.id)} className="block w-full text-left">
@@ -206,7 +206,7 @@ export function ScreenPanel({
                   </div>
                 )}
               </div>
-              <p className="mt-2 truncate text-xs font-medium text-white/80">{screen.name}</p>
+              <p className="mt-2 truncate text-xs font-medium text-fg-secondary">{screen.name}</p>
             </button>
 
             <div className="mt-2 flex items-center gap-1 opacity-70 transition group-hover:opacity-100">
@@ -214,7 +214,7 @@ export function ScreenPanel({
                 title="Move up"
                 onClick={() => move(screen, -1)}
                 disabled={index === 0 || busy === screen.id}
-                className="rounded px-1.5 py-1 text-[10px] text-white/50 hover:bg-white/10 hover:text-white disabled:opacity-20"
+                className="rounded px-1.5 py-1 text-[10px] text-fg-muted hover:bg-surface-raised hover:text-fg disabled:opacity-20"
               >
                 ↑
               </button>
@@ -222,28 +222,28 @@ export function ScreenPanel({
                 title="Move down"
                 onClick={() => move(screen, 1)}
                 disabled={index === sorted.length - 1 || busy === screen.id}
-                className="rounded px-1.5 py-1 text-[10px] text-white/50 hover:bg-white/10 hover:text-white disabled:opacity-20"
+                className="rounded px-1.5 py-1 text-[10px] text-fg-muted hover:bg-surface-raised hover:text-fg disabled:opacity-20"
               >
                 ↓
               </button>
               <button
                 title="Rename"
                 onClick={() => openRename(screen)}
-                className="rounded px-1.5 py-1 text-[10px] text-white/50 hover:bg-white/10 hover:text-white"
+                className="rounded px-1.5 py-1 text-[10px] text-fg-muted hover:bg-surface-raised hover:text-fg"
               >
                 Rename
               </button>
               <button
                 title="Duplicate"
                 onClick={() => duplicateScreen(screen)}
-                className="rounded px-1.5 py-1 text-[10px] text-white/50 hover:bg-white/10 hover:text-white"
+                className="rounded px-1.5 py-1 text-[10px] text-fg-muted hover:bg-surface-raised hover:text-fg"
               >
                 Copy
               </button>
               <button
                 title="Delete"
                 onClick={() => setDialog({ type: 'delete', screen })}
-                className="ml-auto rounded px-1.5 py-1 text-[10px] text-studio-coral/70 hover:bg-studio-coral/10 hover:text-studio-coral"
+                className="ml-auto rounded px-1.5 py-1 text-[10px] text-accent-text/70 hover:bg-studio-coral/10 hover:text-accent-text"
               >
                 Delete
               </button>

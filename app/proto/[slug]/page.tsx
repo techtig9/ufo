@@ -65,9 +65,9 @@ export default async function PublicProtoPage({ params }: { params: Promise<{ sl
       <GridField strength="subtle" />
       <div className="relative mx-auto max-w-5xl">
         <div className="mb-8 text-center">
-          <p className="text-xs uppercase tracking-wide text-white/40">Prototype</p>
+          <p className="text-xs uppercase tracking-wide text-fg-faint">Prototype</p>
           <h1 className="font-display text-2xl font-semibold">{project?.name}</h1>
-          <p className="mt-1 text-xs text-white/30">Built with ufo</p>
+          <p className="mt-1 text-xs text-fg-faint">Built with ufo</p>
         </div>
 
         <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:justify-center">

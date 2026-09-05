@@ -57,21 +57,21 @@ export function ProjectSearch({ projects }: { projects: Project[] }) {
 
   return (
     <>
-      <div className="flex flex-col gap-3 rounded-panel border border-white/10 bg-white/[0.02] p-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 rounded-panel border border-edge bg-surface-subtle p-3 sm:flex-row sm:items-center">
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search projects, type, tags…"
           aria-label="Search projects"
-          className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm outline-none placeholder:text-white/25 focus:border-studio-citron/50"
+          className="min-w-0 flex-1 rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none placeholder:text-fg-faint focus:border-studio-citron/50"
         />
-        <div className="flex rounded-lg bg-white/5 p-1" role="tablist" aria-label="Filter projects">
+        <div className="flex rounded-lg bg-surface-subtle p-1" role="tablist" aria-label="Filter projects">
           <button
             role="tab"
             aria-selected={filter === 'all'}
             onClick={() => setFilter('all')}
-            className={`rounded-md px-3 py-1.5 text-xs ${filter === 'all' ? 'bg-white/15 text-white' : 'text-white/40'}`}
+            className={`rounded-md px-3 py-1.5 text-xs ${filter === 'all' ? 'bg-surface-strong text-fg' : 'text-fg-faint'}`}
           >
             All
           </button>
@@ -79,7 +79,7 @@ export function ProjectSearch({ projects }: { projects: Project[] }) {
             role="tab"
             aria-selected={filter === 'favorites'}
             onClick={() => setFilter('favorites')}
-            className={`rounded-md px-3 py-1.5 text-xs ${filter === 'favorites' ? 'bg-white/15 text-white' : 'text-white/40'}`}
+            className={`rounded-md px-3 py-1.5 text-xs ${filter === 'favorites' ? 'bg-surface-strong text-fg' : 'text-fg-faint'}`}
           >
             Favorites
           </button>
@@ -87,7 +87,7 @@ export function ProjectSearch({ projects }: { projects: Project[] }) {
             role="tab"
             aria-selected={filter === 'archived'}
             onClick={() => setFilter('archived')}
-            className={`rounded-md px-3 py-1.5 text-xs ${filter === 'archived' ? 'bg-white/15 text-white' : 'text-white/40'}`}
+            className={`rounded-md px-3 py-1.5 text-xs ${filter === 'archived' ? 'bg-surface-strong text-fg' : 'text-fg-faint'}`}
           >
             Archived {archivedCount > 0 && `(${archivedCount})`}
           </button>
@@ -104,7 +104,7 @@ export function ProjectSearch({ projects }: { projects: Project[] }) {
 
       {!filtered.length ? (
         query ? (
-          <div className="rounded-panel border border-dashed border-white/10 p-10 text-center text-sm text-white/35">
+          <div className="rounded-panel border border-dashed border-edge p-10 text-center text-sm text-fg-faint">
             No projects match your search.
           </div>
         ) : filter === 'archived' ? (
@@ -115,7 +115,7 @@ export function ProjectSearch({ projects }: { projects: Project[] }) {
           <EmptyState
             title="No projects yet"
             description="Generate your first AI prototype to get started."
-            action={<Link href="/dashboard/ai-designer" className="text-sm text-studio-coral hover:underline">Open AI Designer →</Link>}
+            action={<Link href="/dashboard/ai-designer" className="text-sm text-accent-text hover:underline">Open AI Designer →</Link>}
           />
         )
       ) : (

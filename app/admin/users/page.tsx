@@ -11,7 +11,7 @@ export default async function AdminUsersPage() {
   return (
     <Panel hover={false} className="overflow-x-auto p-0">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-white/10 text-white/40">
+        <thead className="border-b border-edge text-fg-faint">
           <tr>
             <th className="px-4 py-3 font-normal">Name</th>
             <th className="px-4 py-3 font-normal">Email</th>
@@ -19,13 +19,13 @@ export default async function AdminUsersPage() {
             <th className="px-4 py-3 font-normal">Joined</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/5">
+        <tbody className="divide-y divide-edge">
           {users?.map((u) => (
             <tr key={u.id}>
               <td className="px-4 py-3">{u.name ?? '\u2014'}</td>
-              <td className="px-4 py-3 text-white/60">{u.email}</td>
+              <td className="px-4 py-3 text-fg-muted">{u.email}</td>
               <td className="px-4 py-3 capitalize">{u.role}</td>
-              <td className="px-4 py-3 text-white/40">{new Date(u.created_at).toLocaleDateString()}</td>
+              <td className="px-4 py-3 text-fg-faint">{new Date(u.created_at).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>

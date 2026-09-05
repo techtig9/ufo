@@ -20,11 +20,11 @@ export function AIDemo() {
   return (
     <section id="ai-demo" className="relative mx-auto max-w-5xl px-6 py-24">
       <Reveal>
-        <p className="text-center font-mono text-xs uppercase tracking-wider text-studio-citron">Process</p>
+        <p className="text-center font-mono text-xs uppercase tracking-wider text-brand-text">Process</p>
         <h2 className="mt-3 text-center font-display text-3xl font-semibold tracking-tight md:text-4xl">
           Multiple-choice, not a blank chat box
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-center text-white/60">
+        <p className="mx-auto mt-4 max-w-xl text-center text-fg-muted">
           A fixed sequence of questions keeps the output structure predictable — which is what
           keeps generation error-free.
         </p>
@@ -34,12 +34,12 @@ export function AIDemo() {
           <Reveal key={s.q} delay={i * 100}>
             <div className="relative">
               <Panel className="h-full">
-                <span className="font-mono text-xs text-studio-coral">STEP {String(i + 1).padStart(2, '0')}</span>
+                <span className="font-mono text-xs text-accent-text">STEP {String(i + 1).padStart(2, '0')}</span>
                 <h3 className="mt-2 font-display font-medium">{s.q}</h3>
-                <p className="mt-2 text-sm text-white/60">{s.a}</p>
+                <p className="mt-2 text-sm text-fg-muted">{s.a}</p>
               </Panel>
               {i < STEPS.length - 1 && (
-                <span className="absolute -right-4 top-1/2 hidden -translate-y-1/2 font-mono text-studio-citron/40 md:block">
+                <span className="absolute -right-4 top-1/2 hidden -translate-y-1/2 font-mono text-brand-text/40 md:block">
                   &rarr;
                 </span>
               )}

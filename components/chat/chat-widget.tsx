@@ -71,7 +71,7 @@ export function ChatWidget() {
       {!open && showBubble && (
         <button
           onClick={handleOpen}
-          className="panel panel-hover mb-3 max-w-[240px] p-3 text-left text-sm text-white/80 animate-fade-up"
+          className="panel panel-hover mb-3 max-w-[240px] p-3 text-left text-sm text-fg-secondary animate-fade-up"
         >
           <span className="mr-1.5">{'\u{1F44B}'}</span>
           {authed ? GREETING : "Curious which plan fits? Sign up to ask Compass, ufo's AI advisor."}
@@ -80,17 +80,17 @@ export function ChatWidget() {
 
       {open && (
         <div className="panel crop-marks mb-3 flex h-[440px] w-80 flex-col overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <div className="flex items-center justify-between border-b border-edge px-4 py-3">
             <div className="flex items-center gap-2">
               <CompassChatIcon size={20} />
               <span className="font-display text-sm font-medium">Compass</span>
             </div>
-            <button onClick={() => setOpen(false)} className="text-white/40 hover:text-white">&times;</button>
+            <button onClick={() => setOpen(false)} className="text-fg-faint hover:text-fg">&times;</button>
           </div>
 
           {authed === false ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-              <p className="text-sm text-white/60">
+              <p className="text-sm text-fg-muted">
                 Sign up or log in to chat with Compass {'\u2014'} ufo&rsquo;s AI advisor for picking a
                 plan and figuring out what fits your project.
               </p>
@@ -108,7 +108,7 @@ export function ChatWidget() {
                     className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                       m.role === 'user'
                         ? 'ml-auto bg-studio-citron text-ink'
-                        : 'bg-white/5 text-white/80'
+                        : 'bg-surface-subtle text-fg-secondary'
                     }`}
                   >
                     {m.text}
@@ -116,12 +116,12 @@ export function ChatWidget() {
                 ))}
                 {sending && <div className="shimmer h-8 w-24 rounded-lg" />}
               </div>
-              <form onSubmit={handleSend} className="flex gap-2 border-t border-line p-3">
+              <form onSubmit={handleSend} className="flex gap-2 border-t border-edge p-3">
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask about plans, credits, features…"
-                  className="flex-1 rounded-lg border border-line bg-white/5 px-3 py-2 text-xs outline-none focus:border-studio-citron"
+                  className="flex-1 rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-xs outline-none focus:border-studio-citron"
                 />
                 <Button type="submit" size="sm" disabled={sending || !input.trim()}>Send</Button>
               </form>

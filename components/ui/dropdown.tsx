@@ -66,11 +66,11 @@ export function Dropdown({ trigger, items, align = 'right', triggerLabel, header
           id={menuId}
           role="menu"
           className={clsx(
-            'dropdown-surface absolute z-[150] mt-2 min-w-[180px] animate-scale-in rounded-lg border border-line p-1 shadow-lift',
+            'dropdown-surface absolute z-[150] mt-2 min-w-[180px] animate-scale-in rounded-lg border border-edge p-1 shadow-lift',
             align === 'right' ? 'right-0' : 'left-0'
           )}
         >
-          {header && <div className="border-b border-line px-3 py-2">{header}</div>}
+          {header && <div className="border-b border-edge px-3 py-2">{header}</div>}
           {items.map((item) => (
             <button
               key={item.id}
@@ -83,7 +83,7 @@ export function Dropdown({ trigger, items, align = 'right', triggerLabel, header
               }}
               className={clsx(
                 'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors disabled:opacity-40 disabled:pointer-events-none',
-                item.destructive ? 'text-status-error hover:bg-status-error/10' : 'text-white/80 hover:bg-white/[0.06] hover:text-white'
+                item.destructive ? 'text-status-error hover:bg-status-error/10' : 'text-fg-secondary hover:bg-surface-raised hover:text-fg'
               )}
             >
               {item.icon}

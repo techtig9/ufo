@@ -18,9 +18,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary:
         'bg-studio-citron text-ink font-semibold hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0',
       secondary:
-        'panel panel-hover text-white font-medium border-line',
-      ghost: 'text-white/60 hover:text-white font-medium',
-      danger: 'bg-studio-coral/15 text-studio-coral font-medium hover:bg-studio-coral/25 border border-studio-coral/30',
+        'panel panel-hover text-fg font-medium border-edge',
+      ghost: 'text-fg-muted hover:text-fg font-medium',
+      danger: 'bg-studio-coral/15 text-accent-text font-medium hover:bg-studio-coral/25 border border-studio-coral/30',
     };
 
     return (

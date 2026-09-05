@@ -129,12 +129,12 @@ export function ProjectToolbar({
         </Button>
       </div>
 
-      <div className="border-t border-white/10 pt-4">
+      <div className="border-t border-edge pt-4">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm text-white/60">Shareable prototype link</span>
+            <span className="text-sm text-fg-muted">Shareable prototype link</span>
             {isPublic && publishedAt && (
-              <p className="text-[10px] text-white/30">Last published {timeAgo(publishedAt)}</p>
+              <p className="text-[10px] text-fg-faint">Last published {timeAgo(publishedAt)}</p>
             )}
           </div>
           <Button size="sm" onClick={handlePublish}>
@@ -145,8 +145,8 @@ export function ProjectToolbar({
           <div className="mt-3 flex items-center gap-3">
             {qr && <img src={qr} alt="QR code" className="h-16 w-16 rounded bg-white p-1" />}
             <div className="min-w-0 flex-1">
-              <code className="block truncate rounded bg-white/5 px-2 py-1 text-xs text-white/60">{shareUrl}</code>
-              <button onClick={copyLink} className="mt-1.5 text-[10px] text-studio-citron hover:underline">
+              <code className="block truncate rounded bg-surface-subtle px-2 py-1 text-xs text-fg-muted">{shareUrl}</code>
+              <button onClick={copyLink} className="mt-1.5 text-[10px] text-brand-text hover:underline">
                 Copy link
               </button>
             </div>

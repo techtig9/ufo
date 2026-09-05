@@ -71,7 +71,7 @@ export default async function DashboardHome() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <DashboardGreeting name={profile?.name ? profile.name.split(' ')[0] : null} />
-          <p className="mt-1 max-w-xl text-sm text-white/40">Generate websites, refine them with AI, and manage every project from one focused workspace.</p>
+          <p className="mt-1 max-w-xl text-sm text-fg-faint">Generate websites, refine them with AI, and manage every project from one focused workspace.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/dashboard/templates"><Button variant="secondary">Browse templates</Button></Link>
@@ -85,8 +85,8 @@ export default async function DashboardHome() {
         {stats.map((stat) => (
           <Link key={stat.label} href={stat.href}>
             <Panel className="h-full">
-              <p className="text-[10px] uppercase tracking-wider text-white/35">{stat.label}</p>
-              <p className="mt-1.5 font-display text-2xl font-semibold text-white">{stat.value}</p>
+              <p className="text-[10px] uppercase tracking-wider text-fg-faint">{stat.label}</p>
+              <p className="mt-1.5 font-display text-2xl font-semibold text-fg">{stat.value}</p>
             </Panel>
           </Link>
         ))}
@@ -94,10 +94,10 @@ export default async function DashboardHome() {
 
       <Panel className="bg-gradient-to-br from-violet-500/10 via-[#111218] to-studio-citron/5">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-white/60">Credits this cycle</span>
+          <span className="text-fg-muted">Credits this cycle</span>
           <span>{remaining.toLocaleString()} / {total.toLocaleString()}</span>
         </div>
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-raised">
           <div className="h-full rounded-full bg-gradient-to-r from-studio-citron to-studio-coral" style={{ width: `${usedPct}%` }} />
         </div>
       </Panel>
@@ -105,17 +105,17 @@ export default async function DashboardHome() {
       <div>
         <div className="mb-4 flex items-end justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-studio-citron">Workspace</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text">Workspace</p>
             <h2 className="mt-1 text-lg font-medium">Recent projects</h2>
           </div>
-          <Link href="/dashboard/projects" className="text-xs text-white/40 hover:text-white">View all →</Link>
+          <Link href="/dashboard/projects" className="text-xs text-fg-faint hover:text-fg">View all →</Link>
         </div>
 
         {!projects?.length ? (
           <EmptyState
             title="No projects yet"
             description="Generate your first AI prototype to get started."
-            action={<Link href="/dashboard/ai-designer" className="text-sm text-studio-coral hover:underline">Generate your first one →</Link>}
+            action={<Link href="/dashboard/ai-designer" className="text-sm text-accent-text hover:underline">Generate your first one →</Link>}
           />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -82,20 +82,20 @@ export function ProjectWorkspace({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-[#101116]/80 p-4 shadow-[0_12px_40px_rgba(0,0,0,.18)] backdrop-blur-xl">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-edge bg-[#101116]/80 p-4 shadow-[0_12px_40px_rgba(0,0,0,.18)] backdrop-blur-xl">
         <div>
-          <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-violet-500/15 text-violet-300">✦</span><div><p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-violet-300">UFO Studio</p>
+          <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-violet-500/15 text-accent-alt-text">✦</span><div><p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-accent-alt-text">UFO Studio</p>
           <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
-          <p className="text-xs capitalize text-white/35">{project.project_type} · {sorted.length} screens</p></div></div>
+          <p className="text-xs capitalize text-fg-faint">{project.project_type} · {sorted.length} screens</p></div></div>
         </div>
-        <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] p-1">
+        <div className="flex items-center gap-1 rounded-full border border-edge bg-surface-subtle p-1">
           {(['preview', 'code', 'handoff'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={clsx(
                 'rounded-lg px-4 py-2 text-xs capitalize transition',
-                tab === t ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:bg-white/5 hover:text-white'
+                tab === t ? 'bg-surface-raised text-fg shadow-sm' : 'text-fg-faint hover:bg-surface-subtle hover:text-fg'
               )}
             >
               {t === 'handoff' ? 'Design Handoff' : t}
@@ -113,7 +113,7 @@ export function ProjectWorkspace({
           onSelect={setActiveScreenId}
         />
 
-        <div className="min-w-0 rounded-2xl border border-white/[0.08] bg-[#0b0c10] p-2 shadow-[0_24px_70px_rgba(0,0,0,.25)]">
+        <div className="min-w-0 rounded-2xl border border-edge bg-canvas p-2 shadow-[0_24px_70px_rgba(0,0,0,.25)]">
           {tab === 'preview' && (
             <>
               <CanvasToolbar

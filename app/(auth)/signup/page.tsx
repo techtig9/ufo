@@ -77,8 +77,8 @@ function SignupForm() {
         <GridField strength="strong" />
         <Panel className="relative max-w-sm text-center" hover={false}>
           <h1 className="font-display text-xl font-semibold">Check your email</h1>
-          <p className="mt-3 text-sm text-white/60">
-            We sent a verification link to <span className="text-white">{email}</span>. Click it
+          <p className="mt-3 text-sm text-fg-muted">
+            We sent a verification link to <span className="text-fg">{email}</span>. Click it
             to activate your account.
           </p>
         </Panel>
@@ -92,34 +92,34 @@ function SignupForm() {
       <Panel className="relative w-full max-w-sm" hover={false}>
         <h1 className="font-display text-xl font-semibold">Create your account</h1>
         {plan && (
-          <p className="mt-1 text-xs text-studio-coral">
+          <p className="mt-1 text-xs text-accent-text">
             Signing up for the {plan.charAt(0).toUpperCase() + plan.slice(1)} plan
           </p>
         )}
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="text-sm text-white/60" htmlFor="name">Name</label>
+            <label className="text-sm text-fg-muted" htmlFor="name">Name</label>
             <input
               id="name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+              className="mt-1 w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
             />
           </div>
           <div>
-            <label className="text-sm text-white/60" htmlFor="email">Email</label>
+            <label className="text-sm text-fg-muted" htmlFor="email">Email</label>
             <input
               id="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+              className="mt-1 w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
             />
           </div>
           <div>
-            <label className="text-sm text-white/60" htmlFor="password">Password</label>
+            <label className="text-sm text-fg-muted" htmlFor="password">Password</label>
             <input
               id="password"
               type="password"
@@ -127,13 +127,13 @@ function SignupForm() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+              className="mt-1 w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
             />
           </div>
           <Button type="submit" disabled={loading || !agreed} className="w-full">
             {loading ? 'Creating account\u2026' : 'Create account'}
           </Button>
-          <label className="flex items-start gap-2 text-xs text-white/50">
+          <label className="flex items-start gap-2 text-xs text-fg-muted">
             <input
               type="checkbox"
               checked={agreed}
@@ -142,15 +142,15 @@ function SignupForm() {
             />
             <span>
               I agree to the{' '}
-              <Link href="/legal/terms" className="text-studio-citron hover:underline">Terms</Link>{' '}
+              <Link href="/legal/terms" className="text-brand-text hover:underline">Terms</Link>{' '}
               and{' '}
-              <Link href="/legal/privacy" className="text-studio-citron hover:underline">Privacy Policy</Link>.
+              <Link href="/legal/privacy" className="text-brand-text hover:underline">Privacy Policy</Link>.
             </span>
           </label>
           <TurnstileWidget onVerify={setCaptchaToken} />
         </form>
-        <div className="my-4 flex items-center gap-3 text-xs text-white/30">
-          <span className="h-px flex-1 bg-white/10" /> or <span className="h-px flex-1 bg-white/10" />
+        <div className="my-4 flex items-center gap-3 text-xs text-fg-faint">
+          <span className="h-px flex-1 bg-surface-raised" /> or <span className="h-px flex-1 bg-surface-raised" />
         </div>
         <Button
           variant="secondary"
@@ -160,8 +160,8 @@ function SignupForm() {
         >
           {googleLoading ? 'Redirecting to Google…' : 'Continue with Google'}
         </Button>
-        <p className="mt-6 text-center text-sm text-white/50">
-          Already have an account? <Link href="/login" className="text-studio-coral hover:underline">Log in</Link>
+        <p className="mt-6 text-center text-sm text-fg-muted">
+          Already have an account? <Link href="/login" className="text-accent-text hover:underline">Log in</Link>
         </p>
       </Panel>
     </div>

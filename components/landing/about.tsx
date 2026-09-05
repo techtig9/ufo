@@ -8,8 +8,8 @@ export function About() {
       <Reveal>
         <Panel>
           <h2 className="font-display text-2xl font-semibold tracking-tight">About Us</h2>
-          <p className="mt-4 text-white/60">
-            ufo is built by <strong className="text-white">[Your Name / Agency Name]</strong>,
+          <p className="mt-4 text-fg-muted">
+            ufo is built by <strong className="text-fg">[Your Name / Agency Name]</strong>,
             [a solo developer / a small team] focused on making polished UI/UX design accessible
             to anyone with an idea — no design background required. We specialize in AI-powered
             design generation, rapid prototyping, and MVP delivery, helping founders and small

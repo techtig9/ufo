@@ -41,9 +41,9 @@ export default async function BillingPage() {
       <h1 className="font-display text-2xl font-semibold">Billing</h1>
 
       <Panel hover={false}>
-        <p className="text-sm text-white/60">Current plan</p>
+        <p className="text-sm text-fg-muted">Current plan</p>
         <p className="mt-1 text-xl font-medium capitalize">{subscription?.plan ?? 'free'}</p>
-        <p className="mt-2 text-sm text-white/40">
+        <p className="mt-2 text-sm text-fg-faint">
           {subscription?.credits_remaining?.toLocaleString() ?? 0} credits remaining this cycle
           {subscription?.renews_at ? ` \u00b7 renews ${new Date(subscription.renews_at).toLocaleDateString()}` : ''}
         </p>
@@ -63,13 +63,13 @@ export default async function BillingPage() {
             return (
               <Panel key={card.plan}>
                 <h3 className="font-medium">{card.label}</h3>
-                <p className="mt-1 text-2xl font-semibold">${card.price}<span className="text-sm text-white/40">/mo</span></p>
-                <p className="mt-1 text-xs text-white/40">{card.credits.toLocaleString()} credits</p>
+                <p className="mt-1 text-2xl font-semibold">${card.price}<span className="text-sm text-fg-faint">/mo</span></p>
+                <p className="mt-1 text-xs text-fg-faint">{card.credits.toLocaleString()} credits</p>
                 <div className="mt-4">
                   {isCurrent ? (
-                    <span className="text-xs text-studio-coral">Current plan</span>
+                    <span className="text-xs text-accent-text">Current plan</span>
                   ) : card.plan === 'free' ? (
-                    <span className="text-xs text-white/30">Cancel above to move to Free</span>
+                    <span className="text-xs text-fg-faint">Cancel above to move to Free</span>
                   ) : priceId ? (
                     <PaddleCheckoutButton
                       priceId={priceId}
@@ -78,7 +78,7 @@ export default async function BillingPage() {
                       label={`Choose ${card.label}`}
                     />
                   ) : (
-                    <span className="text-xs text-white/30">Set NEXT_PUBLIC_PADDLE_PRICE_{card.plan.toUpperCase()}</span>
+                    <span className="text-xs text-fg-faint">Set NEXT_PUBLIC_PADDLE_PRICE_{card.plan.toUpperCase()}</span>
                   )}
                 </div>
               </Panel>
@@ -102,7 +102,7 @@ export default async function BillingPage() {
                   variant="secondary"
                 />
               ) : (
-                <span className="text-xs text-white/30">Not configured</span>
+                <span className="text-xs text-fg-faint">Not configured</span>
               )}
             </Panel>
           ))}
@@ -114,21 +114,21 @@ export default async function BillingPage() {
         {!payments?.length ? (
           <EmptyState title="No payments yet" description="Your payment history will show up here." />
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111218]">
-            <div className="grid grid-cols-[1.2fr_.8fr_.8fr_.8fr] gap-4 border-b border-white/[0.08] px-4 py-3 text-xs font-medium text-white/40">
+          <div className="overflow-hidden rounded-2xl border border-edge bg-[#111218]">
+            <div className="grid grid-cols-[1.2fr_.8fr_.8fr_.8fr] gap-4 border-b border-edge px-4 py-3 text-xs font-medium text-fg-faint">
               <span>Date</span>
               <span>Amount</span>
               <span>Status</span>
               <span>Transaction</span>
             </div>
             {payments.map((payment) => (
-              <div key={payment.id} className="grid grid-cols-[1.2fr_.8fr_.8fr_.8fr] gap-4 border-b border-white/[0.06] px-4 py-3 text-sm last:border-0">
-                <span className="text-white/70">{payment.created_at ? new Date(payment.created_at).toLocaleDateString() : '—'}</span>
-                <span className="text-white/70">
+              <div key={payment.id} className="grid grid-cols-[1.2fr_.8fr_.8fr_.8fr] gap-4 border-b border-edge px-4 py-3 text-sm last:border-0">
+                <span className="text-fg-secondary">{payment.created_at ? new Date(payment.created_at).toLocaleDateString() : '—'}</span>
+                <span className="text-fg-secondary">
                   {payment.amount != null ? `$${Number(payment.amount).toFixed(2)}` : '—'}
                 </span>
-                <span className="capitalize text-white/60">{payment.status ?? '—'}</span>
-                <span className="truncate text-white/40" title={payment.paddle_transaction_id ?? undefined}>
+                <span className="capitalize text-fg-muted">{payment.status ?? '—'}</span>
+                <span className="truncate text-fg-faint" title={payment.paddle_transaction_id ?? undefined}>
                   {payment.paddle_transaction_id ?? '—'}
                 </span>
               </div>

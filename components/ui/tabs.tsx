@@ -47,7 +47,7 @@ export function Tabs({ tabs, value, onChange, defaultValue, className }: TabsPro
 
   return (
     <div className={className}>
-      <div role="tablist" className="flex gap-1 border-b border-line">
+      <div role="tablist" className="flex gap-1 border-b border-edge">
         {tabs.map((tab, i) => {
           const selected = tab.id === active;
           return (
@@ -64,7 +64,7 @@ export function Tabs({ tabs, value, onChange, defaultValue, className }: TabsPro
               onKeyDown={(e) => handleKeyDown(e, i)}
               className={clsx(
                 'relative px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-studio-citron disabled:opacity-40 disabled:pointer-events-none',
-                selected ? 'text-white' : 'text-white/50 hover:text-white/80'
+                selected ? 'text-fg' : 'text-fg-muted hover:text-fg-secondary'
               )}
             >
               {tab.label}

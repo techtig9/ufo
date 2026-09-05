@@ -153,14 +153,14 @@ function LoginForm() {
         <GridField strength="strong" />
         <Panel className="relative w-full max-w-sm" hover={false}>
           <h1 className="font-display text-xl font-semibold">Enter your 2FA code</h1>
-          <p className="mt-1 text-sm text-white/50">From your authenticator app.</p>
+          <p className="mt-1 text-sm text-fg-muted">From your authenticator app.</p>
           <form onSubmit={handleMfaVerify} className="mt-6 space-y-4">
             <input
               value={mfaCode}
               onChange={(e) => setMfaCode(e.target.value)}
               placeholder="6-digit code"
               autoFocus
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+              className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
             />
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? 'Verifying…' : 'Verify'}
@@ -176,7 +176,7 @@ function LoginForm() {
       <GridField strength="strong" />
       <Panel className="relative w-full max-w-sm" hover={false}>
         <h1 className="font-display text-xl font-semibold">Log in to ufo</h1>
-        <p className="mt-1 text-sm text-white/50">Welcome back. Enter your details below.</p>
+        <p className="mt-1 text-sm text-fg-muted">Welcome back. Enter your details below.</p>
 
         {callbackError && (
           <div
@@ -204,7 +204,7 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="text-sm text-white/60" htmlFor="email">Email</label>
+            <label className="text-sm text-fg-muted" htmlFor="email">Email</label>
             <input
               id="email"
               type="email"
@@ -212,14 +212,14 @@ function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+              className="mt-1 w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between">
-              <label className="text-sm text-white/60" htmlFor="password">Password</label>
-              <Link href="/forgot-password" className="text-xs text-white/40 hover:text-white/70">
+              <label className="text-sm text-fg-muted" htmlFor="password">Password</label>
+              <Link href="/forgot-password" className="text-xs text-fg-faint hover:text-fg-secondary">
                 Forgot password?
               </Link>
             </div>
@@ -230,7 +230,7 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+              className="mt-1 w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
             />
           </div>
 
@@ -241,10 +241,10 @@ function LoginForm() {
           </Button>
         </form>
 
-        <div className="mt-4 flex items-center gap-3 text-xs text-white/30">
-          <div className="h-px flex-1 bg-white/10" />
+        <div className="mt-4 flex items-center gap-3 text-xs text-fg-faint">
+          <div className="h-px flex-1 bg-surface-raised" />
           or
-          <div className="h-px flex-1 bg-white/10" />
+          <div className="h-px flex-1 bg-surface-raised" />
         </div>
 
         <Button
@@ -257,9 +257,9 @@ function LoginForm() {
           {googleLoading ? 'Redirecting to Google…' : 'Continue with Google'}
         </Button>
 
-        <p className="mt-6 text-center text-sm text-white/40">
+        <p className="mt-6 text-center text-sm text-fg-faint">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-white/70 hover:text-white">
+          <Link href="/signup" className="text-fg-secondary hover:text-fg">
             Sign up
           </Link>
         </p>

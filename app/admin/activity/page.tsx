@@ -12,7 +12,7 @@ export default async function AdminActivityPage() {
   return (
     <Panel hover={false} className="overflow-x-auto p-0">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-line text-white/40">
+        <thead className="border-b border-edge text-fg-faint">
           <tr>
             <th className="px-4 py-3 font-normal">User</th>
             <th className="px-4 py-3 font-normal">Route</th>
@@ -23,15 +23,15 @@ export default async function AdminActivityPage() {
         <tbody className="divide-y divide-line">
           {entries?.map((e: any) => (
             <tr key={e.id}>
-              <td className="px-4 py-3 text-white/60">{e.users?.email ?? '\u2014'}</td>
-              <td className="px-4 py-3 font-mono text-xs text-studio-citron">{e.route}</td>
-              <td className="px-4 py-3 text-white/40">{e.meta ? JSON.stringify(e.meta) : '\u2014'}</td>
-              <td className="px-4 py-3 text-white/40">{new Date(e.created_at).toLocaleString()}</td>
+              <td className="px-4 py-3 text-fg-muted">{e.users?.email ?? '\u2014'}</td>
+              <td className="px-4 py-3 font-mono text-xs text-brand-text">{e.route}</td>
+              <td className="px-4 py-3 text-fg-faint">{e.meta ? JSON.stringify(e.meta) : '\u2014'}</td>
+              <td className="px-4 py-3 text-fg-faint">{new Date(e.created_at).toLocaleString()}</td>
             </tr>
           ))}
           {!entries?.length && (
             <tr>
-              <td colSpan={4} className="px-4 py-8 text-center text-white/30">No activity logged yet.</td>
+              <td colSpan={4} className="px-4 py-8 text-center text-fg-faint">No activity logged yet.</td>
             </tr>
           )}
         </tbody>

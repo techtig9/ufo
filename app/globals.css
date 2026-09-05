@@ -2,53 +2,239 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-html.light { color-scheme: light; }
-html { scroll-behavior: smooth; }
-body { @apply bg-ink text-white antialiased; background-image: radial-gradient(circle at 50% -10%, rgba(124,92,255,.08), transparent 35%); }
-html.light body { @apply bg-paper text-ink; }
+/* ===========================================================================
+   UFO design tokens.
 
-/*
- * Light-mode text contrast. Most components set explicit text-white/NN utility
- * classes rather than relying on inherited color, so the `body` override above
- * doesn't reach them — every one of those was rendering white-on-paper (near
- * invisible) in light mode. Rather than hand-edit ~270 call sites across the
- * app, remap the exact set of text-white variants actually in use to the same
- * opacity against ink (#101114) instead of white, scoped to html.light only —
- * dark mode (the default, no class needed) is completely unaffected.
- */
-html.light .text-white { color: #101114; }
-html.light .text-white\/90 { color: rgb(16 17 20 / 0.9); }
-html.light .text-white\/80 { color: rgb(16 17 20 / 0.8); }
-html.light .text-white\/70 { color: rgb(16 17 20 / 0.7); }
-html.light .text-white\/60 { color: rgb(16 17 20 / 0.6); }
-html.light .text-white\/55 { color: rgb(16 17 20 / 0.55); }
-html.light .text-white\/50 { color: rgb(16 17 20 / 0.5); }
-html.light .text-white\/45 { color: rgb(16 17 20 / 0.45); }
-html.light .text-white\/40 { color: rgb(16 17 20 / 0.4); }
-html.light .text-white\/35 { color: rgb(16 17 20 / 0.35); }
-html.light .text-white\/30 { color: rgb(16 17 20 / 0.3); }
-html.light .text-white\/25 { color: rgb(16 17 20 / 0.25); }
-html.light .text-white\/20 { color: rgb(16 17 20 / 0.2); }
-::selection { background: #d4ff4f; color: #101114; }
-.dot-canvas { background-image: radial-gradient(rgba(255,255,255,.055) 1px, transparent 1px); background-size: 24px 24px; }
-html.light .dot-canvas { background-image: radial-gradient(rgba(16,17,20,.10) 1px, transparent 1px); }
+   Before Phase 3 there were zero CSS custom properties in this codebase and
+   ~580 hardcoded white-based utilities, with light mode propped up by a block
+   that remapped thirteen specific `text-white/NN` opacities to ink. Any new
+   opacity a developer wrote was invisible on paper, and `bg-white/5` surfaces
+   were never remapped at all — so a "surface" in light mode was white on white.
+
+   Every colour is now a semantic variable with a light counterpart. Components
+   name the ROLE (surface, edge, fg-muted) rather than a literal colour, which
+   is what makes both themes correct by construction instead of by patch.
+
+   The palette keeps UFO's own Studio Grid identity — ink, paper, citron,
+   coral, indigo — rather than adopting the spec's generic violet. That
+   vocabulary is the product's only real visual differentiation; what the spec
+   contributes here is the STRUCTURE: surface elevation tiers, a radius scale,
+   motion tiers, and semantic naming.
+   =========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* --- Surfaces: four elevation tiers, flat -> raised --------------------- */
+  --canvas: #0b0c10;          /* page background */
+  --surface: #111218;         /* panels, cards */
+  --surface-subtle: rgba(255, 255, 255, 0.035);  /* faint inset fills */
+  --surface-raised: rgba(255, 255, 255, 0.08);   /* hover, active chips */
+  --surface-strong: rgba(255, 255, 255, 0.15);   /* pressed, selected */
+  --elevated: #17181d;        /* dropdowns, popovers, command palette */
+  --chrome: #0b0c10;          /* sidebar / top bar */
+  --chrome-translucent: rgba(11, 12, 16, 0.8);
+
+  /* --- Borders ----------------------------------------------------------- */
+  --edge: rgba(255, 255, 255, 0.08);
+  --edge-strong: rgba(255, 255, 255, 0.16);
+
+  /* --- Text: four steps, all AA on --canvas or --surface ------------------ */
+  /* All four steps clear WCAG AA (4.5:1) against --canvas AND --surface.
+     Verified by tests/browser/contrast.mjs, which measures the rendered
+     result rather than trusting these values. The previous palette's faintest
+     steps sat at 3.8-4.0 and failed. */
+  --fg: #f7f9fc;
+  --fg-secondary: #c4cad5;
+  --fg-muted: #a2aab8;
+  --fg-faint: #8b93a1;
+
+  /* --- Brand ------------------------------------------------------------- */
+  --brand: #d4ff4f;           /* citron — fills, rules, marks */
+  --brand-ink: #101114;       /* text placed ON a brand fill */
+  --accent: #ff5a3c;          /* coral */
+  --accent-alt: #6e7bff;      /* indigo */
+
+  /* Brand colours used as TEXT need their own values: citron and coral are
+     tuned for a dark ground and are unreadable on paper (measured at 1.1:1
+     and 3.1:1). The fills stay brand-coloured; only the text tone changes. */
+  --brand-text: #d4ff4f;
+  --accent-text: #ff8a72;
+  --accent-alt-text: #a5b4fc;  /* indigo eyebrows, feature glyphs */
+
+  /* --- Status. `error` intentionally reuses coral: one "this is bad" colour
+         across the product, not a second red. ------------------------------ */
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --error: #ff5a3c;
+  --info: #6e7bff;
+
+  /* --- Radius scale (spec: 10/14/18/20) ---------------------------------- */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 20px;
+
+  /* --- Motion tiers, straight from the spec ------------------------------ */
+  --motion-micro: 140ms;      /* 120-180: press, hover, icon swap */
+  --motion-standard: 200ms;   /* 180-240: cards, tabs, toggles */
+  --motion-overlay: 260ms;    /* 220-320: modals, drawers, palette */
+  --motion-reveal: 420ms;     /* 350-500: section entrance */
+  --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* --- Dot-grid canvas texture ------------------------------------------- */
+  --grid-dot: rgba(255, 255, 255, 0.055);
+}
+
+html.light {
+  color-scheme: light;
+
+  --canvas: #f7f8fb;
+  --surface: #ffffff;
+  /* Opaque-over-ink rather than white-over-white: a translucent white fill on
+     a white surface is invisible, which is exactly what broke light mode. */
+  --surface-subtle: rgba(16, 17, 20, 0.035);
+  --surface-raised: rgba(16, 17, 20, 0.07);
+  --surface-strong: rgba(16, 17, 20, 0.12);
+  --elevated: #ffffff;
+  --chrome: #ffffff;
+  --chrome-translucent: rgba(255, 255, 255, 0.85);
+
+  --edge: rgba(16, 17, 20, 0.1);
+  --edge-strong: rgba(16, 17, 20, 0.2);
+
+  --fg: #101114;
+  --fg-secondary: #33394a;
+  --fg-muted: #4b5563;
+  --fg-faint: #5a6371;
+
+  --brand-ink: #101114;
+  --brand-text: #4d6b00;         /* citron, darkened for paper */
+  --accent-text: #b0341a;        /* coral, darkened for paper */
+  --accent-alt-text: #4338ca;    /* indigo, darkened for paper */
+
+  --success: #15803d;
+  --warning: #a16207;
+  --error: #c2410c;
+  --info: #4338ca;
+
+  --grid-dot: rgba(16, 17, 20, 0.1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--canvas);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  background-image: radial-gradient(circle at 50% -10%, rgba(124, 92, 255, 0.08), transparent 35%);
+}
+
+::selection { background: var(--brand); color: var(--brand-ink); }
+
+/* --- Surfaces ------------------------------------------------------------ */
+.panel {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--edge);
+  background: var(--surface);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+html.light .panel { box-shadow: 0 1px 2px rgba(16, 17, 20, 0.04); }
+
+.drawer-surface { background: var(--surface); }
+.dropdown-surface { background: var(--elevated); border-color: var(--edge); }
+
+.panel-hover {
+  transition:
+    transform var(--motion-standard) var(--ease-snap),
+    border-color var(--motion-standard) ease,
+    box-shadow var(--motion-standard) ease;
+}
+.panel-hover:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent-alt) 35%, transparent);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+html.light .panel-hover:hover { box-shadow: 0 16px 40px rgba(16, 17, 20, 0.1); }
+
+/* --- Studio Grid texture ------------------------------------------------- */
+.dot-canvas {
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
 .crop-marks { position: relative; }
-.crop-marks::before,.crop-marks::after { content:''; position:absolute; width:16px; height:16px; border-color:#d4ff4f; pointer-events:none; }
-.crop-marks::before { top:-1px;left:-1px;border-top:2px solid #d4ff4f;border-left:2px solid #d4ff4f; }
-.crop-marks::after { bottom:-1px;right:-1px;border-bottom:2px solid #d4ff4f;border-right:2px solid #d4ff4f; }
-.panel { @apply rounded-2xl border border-white/[0.08]; background:#111218; box-shadow:0 1px 0 rgba(255,255,255,.04) inset; }
-html.light .panel { background:#fff; border-color:rgba(16,17,20,.08); }
-.drawer-surface { background:#111218; }
-html.light .drawer-surface { background:#fff; border-color:rgba(16,17,20,.08); }
-.dropdown-surface { background:#17181D; }
-html.light .dropdown-surface { background:#fff; border-color:rgba(16,17,20,.08); }
-.panel-hover { transition:transform 220ms cubic-bezier(.16,1,.3,1),border-color 220ms ease,box-shadow 220ms ease; }
-.panel-hover:hover { transform:translateY(-3px); border-color:rgba(139,92,246,.35); box-shadow:0 20px 50px rgba(0,0,0,.3); }
-.shimmer { background-image:linear-gradient(100deg,rgba(255,255,255,.04) 20%,rgba(255,255,255,.12) 40%,rgba(255,255,255,.04) 60%); background-size:200% 100%; @apply animate-shimmer rounded-panel; }
-.marching-ants { background-image:repeating-linear-gradient(90deg,#d4ff4f 0 8px,transparent 8px 16px),repeating-linear-gradient(90deg,#d4ff4f 0 8px,transparent 8px 16px),repeating-linear-gradient(0deg,#d4ff4f 0 8px,transparent 8px 16px),repeating-linear-gradient(0deg,#d4ff4f 0 8px,transparent 8px 16px); background-size:16px 2px,16px 2px,2px 16px,2px 16px;background-position:0 0,0 100%,0 0,100% 0;background-repeat:repeat-x,repeat-x,repeat-y,repeat-y;animation:marquee 1.2s linear infinite; }
-.ruler-ticks { background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0,rgba(255,255,255,.12) 1px,transparent 1px,transparent 8px);height:6px; }
-.reveal { opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1); }
-.reveal.in-view { opacity:1;transform:translateY(0); }
-.tilt-card { transform-style:preserve-3d;transition:transform 120ms ease-out;will-change:transform; }
-@media (prefers-reduced-motion: reduce) { * { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; } }
+.crop-marks::before,
+.crop-marks::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: var(--brand);
+  pointer-events: none;
+}
+.crop-marks::before { top: -1px; left: -1px; border-top: 2px solid var(--brand); border-left: 2px solid var(--brand); }
+.crop-marks::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--brand); border-right: 2px solid var(--brand); }
+
+.ruler-ticks {
+  background-image: repeating-linear-gradient(90deg, var(--edge) 0, var(--edge) 1px, transparent 1px, transparent 8px);
+  height: 6px;
+}
+.marching-ants {
+  background-image:
+    repeating-linear-gradient(90deg, var(--brand) 0 8px, transparent 8px 16px),
+    repeating-linear-gradient(90deg, var(--brand) 0 8px, transparent 8px 16px),
+    repeating-linear-gradient(0deg, var(--brand) 0 8px, transparent 8px 16px),
+    repeating-linear-gradient(0deg, var(--brand) 0 8px, transparent 8px 16px);
+  background-size: 16px 2px, 16px 2px, 2px 16px, 2px 16px;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  animation: marquee 1.2s linear infinite;
+}
+
+/* --- Loading ------------------------------------------------------------- */
+.shimmer {
+  background-image: linear-gradient(
+    100deg,
+    var(--surface-subtle) 20%,
+    var(--surface-raised) 40%,
+    var(--surface-subtle) 60%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-lg);
+  animation: shimmer 2.2s linear infinite;
+}
+
+/* --- Reveal -------------------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity var(--motion-reveal) var(--ease-snap),
+    transform var(--motion-reveal) var(--ease-snap);
+}
+.reveal.in-view { opacity: 1; transform: translateY(0); }
+
+.tilt-card { transform-style: preserve-3d; transition: transform var(--motion-micro) ease-out; will-change: transform; }
+
+/* --- Focus: one visible ring everywhere, never removed ------------------- */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+html.light :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: var(--accent-alt);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

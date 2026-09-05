@@ -106,7 +106,7 @@ export function PrototypeViewer({
   }, [sorted]);
 
   if (!sorted.length) {
-    return <p className="text-center text-white/40">No screens yet.</p>;
+    return <p className="text-center text-fg-faint">No screens yet.</p>;
   }
 
   const active = sorted.find((s) => s.id === activeId) ?? sorted[0];
@@ -128,14 +128,14 @@ export function PrototypeViewer({
 
   return (
     <div ref={frameRef} className={`flex flex-col items-center gap-3 ${presentation ? 'bg-[#0b0b0b] p-6' : ''}`}>
-      <div className="flex w-full flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-2">
+      <div className="flex w-full flex-wrap items-center justify-between gap-2 rounded-xl border border-edge bg-surface-subtle p-2">
         <div className="flex min-w-0 gap-1 overflow-x-auto">
           {sorted.map((s) => (
             <button
               key={s.id}
               onClick={() => setActiveId(s.id)}
               className={`whitespace-nowrap rounded-full px-3 py-1 text-xs ${
-                s.id === active.id ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white'
+                s.id === active.id ? 'bg-surface-strong text-fg' : 'text-fg-faint hover:text-fg'
               }`}
             >
               {s.name}
@@ -143,12 +143,12 @@ export function PrototypeViewer({
           ))}
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => go(-1)} disabled={!sorted[sorted.findIndex((s) => s.id === active.id) - 1]} className="rounded-lg px-2 py-1 text-xs text-white/50 hover:bg-white/10 disabled:opacity-20">←</button>
-          <button onClick={() => go(1)} disabled={!sorted[sorted.findIndex((s) => s.id === active.id) + 1]} className="rounded-lg px-2 py-1 text-xs text-white/50 hover:bg-white/10 disabled:opacity-20">→</button>
-          <button onClick={() => setPresentation((v) => !v)} className="rounded-lg px-2 py-1 text-xs text-white/50 hover:bg-white/10">
+          <button onClick={() => go(-1)} disabled={!sorted[sorted.findIndex((s) => s.id === active.id) - 1]} className="rounded-lg px-2 py-1 text-xs text-fg-muted hover:bg-surface-raised disabled:opacity-20">←</button>
+          <button onClick={() => go(1)} disabled={!sorted[sorted.findIndex((s) => s.id === active.id) + 1]} className="rounded-lg px-2 py-1 text-xs text-fg-muted hover:bg-surface-raised disabled:opacity-20">→</button>
+          <button onClick={() => setPresentation((v) => !v)} className="rounded-lg px-2 py-1 text-xs text-fg-muted hover:bg-surface-raised">
             {presentation ? 'Exit' : 'Present'}
           </button>
-          <button onClick={toggleFullscreen} className="rounded-lg px-2 py-1 text-xs text-white/50 hover:bg-white/10">
+          <button onClick={toggleFullscreen} className="rounded-lg px-2 py-1 text-xs text-fg-muted hover:bg-surface-raised">
             ⛶
           </button>
         </div>
@@ -182,7 +182,7 @@ export function PrototypeViewer({
               onClick={() => onPinClick?.(pin.id)}
               title="View this comment"
               style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-              className={`absolute -translate-x-1/2 -translate-y-1/2 grid h-5 w-5 place-items-center rounded-full border-2 border-white text-[9px] font-bold !text-white shadow-lg ${pin.resolved ? 'bg-status-success' : 'bg-studio-coral'}`}
+              className={`absolute -translate-x-1/2 -translate-y-1/2 grid h-5 w-5 place-items-center rounded-full border-2 border-white text-[9px] font-bold !text-fg shadow-lg ${pin.resolved ? 'bg-status-success' : 'bg-studio-coral'}`}
             >
               !
             </button>

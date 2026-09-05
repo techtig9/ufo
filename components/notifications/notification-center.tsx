@@ -90,11 +90,11 @@ export function NotificationCenter() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        className="relative rounded-lg p-2 text-white/50 hover:bg-white/5 hover:text-white"
+        className="relative rounded-lg p-2 text-fg-muted hover:bg-surface-subtle hover:text-fg"
       >
         <span aria-hidden="true">🔔</span>
         {unread > 0 && (
-          <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-studio-coral px-1 text-[9px] leading-4 text-black">
+          <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-studio-coral px-1 text-[9px] leading-4 text-brand-ink">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -105,18 +105,18 @@ export function NotificationCenter() {
           id={menuId}
           role="menu"
           aria-label="Notifications"
-          className="dropdown-surface absolute right-0 top-11 z-50 w-[min(360px,calc(100vw-2rem))] animate-scale-in rounded-panel border border-line p-2 shadow-2xl"
+          className="dropdown-surface absolute right-0 top-11 z-50 w-[min(360px,calc(100vw-2rem))] animate-scale-in rounded-panel border border-edge p-2 shadow-2xl"
         >
           <div className="flex items-center justify-between px-3 py-2">
             <div>
               <p className="font-medium">Notifications</p>
-              <p className="text-[10px] text-white/30">{unread} unread</p>
+              <p className="text-[10px] text-fg-faint">{unread} unread</p>
             </div>
             <div className="flex items-center gap-3">
               {unread > 0 && (
-                <button onClick={markAllRead} className="text-xs text-white/40 hover:text-white">Mark all read</button>
+                <button onClick={markAllRead} className="text-xs text-fg-faint hover:text-fg">Mark all read</button>
               )}
-              <button onClick={() => setOpen(false)} className="text-xs text-white/30 hover:text-white">Close</button>
+              <button onClick={() => setOpen(false)} className="text-xs text-fg-faint hover:text-fg">Close</button>
             </div>
           </div>
 
@@ -129,15 +129,15 @@ export function NotificationCenter() {
                 key={item.id}
                 role="menuitem"
                 onClick={() => markRead(item.id)}
-                className={clsx('w-full rounded-lg p-3 text-left hover:bg-white/5', item.read && 'opacity-50')}
+                className={clsx('w-full rounded-lg p-3 text-left hover:bg-surface-subtle', item.read && 'opacity-50')}
               >
                 <div className="flex items-center gap-2">
                   <Badge variant={TYPE_VARIANT[item.type] ?? 'neutral'} size="sm" dot>{item.type}</Badge>
                   {!item.read && <span className="h-1.5 w-1.5 rounded-full bg-studio-citron" aria-hidden="true" />}
                 </div>
-                <p className="mt-1.5 text-sm text-white/80">{item.title}</p>
-                <p className="mt-1 text-xs leading-5 text-white/40">{item.message}</p>
-                <p className="mt-1 text-[9px] text-white/25">{new Date(item.created_at).toLocaleString()}</p>
+                <p className="mt-1.5 text-sm text-fg-secondary">{item.title}</p>
+                <p className="mt-1 text-xs leading-5 text-fg-faint">{item.message}</p>
+                <p className="mt-1 text-[9px] text-fg-faint">{new Date(item.created_at).toLocaleString()}</p>
               </button>
             ))}
           </div>

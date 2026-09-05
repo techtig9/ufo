@@ -41,8 +41,8 @@ export function TemplateCard({ id, name, category, description, screenCount }: T
           <p className="text-sm font-medium">{name}</p>
           <Badge size="sm">{category}</Badge>
         </div>
-        {description && <p className="mt-1.5 text-xs leading-5 text-white/45">{description}</p>}
-        <p className="mt-2 text-[10px] text-white/30">{screenCount} screen{screenCount === 1 ? '' : 's'} · free, no credits used</p>
+        {description && <p className="mt-1.5 text-xs leading-5 text-fg-muted">{description}</p>}
+        <p className="mt-2 text-[10px] text-fg-faint">{screenCount} screen{screenCount === 1 ? '' : 's'} · free, no credits used</p>
       </div>
       <Button size="sm" className="mt-4 w-full" onClick={handleUse} disabled={loading}>
         {loading ? 'Creating…' : 'Use this template'}

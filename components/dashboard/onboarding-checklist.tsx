@@ -15,9 +15,9 @@ export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
     <Panel hover={false}>
       <div className="flex items-center justify-between">
         <h2 className="font-medium">Get started</h2>
-        <span className="font-mono text-xs text-white/40">{doneCount}/{items.length}</span>
+        <span className="font-mono text-xs text-fg-faint">{doneCount}/{items.length}</span>
       </div>
-      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface-raised">
         <div
           className="h-full rounded-full bg-studio-citron transition-all duration-500 ease-snap"
           style={{ width: `${(doneCount / items.length) * 100}%` }}
@@ -28,18 +28,18 @@ export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
           <li key={item.label}>
             <Link
               href={item.href}
-              className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-white/5"
+              className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-subtle"
             >
               <span
                 className={
                   item.done
                     ? 'flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-studio-citron text-[10px] text-ink'
-                    : 'h-4 w-4 shrink-0 rounded-full border border-white/20'
+                    : 'h-4 w-4 shrink-0 rounded-full border border-edge-strong'
                 }
               >
                 {item.done && '\u2713'}
               </span>
-              <span className={item.done ? 'text-white/40 line-through' : 'text-white/80'}>
+              <span className={item.done ? 'text-fg-faint line-through' : 'text-fg-secondary'}>
                 {item.label}
               </span>
             </Link>

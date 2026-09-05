@@ -47,26 +47,26 @@ export default function HelpPage() {
       <main className="relative mx-auto max-w-3xl px-6 py-16">
         <GridField strength="subtle" />
         <div className="relative">
-          <p className="font-mono text-xs uppercase tracking-wider text-studio-citron">Support</p>
+          <p className="font-mono text-xs uppercase tracking-wider text-brand-text">Support</p>
           <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">Help &amp; FAQs</h1>
-          <p className="mt-3 text-white/50">Answers to the most common questions. Can&rsquo;t find what you need? Reach out directly.</p>
+          <p className="mt-3 text-fg-muted">Answers to the most common questions. Can&rsquo;t find what you need? Reach out directly.</p>
 
           <div className="mt-10 space-y-3">
             {FAQS.map((item) => (
               <Panel key={item.q} hover={false} className="p-0">
                 <details className="group p-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-white/90 marker:content-none">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-fg-secondary marker:content-none">
                     {item.q}
-                    <span className="shrink-0 text-white/30 transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+                    <span className="shrink-0 text-fg-faint transition-transform group-open:rotate-45" aria-hidden="true">+</span>
                   </summary>
-                  <p className="mt-3 text-sm leading-6 text-white/50">{item.a}</p>
+                  <p className="mt-3 text-sm leading-6 text-fg-muted">{item.a}</p>
                 </details>
               </Panel>
             ))}
           </div>
 
           <Panel hover={false} className="mt-10 text-center">
-            <p className="text-sm text-white/60">Still stuck? We reply to every message.</p>
+            <p className="text-sm text-fg-muted">Still stuck? We reply to every message.</p>
             <Link href="/contact" className="mt-4 inline-block">
               <Button variant="secondary">Contact support</Button>
             </Link>

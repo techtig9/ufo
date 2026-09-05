@@ -37,10 +37,10 @@ export function CookieConsent() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-4 z-[100] mx-auto max-w-xl animate-fade-up rounded-panel border border-line bg-ink-soft/95 p-4 shadow-lift backdrop-blur-sm sm:inset-x-auto sm:right-4">
-      <p className="text-sm text-white/70">
+    <div className="fixed inset-x-4 bottom-4 z-[100] mx-auto max-w-xl animate-fade-up rounded-panel border border-edge bg-elevated p-4 shadow-lift backdrop-blur-sm sm:inset-x-auto sm:right-4">
+      <p className="text-sm text-fg-secondary">
         We use cookies for login sessions and basic analytics. See our{' '}
-        <Link href="/legal/cookies" className="text-studio-citron hover:underline">
+        <Link href="/legal/cookies" className="text-brand-text hover:underline">
           Cookie Policy
         </Link>
         .

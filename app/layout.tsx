@@ -70,7 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Toaster
           position="bottom-right"
           toastOptions={{
-            className: 'panel !text-white !bg-ink-soft !border-line !rounded-panel',
+            className: 'panel !text-fg !bg-elevated !border-edge !rounded-panel',
             duration: 4000,
           }}
         />

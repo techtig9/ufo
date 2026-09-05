@@ -18,8 +18,8 @@ export function NotificationToggle({
     <form action={action} className="mt-4">
       <label className="flex items-start justify-between gap-4 text-sm">
         <span>
-          <span className="text-white/70">{label}</span>
-          {description && <span className="mt-0.5 block text-xs text-white/40">{description}</span>}
+          <span className="text-fg-secondary">{label}</span>
+          {description && <span className="mt-0.5 block text-xs text-fg-faint">{description}</span>}
         </span>
         <input
           type="checkbox"

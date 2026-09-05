@@ -20,9 +20,9 @@ export default async function ProjectsPage() {
     <div className="mx-auto max-w-6xl space-y-6 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-studio-citron">Workspace</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-text">Workspace</p>
           <h1 className="font-display text-2xl font-semibold">Projects</h1>
-          <p className="mt-1 text-sm text-white/40">Generate, refine, prototype and share your products.</p>
+          <p className="mt-1 text-sm text-fg-faint">Generate, refine, prototype and share your products.</p>
         </div>
         <Link href="/dashboard/ai-designer">
           <Button>+ New Project</Button>

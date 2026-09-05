@@ -65,35 +65,35 @@ export function VersionHistoryPanel({
     <section className="panel rounded-panel p-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">History</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fg-faint">History</p>
           <h3 className="mt-1 font-medium">Version history</h3>
         </div>
-        {loading && <span className="text-xs text-white/30">Loading…</span>}
+        {loading && <span className="text-xs text-fg-faint">Loading…</span>}
       </div>
 
       {!screen ? (
-        <p className="mt-3 text-xs text-white/35">Select a screen first.</p>
+        <p className="mt-3 text-xs text-fg-faint">Select a screen first.</p>
       ) : !versions.length && !loading ? (
-        <p className="mt-3 text-xs text-white/35">No previous versions yet. Saving edits creates them automatically.</p>
+        <p className="mt-3 text-xs text-fg-faint">No previous versions yet. Saving edits creates them automatically.</p>
       ) : (
         <div className="mt-3 space-y-2">
           {versions.map((version, index) => (
-            <div key={version.id} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+            <div key={version.id} className="flex items-center justify-between gap-2 rounded-lg border border-edge bg-surface-subtle px-3 py-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-medium text-white/70">Version {versions.length - index}</p>
+                  <p className="text-xs font-medium text-fg-secondary">Version {versions.length - index}</p>
                   <Badge variant={version.source === 'ai' ? 'primary' : 'neutral'} size="sm">
                     {version.source === 'ai' ? 'AI' : 'Manual'}
                   </Badge>
                 </div>
                 {version.instruction && (
-                  <p className="mt-0.5 truncate text-[10px] text-white/40" title={version.instruction}>{version.instruction}</p>
+                  <p className="mt-0.5 truncate text-[10px] text-fg-faint" title={version.instruction}>{version.instruction}</p>
                 )}
-                <p className="text-[10px] text-white/35">{new Date(version.created_at).toLocaleString()}</p>
+                <p className="text-[10px] text-fg-faint">{new Date(version.created_at).toLocaleString()}</p>
               </div>
               <button
                 onClick={() => setConfirmVersion(version)}
-                className="shrink-0 rounded-md border border-white/10 px-2 py-1 text-[10px] text-white/50 hover:border-studio-citron/40 hover:text-white"
+                className="shrink-0 rounded-md border border-edge px-2 py-1 text-[10px] text-fg-muted hover:border-studio-citron/40 hover:text-fg"
               >
                 Restore
               </button>

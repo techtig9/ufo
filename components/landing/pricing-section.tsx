@@ -15,11 +15,11 @@ export function PricingSection() {
       <div className="relative mx-auto max-w-6xl">
         <Reveal>
           <div className="mx-auto max-w-xl text-center">
-            <p className="font-mono text-xs uppercase tracking-wider text-studio-citron">Pricing</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-brand-text">Pricing</p>
             <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-4xl">
               Simple pricing, real credits
             </h2>
-            <p className="mt-3 text-white/60">
+            <p className="mt-3 text-fg-muted">
               Every plan includes the full generator. Credits cover AI generation; everything
               else — exports, sharing, folders, comments — stays free.
             </p>
@@ -37,22 +37,22 @@ export function PricingSection() {
                 )}
               >
                 {card.featured && (
-                  <span className="mb-3 inline-block w-fit rounded border border-studio-citron/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-studio-citron">
+                  <span className="mb-3 inline-block w-fit rounded border border-studio-citron/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-brand-text">
                     Most popular
                   </span>
                 )}
                 <h3 className="font-display text-lg font-medium">{card.label}</h3>
-                <p className="mt-1 text-sm text-white/50">{card.tagline}</p>
+                <p className="mt-1 text-sm text-fg-muted">{card.tagline}</p>
                 <div className="mt-5 flex items-baseline gap-1">
                   <span className="font-display text-3xl font-semibold">
                     $<CountUp to={card.price} duration={800} />
                   </span>
-                  <span className="text-sm text-white/40">/mo</span>
+                  <span className="text-sm text-fg-faint">/mo</span>
                 </div>
-                <p className="mt-1 font-mono text-xs text-white/40">
+                <p className="mt-1 font-mono text-xs text-fg-faint">
                   <CountUp to={card.credits} duration={1000} /> credits &middot; ~{card.fullProjects} full projects/mo
                 </p>
-                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/70">
+                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-fg-secondary">
                   {card.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
                       <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-studio-coral" />
@@ -76,7 +76,7 @@ export function PricingSection() {
           })}
         </div>
 
-        <p className="mt-8 text-center text-xs text-white/30">
+        <p className="mt-8 text-center text-xs text-fg-faint">
           First 30 days: 10&ndash;20% off Starter/Pro/Business. Annual billing saves 10&ndash;15%. Extra
           credits available as top-up packs from your dashboard.
         </p>

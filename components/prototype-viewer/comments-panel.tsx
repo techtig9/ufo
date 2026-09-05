@@ -144,7 +144,7 @@ export function CommentsPanel({
         <button
           type="button"
           onClick={onTogglePinMode}
-          className={`rounded-full border px-2.5 py-1 text-[10px] font-medium ${pinMode ? 'border-studio-citron bg-studio-citron/10 text-studio-citron' : 'border-white/10 text-white/45 hover:text-white'}`}
+          className={`rounded-full border px-2.5 py-1 text-[10px] font-medium ${pinMode ? 'border-studio-citron bg-studio-citron/10 text-brand-text' : 'border-edge text-fg-muted hover:text-fg'}`}
         >
           {pinMode ? 'Click the preview…' : '📍 Add pin'}
         </button>
@@ -152,7 +152,7 @@ export function CommentsPanel({
 
       <form onSubmit={handleSubmit} className="mt-3 space-y-2">
         {pendingPin && (
-          <p className="text-[10px] text-studio-citron">
+          <p className="text-[10px] text-brand-text">
             Pin placed ✓{' '}
             <button type="button" onClick={onClearPendingPin} className="underline">clear</button>
           </p>
@@ -161,21 +161,21 @@ export function CommentsPanel({
           placeholder="Your name (optional)"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm outline-none focus:border-studio-citron"
+          className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-1.5 text-sm outline-none focus:border-studio-citron"
         />
         <textarea
           placeholder="Leave a note for the team…"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={2}
-          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm outline-none focus:border-studio-citron"
+          className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-1.5 text-sm outline-none focus:border-studio-citron"
         />
         <Button size="sm" type="submit" disabled={submitting}>
           {submitting ? 'Posting…' : 'Post comment'}
         </Button>
       </form>
 
-      <div className="mt-4 border-t border-white/10 pt-3">
+      <div className="mt-4 border-t border-edge pt-3">
         <Tabs
           tabs={[
             { id: 'all', label: 'All', content: null },
@@ -188,7 +188,7 @@ export function CommentsPanel({
       </div>
 
       <div className="mt-3 max-h-72 space-y-3 overflow-y-auto">
-        {!visible.length && <p className="text-xs text-white/30">No comments yet.</p>}
+        {!visible.length && <p className="text-xs text-fg-faint">No comments yet.</p>}
         {visible.map((c) => (
           <div
             key={c.id}
@@ -196,17 +196,17 @@ export function CommentsPanel({
             className={`rounded-lg p-2 transition-colors ${highlightId === c.id ? 'bg-studio-citron/10 ring-1 ring-studio-citron/40' : ''}`}
           >
             <div className="flex items-start justify-between gap-2 text-sm">
-              <p className="text-white/80">{c.body}</p>
+              <p className="text-fg-secondary">{c.body}</p>
               {c.resolved && <Badge variant="success" size="sm">Resolved</Badge>}
             </div>
-            <p className="mt-0.5 text-xs text-white/30">
+            <p className="mt-0.5 text-xs text-fg-faint">
               {c.author_name} · {new Date(c.created_at).toLocaleDateString()}
             </p>
-            <div className="mt-1.5 flex gap-3 text-[10px] text-white/40">
-              <button onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)} className="hover:text-white">Reply</button>
+            <div className="mt-1.5 flex gap-3 text-[10px] text-fg-faint">
+              <button onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)} className="hover:text-fg">Reply</button>
               {isOwner && (
                 <>
-                  <button onClick={() => toggleResolved(c)} className="hover:text-white">
+                  <button onClick={() => toggleResolved(c)} className="hover:text-fg">
                     {c.resolved ? 'Reopen' : 'Resolve'}
                   </button>
                   <button onClick={() => deleteComment(c.id)} className="text-status-error/70 hover:text-status-error">Delete</button>
@@ -215,9 +215,9 @@ export function CommentsPanel({
             </div>
 
             {repliesOf(c.id).map((reply) => (
-              <div key={reply.id} className="mt-2 ml-4 border-l border-white/10 pl-3">
-                <p className="text-sm text-white/70">{reply.body}</p>
-                <p className="mt-0.5 text-xs text-white/30">
+              <div key={reply.id} className="mt-2 ml-4 border-l border-edge pl-3">
+                <p className="text-sm text-fg-secondary">{reply.body}</p>
+                <p className="mt-0.5 text-xs text-fg-faint">
                   {reply.author_name} · {new Date(reply.created_at).toLocaleDateString()}
                 </p>
                 {isOwner && (
@@ -232,7 +232,7 @@ export function CommentsPanel({
                   value={replyBody}
                   onChange={(e) => setReplyBody(e.target.value)}
                   placeholder="Write a reply…"
-                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs outline-none focus:border-studio-citron"
+                  className="min-w-0 flex-1 rounded-lg border border-edge bg-surface-subtle px-2.5 py-1.5 text-xs outline-none focus:border-studio-citron"
                 />
                 <Button size="sm" onClick={() => handleReplySubmit(c.id)} disabled={submitting}>Send</Button>
               </div>

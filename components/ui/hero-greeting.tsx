@@ -10,5 +10,5 @@ export function HeroGreeting() {
 
   if (!greeting) return null;
 
-  return <p className="mb-3 text-sm text-white/40">{greeting} {'\u{1F44B}'}</p>;
+  return <p className="mb-3 text-sm text-fg-faint">{greeting} {'\u{1F44B}'}</p>;
 }

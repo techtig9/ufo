@@ -170,10 +170,10 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
       <Panel className="mx-auto max-w-2xl text-center">
         <div className="mx-auto mb-4 h-40 w-full max-w-md shimmer" />
         <p className="font-medium">Generating your screens{'\u2026'}</p>
-        <p className="mt-1 text-sm text-white/50">
+        <p className="mt-1 text-sm text-fg-muted">
           Building a shared design system, then rendering each linked screen. Usually 15{'\u2013'}45s.
         </p>
-        <p className="mt-3 font-mono text-xs text-white/30" role="status" aria-live="polite">
+        <p className="mt-3 font-mono text-xs text-fg-faint" role="status" aria-live="polite">
           {elapsedSeconds}s elapsed
         </p>
       </Panel>
@@ -190,7 +190,7 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
             key={s}
             className={clsx(
               'h-1 flex-1 rounded-full transition-colors',
-              i <= stepIndex ? 'bg-studio-citron' : 'bg-white/10'
+              i <= stepIndex ? 'bg-studio-citron' : 'bg-surface-raised'
             )}
           />
         ))}
@@ -203,13 +203,13 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
             <div className="flex gap-2">
               <button
                 onClick={() => setMode('scratch')}
-                className={clsx('rounded-full px-4 py-1.5 text-sm', mode === 'scratch' ? 'bg-white/10' : 'text-white/50')}
+                className={clsx('rounded-full px-4 py-1.5 text-sm', mode === 'scratch' ? 'bg-surface-raised' : 'text-fg-muted')}
               >
                 Start from scratch
               </button>
               <button
                 onClick={() => setMode('import')}
-                className={clsx('rounded-full px-4 py-1.5 text-sm', mode === 'import' ? 'bg-white/10' : 'text-white/50')}
+                className={clsx('rounded-full px-4 py-1.5 text-sm', mode === 'import' ? 'bg-surface-raised' : 'text-fg-muted')}
               >
                 Import existing design
               </button>
@@ -219,7 +219,7 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
             placeholder="Project name"
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+            className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
           />
           {mode === 'scratch' ? (
             <div className="relative">
@@ -228,7 +228,7 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 pr-28 text-sm outline-none focus:border-studio-citron"
+                className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 pr-28 text-sm outline-none focus:border-studio-citron"
               />
               <button
                 type="button"
@@ -236,8 +236,8 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
                 className={clsx(
                   'absolute bottom-2 right-2 rounded-lg border px-2.5 py-1.5 text-xs transition',
                   listening
-                    ? 'border-studio-citron bg-studio-citron/15 text-studio-citron'
-                    : 'border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+                    ? 'border-studio-citron bg-studio-citron/15 text-brand-text'
+                    : 'border-edge text-fg-muted hover:bg-surface-raised hover:text-fg'
                 )}
                 aria-label={listening ? 'Stop voice input' : 'Start voice input'}
               >
@@ -250,19 +250,19 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
                 placeholder="Live URL, or describe the screenshot/Figma link you'll attach"
                 value={importSource}
                 onChange={(e) => setImportSource(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+                className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
               />
               <textarea
                 placeholder="What should change or extend?"
                 value={importInstruction}
                 onChange={(e) => setImportInstruction(e.target.value)}
                 rows={3}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-studio-citron"
+                className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
               />
             </>
           )}
           <div>
-            <p className="mb-2 text-sm text-white/60">Project type</p>
+            <p className="mb-2 text-sm text-fg-muted">Project type</p>
             <div className="flex flex-wrap gap-2">
               {PROJECT_TYPES.map((t) => (
                 <button
@@ -272,7 +272,7 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
                     'rounded-full border px-4 py-1.5 text-sm',
                     answers.projectType === t.value
                       ? 'border-studio-citron bg-studio-citron/20'
-                      : 'border-white/10 text-white/60'
+                      : 'border-edge text-fg-muted'
                   )}
                 >
                   {t.label}
@@ -342,8 +342,8 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
       {step === 'review' && (
         <div className="space-y-3 text-sm">
           <h2 className="text-lg font-medium">Ready to generate</h2>
-          <p className="text-white/60">{projectName || 'Untitled project'}</p>
-          <ul className="space-y-1 text-white/50">
+          <p className="text-fg-muted">{projectName || 'Untitled project'}</p>
+          <ul className="space-y-1 text-fg-muted">
             <li>Type: {answers.projectType}</li>
             <li>Devices: {answers.targetDevices.join(', ')}</li>
             <li>Style: {answers.designStyle}</li>
@@ -398,14 +398,14 @@ function StepChoices({
               'rounded-full border px-4 py-1.5 text-sm capitalize',
               selected.includes(o.value)
                 ? 'border-studio-citron bg-studio-citron/20'
-                : 'border-white/10 text-white/60'
+                : 'border-edge text-fg-muted'
             )}
           >
             {o.label}
           </button>
         ))}
       </div>
-      {multi && <p className="mt-2 text-xs text-white/30">Select one or more.</p>}
+      {multi && <p className="mt-2 text-xs text-fg-faint">Select one or more.</p>}
     </div>
   );
 }
