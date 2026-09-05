@@ -1,50 +1,61 @@
 /**
- * Company details used in legal pages, the footer and contact copy.
+ * Company details used in the legal pages, the footer and contact copy.
  *
  * These were previously hardcoded placeholders — "[Your Name / Agency Name]",
- * "[your contact email]", "[date]" — scattered across seven files and shipped
- * to production pages. The Master Command forbids placeholder copy and
- * requires the legal pages to carry real company information.
+ * "[your contact email]", "[date]" — scattered across nine files and shipped to
+ * production pages including Terms and Privacy. The Master Command forbids
+ * placeholder copy and requires the legal pages to carry real company
+ * information.
  *
- * They are collected here rather than invented: a legal entity name,
- * jurisdiction and contact address are facts about your business that only you
- * can supply, and fabricating them on Terms and Privacy pages would be worse
- * than an obvious gap.
+ * They are read from the environment rather than written into the source,
+ * because a legal entity name, jurisdiction and contact address are facts about
+ * your business that belong in deployment configuration, not in a commit — and
+ * because filling them should not require a code change and a redeploy of the
+ * repository.
  *
- * Set these before launch. `npm run preflight` fails while any value is still
- * a placeholder, so an unfilled build cannot reach production unnoticed.
+ * `npm run preflight` fails under CI or NODE_ENV=production while any value is
+ * still unset, so an unfilled build cannot reach production unnoticed.
+ *
+ * All are read at build/render time on the server. They are NOT prefixed
+ * NEXT_PUBLIC_ because none of them need to reach the browser as variables —
+ * they are rendered into the markup server-side.
  */
 
-export const COMPANY = {
+const UNSET = '';
+
+function read(name: string): string {
+  return (process.env[name] ?? UNSET).trim();
+}
+
+export const COMPANY_FIELDS = {
   /** Legal operator of the service, as it should appear in the Terms. */
-  legalName: 'TODO_COMPANY_LEGAL_NAME',
+  legalName: 'UFO_COMPANY_LEGAL_NAME',
   /** Trading/brand name shown in the footer and About section. */
-  displayName: 'TODO_COMPANY_DISPLAY_NAME',
+  displayName: 'UFO_COMPANY_DISPLAY_NAME',
   /** Where support and legal notices should be sent. */
-  contactEmail: 'TODO_COMPANY_CONTACT_EMAIL',
+  contactEmail: 'UFO_COMPANY_CONTACT_EMAIL',
   /** Governing law for the Terms, e.g. "England and Wales". */
-  jurisdiction: 'TODO_COMPANY_JURISDICTION',
-  /** Effective date shown on the legal documents, ISO yyyy-mm-dd. */
-  legalEffectiveDate: 'TODO_LEGAL_EFFECTIVE_DATE',
+  jurisdiction: 'UFO_COMPANY_JURISDICTION',
+  /** Effective date shown on the legal documents. */
+  legalEffectiveDate: 'UFO_LEGAL_EFFECTIVE_DATE',
   /** Public launch date shown on the changelog. */
-  launchDate: 'TODO_LAUNCH_DATE',
+  launchDate: 'UFO_LAUNCH_DATE',
 } as const;
 
-export type CompanyField = keyof typeof COMPANY;
+export type CompanyField = keyof typeof COMPANY_FIELDS;
 
-/** Fields still holding their placeholder value. */
+/** Fields with no value configured. */
 export function unsetCompanyFields(): CompanyField[] {
-  return (Object.keys(COMPANY) as CompanyField[]).filter((k) =>
-    COMPANY[k].startsWith('TODO_')
+  return (Object.keys(COMPANY_FIELDS) as CompanyField[]).filter(
+    (field) => read(COMPANY_FIELDS[field]) === UNSET
   );
 }
 
 /**
- * Renders a value for display. An unset field renders as a clearly-marked gap
- * rather than the raw token, so if one does reach a page it reads as an
- * obvious omission instead of looking like real content.
+ * Renders a value for display. An unconfigured field renders as a clearly
+ * marked gap rather than an empty string or a raw token, so if one does reach a
+ * page it reads as an obvious omission instead of looking like real content.
  */
 export function companyValue(field: CompanyField): string {
-  const value = COMPANY[field];
-  return value.startsWith('TODO_') ? '— not set —' : value;
+  return read(COMPANY_FIELDS[field]) || '— not set —';
 }

@@ -32,24 +32,33 @@ if (bad.length) {
   process.exit(1);
 }
 // ---------------------------------------------------------------------------
-// Company details must be filled before a production build.
+// Company details must be configured before a production build.
 //
 // The legal pages, footer and contact copy previously shipped hardcoded
 // placeholders ("[Your Name / Agency Name]", "[your contact email]"). Those are
-// now centralised in lib/company.ts, and this check keeps an unfilled build
-// from reaching production unnoticed. It is a warning locally and an error in
-// CI/production, so local development is not blocked by details a developer
-// cannot supply.
+// now read from the environment via lib/company.ts, and this check keeps an
+// unconfigured build from reaching production unnoticed.
+//
+// Warning locally, error in CI/production: a developer running the app on their
+// machine should not be blocked by details only the business owner can supply.
 // ---------------------------------------------------------------------------
-const companySrc = fs.readFileSync(path.join(root, "lib/company.ts"), "utf8");
-const unset = [...companySrc.matchAll(/^\s*(\w+):\s*'TODO_[A-Z_]+'/gm)].map((m) => m[1]);
+const COMPANY_VARS = [
+  "UFO_COMPANY_LEGAL_NAME",
+  "UFO_COMPANY_DISPLAY_NAME",
+  "UFO_COMPANY_CONTACT_EMAIL",
+  "UFO_COMPANY_JURISDICTION",
+  "UFO_LEGAL_EFFECTIVE_DATE",
+  "UFO_LAUNCH_DATE",
+];
+
+const unset = COMPANY_VARS.filter((v) => !(process.env[v] ?? "").trim());
 
 if (unset.length) {
   const isProduction = process.env.CI === "true" || process.env.NODE_ENV === "production";
   const message =
-    `Company details are still unset in lib/company.ts: ${unset.join(", ")}.\n` +
+    `Company details are not configured: ${unset.join(", ")}.\n` +
     "These appear on the Terms, Privacy, Refunds and Cookie pages, the footer " +
-    "and the contact page. Fill them in before launch.";
+    "and the contact page. Set them in your deployment environment before launch.";
 
   if (isProduction) {
     console.error("Preflight failed:", message);
