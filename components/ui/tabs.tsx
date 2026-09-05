@@ -63,7 +63,7 @@ export function Tabs({ tabs, value, onChange, defaultValue, className }: TabsPro
               onClick={() => select(tab.id)}
               onKeyDown={(e) => handleKeyDown(e, i)}
               className={clsx(
-                'relative px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-studio-citron disabled:opacity-40 disabled:pointer-events-none',
+                'relative px-4 py-2.5 text-sm font-medium transition-colors duration-standard focus-visible:outline focus-visible:outline-2 focus-visible:outline-studio-citron disabled:opacity-40 disabled:pointer-events-none',
                 selected ? 'text-fg' : 'text-fg-muted hover:text-fg-secondary'
               )}
             >

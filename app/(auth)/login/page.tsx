@@ -162,8 +162,8 @@ function LoginForm() {
               autoFocus
               className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
             />
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? 'Verifying…' : 'Verify'}
+            <Button type="submit" loading={loading} loadingLabel="Verifying your code" className="w-full">
+              Verify
             </Button>
           </form>
         </Panel>
@@ -236,8 +236,8 @@ function LoginForm() {
 
           <TurnstileWidget onVerify={setCaptchaToken} />
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Logging in…' : 'Log in'}
+          <Button type="submit" loading={loading} loadingLabel="Logging in" className="w-full">
+            Log in
           </Button>
         </form>
 

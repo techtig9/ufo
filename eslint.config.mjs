@@ -37,9 +37,7 @@ const config = [
     files: [
       'components/editor/ai-design-copilot.tsx',
       'components/editor/code-editor-panel.tsx',
-      'components/editor/version-history-panel.tsx',
       'components/generator/generator-form.tsx',
-      'components/notifications/notification-center.tsx',
       'components/prototype-viewer/prototype-viewer.tsx',
     ],
     rules: {

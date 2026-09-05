@@ -34,7 +34,33 @@ const COLOR_PRESETS = ['Violet & Teal', 'Warm Sunset', 'Ocean Blue', 'Monochrome
 type Step = 'describe' | 'device' | 'style' | 'screens' | 'nav' | 'color' | 'font' | 'review';
 const STEP_ORDER: Step[] = ['describe', 'device', 'style', 'screens', 'nav', 'color', 'font', 'review'];
 
-export function GeneratorForm({ canImport }: { canImport: boolean }) {
+export function GeneratorForm({
+  canImport,
+  onStateChange,
+  embedded = false,
+}: {
+  canImport: boolean;
+  /**
+   * Inside the Designer workspace the surrounding layout owns the width and
+   * the generating display, so the form drops its own centred max-width and
+   * its full-panel takeover.
+   */
+  embedded?: boolean;
+  /**
+   * Reports the live wizard state so the surrounding workspace can show the
+   * user's real, current selections. Optional — the form still works standalone.
+   */
+  onStateChange?: (state: {
+    step: string;
+    stepIndex: number;
+    stepCount: number;
+    projectName: string;
+    description: string;
+    answers: FollowUpAnswers;
+    generating: boolean;
+    elapsedSeconds: number;
+  }) => void;
+}) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('describe');
   const [mode, setMode] = useState<'scratch' | 'import'>('scratch');
@@ -133,6 +159,22 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
     }));
   }
 
+  useEffect(() => {
+    onStateChange?.({
+      step,
+      stepIndex: STEP_ORDER.indexOf(step),
+      stepCount: STEP_ORDER.length,
+      projectName,
+      description,
+      answers,
+      generating,
+      elapsedSeconds,
+    });
+    // `onStateChange` is intentionally excluded: callers pass an inline
+    // closure, and including it would re-report on every parent render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, projectName, description, answers, generating, elapsedSeconds]);
+
   async function handleGenerate() {
     setGenerating(true);
     try {
@@ -166,6 +208,22 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
   }
 
   if (generating) {
+    // Embedded, the workspace's centre region already shows this — a second
+    // copy in the left rail would just be noise.
+    if (embedded) {
+      return (
+        <Panel className="text-center" hover={false}>
+          <p className="font-medium">Generating{'\u2026'}</p>
+          <p className="mt-1 text-sm text-fg-muted">
+            Your brief is locked while this runs.
+          </p>
+          <p className="mt-3 font-mono text-xs text-fg-faint" role="status" aria-live="polite">
+            {elapsedSeconds}s elapsed
+          </p>
+        </Panel>
+      );
+    }
+
     return (
       <Panel className="mx-auto max-w-2xl text-center">
         <div className="mx-auto mb-4 h-40 w-full max-w-md shimmer" />
@@ -182,7 +240,7 @@ export function GeneratorForm({ canImport }: { canImport: boolean }) {
 
   return (
     <>
-    <Panel className="mx-auto max-w-2xl" hover={false}>
+    <Panel className={embedded ? '' : 'mx-auto max-w-2xl'} hover={false}>
       {/* progress */}
       <div className="mb-6 flex gap-1.5">
         {STEP_ORDER.map((s, i) => (

@@ -82,7 +82,7 @@ export function Dropdown({ trigger, items, align = 'right', triggerLabel, header
                 setOpen(false);
               }}
               className={clsx(
-                'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors disabled:opacity-40 disabled:pointer-events-none',
+                'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors duration-micro disabled:opacity-40 disabled:pointer-events-none',
                 item.destructive ? 'text-status-error hover:bg-status-error/10' : 'text-fg-secondary hover:bg-surface-raised hover:text-fg'
               )}
             >

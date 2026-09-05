@@ -25,25 +25,33 @@ const TYPE_VARIANT: Record<string, 'neutral' | 'primary' | 'success' | 'warning'
 
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(false);
+  // `null` means "not loaded yet", so loading is derived rather than tracked
+  // in a second state that could disagree with the data.
+  const [items, setItems] = useState<Notification[] | null>(null);
+  const loading = items === null;
+  /** One non-null list for rendering; `items === null` still means "loading". */
+  const list = items ?? [];
   const containerRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
 
   async function load() {
-    setLoading(true);
     try {
       const res = await fetch('/api/notifications');
-      if (!res.ok) return;
+      if (!res.ok) { setItems([]); return; }
       const data = await res.json();
       setItems(data.notifications ?? []);
-    } finally {
-      setLoading(false);
+    } catch {
+      setItems([]);
     }
   }
 
   useEffect(() => {
-    load();
+    let cancelled = false;
+    fetch('/api/notifications')
+      .then((r) => (r.ok ? r.json() : { notifications: [] }))
+      .then((d) => { if (!cancelled) setItems(d.notifications ?? []); })
+      .catch(() => { if (!cancelled) setItems([]); });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -63,7 +71,7 @@ export function NotificationCenter() {
   }, [open]);
 
   async function markRead(id: string) {
-    setItems((current) => current.map((item) => item.id === id ? { ...item, read: true } : item));
+    setItems((current) => (current ?? []).map((item) => (item.id === id ? { ...item, read: true } : item)));
     await fetch('/api/notifications', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -72,7 +80,7 @@ export function NotificationCenter() {
   }
 
   async function markAllRead() {
-    setItems((current) => current.map((item) => ({ ...item, read: true })));
+    setItems((current) => (current ?? []).map((item) => ({ ...item, read: true })));
     await fetch('/api/notifications', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -80,7 +88,7 @@ export function NotificationCenter() {
     });
   }
 
-  const unread = items.filter((item) => !item.read).length;
+  const unread = list.filter((item) => !item.read).length;
 
   return (
     <div ref={containerRef} className="relative">
@@ -121,10 +129,10 @@ export function NotificationCenter() {
           </div>
 
           <div className="max-h-80 space-y-1 overflow-y-auto">
-            {!loading && !items.length && (
+            {!loading && !list.length && (
               <EmptyState title="You're all caught up" className="py-8" />
             )}
-            {items.map((item) => (
+            {list.map((item) => (
               <button
                 key={item.id}
                 role="menuitem"

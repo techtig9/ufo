@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { GeneratorForm } from '@/components/generator/generator-form';
+import { DesignerWorkspace } from '@/components/generator/designer-workspace';
 
 export default async function AIDesignerPage() {
   const supabase = await createClient();
@@ -15,10 +15,5 @@ export default async function AIDesignerPage() {
 
   const canImport = subscription?.plan !== 'free';
 
-  return (
-    <div className="mx-auto max-w-3xl p-4">
-      <h1 className="mb-8 text-center text-2xl font-semibold">AI Designer</h1>
-      <GeneratorForm canImport={canImport} />
-    </div>
-  );
+  return <DesignerWorkspace canImport={canImport} />;
 }

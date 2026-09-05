@@ -24,19 +24,30 @@ export function VersionHistoryPanel({
   screen?: Screen;
   onRestored: (screen: Screen) => void;
 }) {
-  const [versions, setVersions] = useState<Version[]>([]);
-  const [loading, setLoading] = useState(false);
+  // The loaded rows are stored WITH the screen they belong to. Staleness is
+  // then derived, so switching screens needs no synchronous reset in the
+  // effect — and the list can never briefly show another screen's history.
+  const [loaded, setLoaded] = useState<{ screenId: string; rows: Version[] } | null>(null);
+  const fresh = !!screen && loaded?.screenId === screen.id;
+  const list = fresh ? loaded!.rows : [];
+  const loading = !!screen && !fresh;
   const [confirmVersion, setConfirmVersion] = useState<Version | null>(null);
   const [restoring, setRestoring] = useState(false);
 
   useEffect(() => {
     if (!screen) return;
-    setLoading(true);
-    fetch(`/api/projects/${projectId}/versions?screenId=${screen.id}`)
+    let cancelled = false;
+    const screenId = screen.id;
+    fetch(`/api/projects/${projectId}/versions?screenId=${screenId}`)
       .then((r) => r.json())
-      .then((data) => setVersions(data.versions ?? []))
-      .catch(() => toast.error('Could not load version history'))
-      .finally(() => setLoading(false));
+      .then((data) => { if (!cancelled) setLoaded({ screenId, rows: data.versions ?? [] }); })
+      .catch(() => {
+        if (cancelled) return;
+        setLoaded({ screenId, rows: [] });
+        toast.error('Could not load version history');
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, screen?.id]);
 
   async function restore() {
@@ -73,15 +84,15 @@ export function VersionHistoryPanel({
 
       {!screen ? (
         <p className="mt-3 text-xs text-fg-faint">Select a screen first.</p>
-      ) : !versions.length && !loading ? (
+      ) : !list.length && !loading ? (
         <p className="mt-3 text-xs text-fg-faint">No previous versions yet. Saving edits creates them automatically.</p>
       ) : (
         <div className="mt-3 space-y-2">
-          {versions.map((version, index) => (
+          {list.map((version, index) => (
             <div key={version.id} className="flex items-center justify-between gap-2 rounded-lg border border-edge bg-surface-subtle px-3 py-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-medium text-fg-secondary">Version {versions.length - index}</p>
+                  <p className="text-xs font-medium text-fg-secondary">Version {list.length - index}</p>
                   <Badge variant={version.source === 'ai' ? 'primary' : 'neutral'} size="sm">
                     {version.source === 'ai' ? 'AI' : 'Manual'}
                   </Badge>

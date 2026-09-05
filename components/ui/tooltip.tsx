@@ -56,7 +56,7 @@ export function Tooltip({ children, content, side = 'top' }: TooltipProps) {
         role="tooltip"
         id={id}
         className={clsx(
-          'dropdown-surface pointer-events-none absolute z-[150] whitespace-nowrap rounded-md border border-edge px-2.5 py-1.5 text-xs text-fg shadow-lift transition-opacity duration-150',
+          'dropdown-surface pointer-events-none absolute z-[150] whitespace-nowrap rounded-md border border-edge px-2.5 py-1.5 text-xs text-fg shadow-lift transition-opacity duration-micro',
           sideClasses[side],
           visible ? 'opacity-100' : 'opacity-0'
         )}

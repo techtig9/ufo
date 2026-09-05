@@ -130,8 +130,14 @@ function SignupForm() {
               className="mt-1 w-full rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-sm outline-none focus:border-studio-citron"
             />
           </div>
-          <Button type="submit" disabled={loading || !agreed} className="w-full">
-            {loading ? 'Creating account\u2026' : 'Create account'}
+          <Button
+            type="submit"
+            loading={loading}
+            loadingLabel="Creating your account"
+            disabled={!agreed}
+            className="w-full"
+          >
+            Create account
           </Button>
           <label className="flex items-start gap-2 text-xs text-fg-muted">
             <input

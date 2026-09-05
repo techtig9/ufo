@@ -109,7 +109,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="shrink-0 rounded-md p-1 text-fg-faint transition-colors hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-studio-citron"
+            className="shrink-0 rounded-md p-1 text-fg-faint transition-colors duration-overlay hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-studio-citron"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M4.5 4.5l9 9m0-9l-9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
