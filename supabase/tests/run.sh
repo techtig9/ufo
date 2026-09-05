@@ -75,4 +75,15 @@ if [[ $STOP_AT_006 -eq 0 ]]; then
   for migration in "$REPO"/supabase/migrations/*.sql; do $APPLY2 -f "$migration"; done
   $PSQL -d $DB2 -f "$REPO/supabase/tests/phase2_tests.sql" 2>&1 |
     grep -vE '^SET$|^RESET$|^-+$|^\(1 row\)$|Pager usage'
+
+  echo
+  echo "==> running Phase 4 suite (workspace roles, share permissions)"
+  DB4=${DB}_p4
+  $PSQL -q -c "drop database if exists $DB4;" -c "create database $DB4;"
+  APPLY4="$PSQL -d $DB4 -v ON_ERROR_STOP=1 -q"
+  $APPLY4 -f "$REPO/supabase/tests/00_supabase_harness.sql"
+  $APPLY4 -f "$REPO/supabase/schema.sql"
+  for migration in "$REPO"/supabase/migrations/*.sql; do $APPLY4 -f "$migration"; done
+  $PSQL -d $DB4 -f "$REPO/supabase/tests/phase4_tests.sql" 2>&1 |
+    grep -vE '^SET$|^RESET$|^-+$|^\(1 row\)$|Pager usage'
 fi

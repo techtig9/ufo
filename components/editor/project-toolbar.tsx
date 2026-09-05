@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Panel } from '@/components/ui/panel';
 import { Tooltip } from '@/components/ui/tooltip';
+import { ShareSettings, formatExpiry } from '@/components/editor/share-settings';
 import { exportProjectZip } from '@/lib/export';
 import type { Plan, Project, Screen } from '@/lib/types';
 
@@ -21,22 +22,34 @@ function timeAgo(iso: string): string {
   return `${days}d ago`;
 }
 
+/** The share row as the editor needs it — never carrying the password hash. */
+export interface ProjectShare {
+  slug: string;
+  isPublic: boolean;
+  publishedAt: string | null;
+  expiresAt: string | null;
+  hasPassword: boolean;
+  allowComments: boolean;
+}
+
 export function ProjectToolbar({
   project,
   screens,
-  shareSlug,
-  isPublic: initialPublic,
-  publishedAt: initialPublishedAt,
+  share,
 }: {
   project: Project;
   screens: Screen[];
-  shareSlug: string;
-  isPublic: boolean;
-  publishedAt: string | null;
+  share: ProjectShare;
 }) {
   const router = useRouter();
-  const [isPublic, setIsPublic] = useState(initialPublic);
-  const [publishedAt, setPublishedAt] = useState(initialPublishedAt);
+  const shareSlug = share.slug;
+  const [isPublic, setIsPublic] = useState(share.isPublic);
+  const [publishedAt, setPublishedAt] = useState(share.publishedAt);
+  const [permissions, setPermissions] = useState({
+    expiresAt: share.expiresAt,
+    hasPassword: share.hasPassword,
+    allowComments: share.allowComments,
+  });
   const [qr, setQr] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [plan, setPlan] = useState<Plan>('free');
@@ -77,7 +90,20 @@ export function ProjectToolbar({
     }
     setIsPublic(data.is_public);
     setPublishedAt(data.published_at ?? publishedAt);
-    toast.success(data.is_public ? 'Prototype published' : 'Prototype unpublished');
+    setPermissions({
+      expiresAt: data.expires_at ?? null,
+      hasPassword: !!data.hasPassword,
+      allowComments: data.allow_comments ?? true,
+    });
+    if (data.is_public && formatExpiry(data.expires_at ?? null) === 'Expired') {
+      // Publishing does not clear a past expiry, so the link would be dead on
+      // arrival. Say so rather than handing over a link that 404s.
+      toast('Published, but the link is past its expiry date — update it in Link settings.', {
+        icon: '⚠️',
+      });
+    } else {
+      toast.success(data.is_public ? 'Prototype published' : 'Prototype unpublished');
+    }
     router.refresh();
   }
 
@@ -150,6 +176,11 @@ export function ProjectToolbar({
                 Copy link
               </button>
             </div>
+          </div>
+        )}
+        {isPublic && (
+          <div className="mt-3 border-t border-edge pt-3">
+            <ShareSettings projectId={project.id} value={permissions} onChange={setPermissions} />
           </div>
         )}
       </div>

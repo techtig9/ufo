@@ -275,3 +275,119 @@ export async function sendSecurityNotificationEmail(
     params.userId
   );
 }
+
+/**
+ * Workspace invitation.
+ *
+ * Unlike the security notifications, this one legitimately carries an action
+ * link — the whole purpose of the message is for the recipient to follow it.
+ * It states who invited them, to what, and when the link stops working, so a
+ * forwarded or stale invitation is recognisable rather than mysterious.
+ */
+export async function sendWorkspaceInviteEmail(
+  to: string,
+  params: { workspaceName: string; role: string; acceptUrl: string; expiresAt: string }
+): Promise<EmailStatus> {
+  const expires = new Date(params.expiresAt).toUTCString();
+
+  return send(
+    to,
+    `You have been invited to ${params.workspaceName} on ufo`,
+    wrapper(`
+      <h1 style="font-size:20px;">Join ${escapeHtml(params.workspaceName)}</h1>
+      <p style="color:#B5B7C0;line-height:1.6;">
+        You have been invited to collaborate on ufo as
+        <strong style="color:#fff;">${escapeHtml(params.role)}</strong>.
+      </p>
+      <p style="margin-top:20px;">
+        <a href="${escapeHtml(params.acceptUrl)}"
+           style="display:inline-block;background:#D4FF4F;color:#101114;text-decoration:none;
+                  font-weight:600;font-size:14px;padding:10px 18px;border-radius:10px;">
+          Accept invitation
+        </a>
+      </p>
+      <p style="color:#737D8F;line-height:1.6;font-size:12px;margin-top:20px;">
+        This link expires on ${escapeHtml(expires)} and can only be used by
+        ${escapeHtml(to)}. If you were not expecting it, you can ignore this email —
+        nothing happens until you accept.
+      </p>
+    `),
+    'workspace_invite',
+    null
+  );
+}
+
+/**
+ * Someone was @-mentioned in a comment.
+ *
+ * The comment body is included as plain text with the mention tokens collapsed
+ * (`toPlainText`), and escaped like every other value here — a comment is
+ * attacker-controlled text that may have come from an anonymous visitor to a
+ * public share link.
+ */
+export async function sendMentionEmail(
+  to: string,
+  params: { actorName: string; projectName: string; excerpt: string; url: string }
+): Promise<EmailStatus> {
+  return send(
+    to,
+    `${params.actorName} mentioned you on ${params.projectName}`,
+    wrapper(`
+      <h1 style="font-size:20px;">You were mentioned</h1>
+      <p style="color:#B5B7C0;line-height:1.6;">
+        <strong style="color:#fff;">${escapeHtml(params.actorName)}</strong> mentioned you in a
+        comment on <strong style="color:#fff;">${escapeHtml(params.projectName)}</strong>.
+      </p>
+      <blockquote style="margin:18px 0;padding:12px 16px;border-left:3px solid #D4FF4F;
+                          background:#17181C;color:#B5B7C0;line-height:1.6;font-size:14px;">
+        ${escapeHtml(params.excerpt)}
+      </blockquote>
+      <p style="margin-top:20px;">
+        <a href="${escapeHtml(params.url)}"
+           style="display:inline-block;background:#D4FF4F;color:#101114;text-decoration:none;
+                  font-weight:600;font-size:14px;padding:10px 18px;border-radius:10px;">
+          View the comment
+        </a>
+      </p>
+      <p style="color:#737D8F;line-height:1.6;font-size:12px;margin-top:20px;">
+        You can turn collaboration emails off in Settings.
+      </p>
+    `),
+    'comment_mention',
+    null
+  );
+}
+
+/** A comment was assigned to someone to act on. */
+export async function sendCommentAssignmentEmail(
+  to: string,
+  params: { actorName: string; projectName: string; excerpt: string; url: string }
+): Promise<EmailStatus> {
+  return send(
+    to,
+    `${params.actorName} assigned you a comment on ${params.projectName}`,
+    wrapper(`
+      <h1 style="font-size:20px;">A comment is waiting for you</h1>
+      <p style="color:#B5B7C0;line-height:1.6;">
+        <strong style="color:#fff;">${escapeHtml(params.actorName)}</strong> assigned you a comment
+        on <strong style="color:#fff;">${escapeHtml(params.projectName)}</strong>.
+      </p>
+      <blockquote style="margin:18px 0;padding:12px 16px;border-left:3px solid #D4FF4F;
+                          background:#17181C;color:#B5B7C0;line-height:1.6;font-size:14px;">
+        ${escapeHtml(params.excerpt)}
+      </blockquote>
+      <p style="margin-top:20px;">
+        <a href="${escapeHtml(params.url)}"
+           style="display:inline-block;background:#D4FF4F;color:#101114;text-decoration:none;
+                  font-weight:600;font-size:14px;padding:10px 18px;border-radius:10px;">
+          Open the comment
+        </a>
+      </p>
+      <p style="color:#737D8F;line-height:1.6;font-size:12px;margin-top:20px;">
+        You can turn collaboration emails off in Settings.
+      </p>
+    `),
+    'comment_assignment',
+    null
+  );
+}

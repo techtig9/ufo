@@ -6,6 +6,8 @@ import { Panel } from '@/components/ui/panel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs } from '@/components/ui/tabs';
+import { CommentBody } from '@/components/prototype-viewer/comment-body';
+import { MentionInput, type Collaborator } from '@/components/prototype-viewer/mention-input';
 
 export interface Comment {
   id: string;
@@ -17,6 +19,8 @@ export interface Comment {
   y: number;
   resolved: boolean;
   parent_id: string | null;
+  author_id?: string | null;
+  assigned_to?: string | null;
 }
 
 type Filter = 'all' | 'unresolved' | 'resolved';
@@ -27,6 +31,8 @@ export function CommentsPanel({
   comments,
   onCommentsChange,
   isOwner,
+  allowComments = true,
+  viewerId = null,
   pinMode,
   onTogglePinMode,
   pendingPin,
@@ -39,6 +45,10 @@ export function CommentsPanel({
   comments: Comment[];
   onCommentsChange: (updater: (current: Comment[]) => Comment[]) => void;
   isOwner: boolean;
+  /** Owners can switch commenting off for a share link (migration 010). */
+  allowComments?: boolean;
+  /** The signed-in viewer, when there is one. Anonymous share visitors have none. */
+  viewerId?: string | null;
   pinMode: boolean;
   onTogglePinMode: () => void;
   pendingPin: { x: number; y: number } | null;
@@ -53,6 +63,24 @@ export function CommentsPanel({
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyBody, setReplyBody] = useState('');
   const itemRefs = useRef(new Map<string, HTMLDivElement>());
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [assigning, setAssigning] = useState<string | null>(null);
+
+  // Who can be @-mentioned or assigned. The endpoint returns an empty list for
+  // an anonymous visitor, so the picker simply never appears for them rather
+  // than being hidden client-side.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/comments/collaborators?shareId=${encodeURIComponent(shareId)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.collaborators) setCollaborators(data.collaborators);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [shareId]);
 
   useEffect(() => {
     if (!highlightId) return;
@@ -127,6 +155,25 @@ export function CommentsPanel({
     onCommentsChange((current) => current.map((c) => (c.id === comment.id ? { ...c, resolved: !comment.resolved } : c)));
   }
 
+  async function assign(comment: Comment, userId: string | null) {
+    setAssigning(comment.id);
+    const res = await fetch(`/api/comments/${comment.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assignedTo: userId }),
+    });
+    setAssigning(null);
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      toast.error(data?.error ?? 'Could not assign this comment');
+      return;
+    }
+    onCommentsChange((current) =>
+      current.map((c) => (c.id === comment.id ? { ...c, assigned_to: userId } : c))
+    );
+    toast.success(userId ? 'Comment assigned' : 'Assignment cleared');
+  }
+
   async function deleteComment(id: string) {
     const res = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
     if (!res.ok) {
@@ -141,15 +188,24 @@ export function CommentsPanel({
     <Panel hover={false} className="w-full max-w-md">
       <div className="flex items-center justify-between">
         <h3 className="font-medium">Feedback on this screen</h3>
-        <button
-          type="button"
-          onClick={onTogglePinMode}
-          className={`rounded-full border px-2.5 py-1 text-[10px] font-medium ${pinMode ? 'border-studio-citron bg-studio-citron/10 text-brand-text' : 'border-edge text-fg-muted hover:text-fg'}`}
-        >
-          {pinMode ? 'Click the preview…' : '📍 Add pin'}
-        </button>
+        {allowComments && (
+          <button
+            type="button"
+            onClick={onTogglePinMode}
+            className={`rounded-full border px-2.5 py-1 text-[10px] font-medium transition-colors duration-micro ${pinMode ? 'border-brand bg-brand/10 text-brand-text' : 'border-edge text-fg-muted hover:text-fg'}`}
+          >
+            {pinMode ? 'Click the preview…' : '📍 Add pin'}
+          </button>
+        )}
       </div>
 
+      {!allowComments && (
+        <p className="mt-3 rounded-lg border border-edge bg-surface-subtle px-3 py-2 text-xs text-fg-muted">
+          Commenting is switched off for this link. Existing feedback is still shown below.
+        </p>
+      )}
+
+      {allowComments && (
       <form onSubmit={handleSubmit} className="mt-3 space-y-2">
         {pendingPin && (
           <p className="text-[10px] text-brand-text">
@@ -163,17 +219,22 @@ export function CommentsPanel({
           onChange={(e) => setName(e.target.value)}
           className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-1.5 text-sm outline-none focus:border-studio-citron"
         />
-        <textarea
-          placeholder="Leave a note for the team…"
+        <MentionInput
           value={body}
-          onChange={(e) => setBody(e.target.value)}
-          rows={2}
-          className="w-full rounded-lg border border-edge bg-surface-subtle px-3 py-1.5 text-sm outline-none focus:border-studio-citron"
+          onChange={setBody}
+          collaborators={collaborators}
+          ariaLabel="Your comment"
+          placeholder={
+            collaborators.length
+              ? 'Leave a note — type @ to mention someone'
+              : 'Leave a note for the team…'
+          }
         />
-        <Button size="sm" type="submit" disabled={submitting}>
-          {submitting ? 'Posting…' : 'Post comment'}
+        <Button size="sm" type="submit" loading={submitting} loadingLabel="Posting your comment">
+          Post comment
         </Button>
       </form>
+      )}
 
       <div className="mt-4 border-t border-edge pt-3">
         <Tabs
@@ -196,12 +257,37 @@ export function CommentsPanel({
             className={`rounded-lg p-2 transition-colors ${highlightId === c.id ? 'bg-studio-citron/10 ring-1 ring-studio-citron/40' : ''}`}
           >
             <div className="flex items-start justify-between gap-2 text-sm">
-              <p className="text-fg-secondary">{c.body}</p>
+              <CommentBody body={c.body} highlightUserId={viewerId} className="text-fg-secondary" />
               {c.resolved && <Badge variant="success" size="sm">Resolved</Badge>}
             </div>
             <p className="mt-0.5 text-xs text-fg-faint">
               {c.author_name} · {new Date(c.created_at).toLocaleDateString()}
             </p>
+
+            {/* Assignment needs a collaborator list, which the server returns
+                only to someone who is one. An anonymous visitor therefore sees
+                neither the control nor who a comment is assigned to — who is
+                handling internal follow-up is not theirs to know. */}
+            {collaborators.length > 0 && (
+              <label className="mt-1.5 flex items-center gap-1.5 text-[10px] text-fg-faint">
+                <span>Assigned to</span>
+                <select
+                  value={c.assigned_to ?? ''}
+                  disabled={assigning === c.id}
+                  onChange={(e) => assign(c, e.target.value || null)}
+                  aria-label={`Assign this comment${c.assigned_to ? '' : ' to a collaborator'}`}
+                  className="rounded border border-edge bg-surface-subtle px-1.5 py-0.5 text-[10px] text-fg-muted outline-none focus:border-studio-citron disabled:opacity-50"
+                >
+                  <option value="">Nobody</option>
+                  {collaborators.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
             <div className="mt-1.5 flex gap-3 text-[10px] text-fg-faint">
               <button onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)} className="hover:text-fg">Reply</button>
               {isOwner && (
@@ -216,7 +302,7 @@ export function CommentsPanel({
 
             {repliesOf(c.id).map((reply) => (
               <div key={reply.id} className="mt-2 ml-4 border-l border-edge pl-3">
-                <p className="text-sm text-fg-secondary">{reply.body}</p>
+                <CommentBody body={reply.body} highlightUserId={viewerId} className="text-sm text-fg-secondary" />
                 <p className="mt-0.5 text-xs text-fg-faint">
                   {reply.author_name} · {new Date(reply.created_at).toLocaleDateString()}
                 </p>
@@ -228,12 +314,18 @@ export function CommentsPanel({
 
             {replyingTo === c.id && (
               <div className="mt-2 ml-4 flex gap-2">
-                <input
-                  value={replyBody}
-                  onChange={(e) => setReplyBody(e.target.value)}
-                  placeholder="Write a reply…"
-                  className="min-w-0 flex-1 rounded-lg border border-edge bg-surface-subtle px-2.5 py-1.5 text-xs outline-none focus:border-studio-citron"
-                />
+                <div className="min-w-0 flex-1">
+                  <MentionInput
+                    value={replyBody}
+                    onChange={setReplyBody}
+                    collaborators={collaborators}
+                    rows={1}
+                    ariaLabel="Your reply"
+                    placeholder="Write a reply…"
+                    onSubmit={() => handleReplySubmit(c.id)}
+                    className="w-full rounded-lg border border-edge bg-surface-subtle px-2.5 py-1.5 text-xs outline-none focus:border-studio-citron"
+                  />
+                </div>
                 <Button size="sm" onClick={() => handleReplySubmit(c.id)} disabled={submitting}>Send</Button>
               </div>
             )}

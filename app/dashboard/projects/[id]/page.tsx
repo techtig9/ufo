@@ -11,12 +11,15 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
   if (!user) notFound();
 
+  // No `.eq('user_id', ...)` filter: since migration 010 a project can also be
+  // reached through workspace membership, and repeating the ownership test here
+  // would 404 workspace collaborators on projects RLS grants them. RLS is the
+  // single authority — an outsider still gets no row.
   const { data: project } = await supabase
     .from('projects')
     .select('*')
     .eq('id', id)
-    .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!project) notFound();
 
@@ -28,7 +31,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       .order('order_index'),
     supabase
       .from('shares')
-      .select('slug, is_public, published_at')
+      .select('slug, is_public, published_at, expires_at, allow_comments, password_hash')
       .eq('project_id', project.id)
       .maybeSingle(),
   ]);
@@ -38,9 +41,16 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       <ProjectWorkspace
         project={project}
         screens={screens ?? []}
-        shareSlug={share?.slug ?? ''}
-        isPublic={share?.is_public ?? false}
-        publishedAt={share?.published_at ?? null}
+        share={{
+          slug: share?.slug ?? '',
+          isPublic: share?.is_public ?? false,
+          publishedAt: share?.published_at ?? null,
+          expiresAt: share?.expires_at ?? null,
+          // The hash itself is never sent to the browser — the UI only needs to
+          // know whether one exists.
+          hasPassword: !!share?.password_hash,
+          allowComments: share?.allow_comments ?? true,
+        }}
       />
     </div>
   );

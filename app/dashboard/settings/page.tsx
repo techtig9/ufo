@@ -16,7 +16,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('name, email, referral_code, notify_low_credits, notify_security_emails')
+    .select('name, email, referral_code, notify_low_credits, notify_security_emails, notify_collaboration_emails')
     .eq('id', user!.id)
     .single();
 
@@ -63,6 +63,21 @@ export default async function SettingsPage() {
     await supabase
       .from('users')
       .update({ notify_security_emails: formData.get('notify_security_emails') === 'on' })
+      .eq('id', user.id);
+    revalidatePath('/dashboard/settings');
+  }
+
+  async function toggleCollaborationEmails(formData: FormData) {
+    'use server';
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+      .from('users')
+      .update({ notify_collaboration_emails: formData.get('notify_collaboration_emails') === 'on' })
       .eq('id', user.id);
     revalidatePath('/dashboard/settings');
   }
@@ -126,6 +141,14 @@ export default async function SettingsPage() {
           label="Email me about sign-ins and security changes"
           description="Sent when someone signs in, completes two-factor, requests a password reset, or changes your password. On by default — this is how you would find out about an account takeover."
           defaultChecked={profile?.notify_security_emails ?? true}
+        />
+
+        <NotificationToggle
+          action={toggleCollaborationEmails}
+          name="notify_collaboration_emails"
+          label="Email me when I'm mentioned or assigned a comment"
+          description="Sent when a collaborator @-mentions you in a comment or assigns one to you. On by default — a mention nobody hears about is not a mention."
+          defaultChecked={profile?.notify_collaboration_emails ?? true}
         />
 
         <NotificationToggle

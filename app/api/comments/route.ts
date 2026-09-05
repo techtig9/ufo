@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { commentSchema } from '@/lib/schemas';
 import { checkAnonymousRateLimit, clientIpFrom } from '@/lib/rate-limit';
+import { recordMentions, type CommentContext } from '@/lib/comment-collaboration';
 
 /**
  * Post a comment on a shared prototype.
@@ -45,15 +47,27 @@ export async function POST(request: Request) {
   const supabase = await createClient();
 
   // The share must exist and be public. Reading it through the anon session
-  // means RLS ("public shares are readable") governs this lookup too.
+  // means RLS ("public shares are readable") governs this lookup too — which
+  // since migration 010 also means an expired or password-protected share
+  // returns nothing here unless the caller can genuinely see it.
   const { data: share } = await supabase
     .from('shares')
-    .select('id, project_id, is_public')
+    .select('id, project_id, is_public, slug, allow_comments')
     .eq('id', shareId)
     .maybeSingle();
 
   if (!share || !share.is_public) {
     return NextResponse.json({ error: 'Share not found' }, { status: 404 });
+  }
+
+  // Commenting turned off is a real setting, not just a hidden composer: the
+  // endpoint is open to anyone holding the link, so it has to be checked here
+  // too or the control would be decoration.
+  if (share.allow_comments === false) {
+    return NextResponse.json(
+      { error: 'Commenting is turned off for this prototype' },
+      { status: 403 }
+    );
   }
 
   // The screen must belong to that share's project.
@@ -85,23 +99,62 @@ export async function POST(request: Request) {
     }
   }
 
+  // A signed-in commenter is attributed; an anonymous visitor stays a name.
+  // Both paths are supported deliberately — anonymous stakeholder feedback is
+  // the point of a share link.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from('comments')
     .insert({
       share_id: shareId,
       screen_id: screenId,
       author_name: authorName,
+      author_id: user?.id ?? null,
       body,
       x,
       y,
       parent_id: parentId ?? null,
     })
-    .select('id, author_name, body, created_at, x, y, resolved, parent_id')
+    .select('id, author_name, author_id, body, created_at, x, y, resolved, parent_id, assigned_to')
     .single();
 
   if (error || !data) {
     console.error('[comments] insert failed', error?.message);
     return NextResponse.json({ error: 'Could not post comment' }, { status: 500 });
   }
-  return NextResponse.json(data);
+
+  // Mentions are resolved AFTER the insert and never block it: the comment is
+  // the user's content and must be saved even if mail delivery is failing.
+  // recordMentions filters every mentioned id against the project's actual
+  // collaborators, so a token naming a stranger notifies nobody.
+  let mentioned: string[] = [];
+  try {
+    const admin = createAdminClient();
+    const { data: project } = await admin
+      .from('projects')
+      .select('id, name, user_id, workspace_id')
+      .eq('id', share.project_id)
+      .maybeSingle();
+
+    if (project) {
+      const context: CommentContext = {
+        projectId: project.id,
+        projectName: project.name,
+        workspaceId: project.workspace_id,
+        ownerId: project.user_id,
+        shareSlug: share.slug,
+      };
+      mentioned = await recordMentions(data.id, body, context, {
+        id: user?.id ?? null,
+        name: authorName,
+      });
+    }
+  } catch (e) {
+    console.error('[comments] mention handling failed', e instanceof Error ? e.message : 'unknown');
+  }
+
+  return NextResponse.json({ ...data, mentionedCount: mentioned.length });
 }

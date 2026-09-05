@@ -10,6 +10,7 @@ export const LINKS = [
   { href: '/dashboard/projects', label: 'Projects', icon: '▦' },
   { href: '/dashboard/templates', label: 'Templates', icon: '◇' },
   { href: '/dashboard/ai-designer', label: 'AI Designer', icon: '✦' },
+  { href: '/dashboard/workspaces', label: 'Workspaces', icon: '◱' },
 ];
 export const SECONDARY = [
   { href: '/dashboard/billing', label: 'Billing', icon: '◈' },

@@ -10,11 +10,17 @@ export function PublicPrototype({
   screens,
   comments: initialComments,
   isOwner,
+  allowComments = true,
+  viewerId = null,
 }: {
   shareId: string;
   screens: Screen[];
   comments: Comment[];
   isOwner: boolean;
+  /** Owners can switch commenting off per share link (migration 010). */
+  allowComments?: boolean;
+  /** null for an anonymous visitor — used to highlight mentions of the viewer. */
+  viewerId?: string | null;
 }) {
   const sorted = useMemo(() => [...screens].sort((a, b) => a.order_index - b.order_index), [screens]);
   const [activeScreenId, setActiveScreenId] = useState(sorted[0]?.id ?? '');
@@ -52,6 +58,8 @@ export function PublicPrototype({
           return [...rest, ...updater(scoped)];
         })}
         isOwner={isOwner}
+        allowComments={allowComments}
+        viewerId={viewerId}
         pinMode={pinMode}
         onTogglePinMode={() => { setPinMode((v) => !v); setPendingPin(null); }}
         pendingPin={pendingPin}

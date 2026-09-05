@@ -9,6 +9,7 @@ import { GridField } from '@/components/ui/grid-field';
 import { Panel } from '@/components/ui/panel';
 import { Button } from '@/components/ui/button';
 import { TurnstileWidget } from '@/components/ui/turnstile-widget';
+import { safeRedirectPath } from '@/lib/safe-redirect';
 
 function SignupForm() {
   const searchParams = useSearchParams();
@@ -26,9 +27,19 @@ function SignupForm() {
   const [sent, setSent] = useState(false);
 
   const extraParams = `${plan ? `&plan=${plan}` : ''}${ref ? `&ref=${ref}` : ''}`;
+
+  // `next` is caller-supplied — safeRedirectPath keeps it to a same-origin path
+  // so a signup link cannot be used to bounce someone to another site after
+  // authenticating. Login already did this; signup ignored the parameter
+  // entirely, which broke flows that send a new user here to finish something
+  // (accepting a workspace invitation, for one).
+  const next = safeRedirectPath(searchParams.get('next'), '');
+
   // Paid-plan selections are an intent, not a grant. After authentication,
   // send the user to Billing where the real Paddle checkout can be completed.
-  const postAuthPath = plan && plan !== 'free' ? '/dashboard/billing' : '/dashboard';
+  // An explicit destination wins over the plan default: someone who followed an
+  // invitation link should land on the invitation, not on billing.
+  const postAuthPath = next || (plan && plan !== 'free' ? '/dashboard/billing' : '/dashboard');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

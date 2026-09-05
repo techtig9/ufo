@@ -98,6 +98,56 @@ with checks as (
   select 'is_project_publicly_shared() exists (RLS recursion fix)',
          to_regprocedure('public.is_project_publicly_shared(uuid)') is not null,
          'CRITICAL: published prototypes 500 with infinite policy recursion'
+
+  -- ---- Phase 4: collaboration and share permissions ---------------------
+  union all
+  select 'workspaces table exists',
+         to_regclass('public.workspaces') is not null,
+         'CRITICAL: every workspace, member and invite endpoint 500s'
+  union all
+  select 'has_workspace_role() exists',
+         to_regprocedure('public.has_workspace_role(uuid,text)') is not null,
+         'CRITICAL: workspace RLS cannot evaluate roles, so collaborators see nothing'
+  union all
+  select 'shares.password_hash exists',
+         exists(select 1 from information_schema.columns
+                where table_schema='public' and table_name='shares' and column_name='password_hash'),
+         'CRITICAL: share passwords are accepted by the UI but never enforced'
+  union all
+  select 'shares.expires_at exists',
+         exists(select 1 from information_schema.columns
+                where table_schema='public' and table_name='shares' and column_name='expires_at'),
+         'CRITICAL: expiring links never actually expire'
+  union all
+  select 'workspace_invites has no client write policy',
+         not exists(select 1 from pg_policies
+                    where schemaname='public' and tablename='workspace_invites'
+                      and cmd in ('INSERT','ALL') and 'anon' = any(roles)),
+         'CRITICAL: anyone could mint themselves an invitation'
+  union all
+  select 'comment_mentions table exists',
+         to_regclass('public.comment_mentions') is not null,
+         'mentions are parsed but never recorded or notified'
+  union all
+  select 'comment_mentions has NO client write policy',
+         not exists(select 1 from pg_policies
+                    where schemaname='public' and tablename='comment_mentions'
+                      and cmd in ('INSERT','UPDATE','DELETE','ALL')),
+         'CRITICAL: a share visitor could make UFO email any user id it guesses'
+  union all
+  select 'comments.body is not client-updatable',
+         not exists(
+           select 1 from information_schema.column_privileges
+            where table_schema='public' and table_name='comments'
+              and column_name='body' and privilege_type='UPDATE'
+              and grantee in ('authenticated','anon')),
+         'CRITICAL: a workspace viewer could rewrite anyone''s feedback'
+  union all
+  select 'users.notify_collaboration_emails exists',
+         exists(select 1 from information_schema.columns
+                where table_schema='public' and table_name='users'
+                  and column_name='notify_collaboration_emails'),
+         'mention emails cannot be turned off, and the Settings toggle 500s'
 )
 select case when ok then 'PASS  ' else 'FAIL  ' end || label ||
        case when ok then '' else '  <-- ' || consequence end
@@ -125,4 +175,13 @@ from (
   union all select to_regclass('public.saved_prompts') is not null
   union all select exists(select 1 from pg_constraint where conname='saved_prompts_user_title_key' and contype='u')
   union all select to_regprocedure('public.is_project_publicly_shared(uuid)') is not null
+  union all select to_regclass('public.workspaces') is not null
+  union all select to_regprocedure('public.has_workspace_role(uuid,text)') is not null
+  union all select exists(select 1 from information_schema.columns where table_schema='public' and table_name='shares' and column_name='password_hash')
+  union all select exists(select 1 from information_schema.columns where table_schema='public' and table_name='shares' and column_name='expires_at')
+  union all select not exists(select 1 from pg_policies where schemaname='public' and tablename='workspace_invites' and cmd in ('INSERT','ALL') and 'anon' = any(roles))
+  union all select to_regclass('public.comment_mentions') is not null
+  union all select not exists(select 1 from pg_policies where schemaname='public' and tablename='comment_mentions' and cmd in ('INSERT','UPDATE','DELETE','ALL'))
+  union all select not exists(select 1 from information_schema.column_privileges where table_schema='public' and table_name='comments' and column_name='body' and privilege_type='UPDATE' and grantee in ('authenticated','anon'))
+  union all select exists(select 1 from information_schema.columns where table_schema='public' and table_name='users' and column_name='notify_collaboration_emails')
 ) t;

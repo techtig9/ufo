@@ -14,6 +14,7 @@ import { VersionHistoryPanel } from '@/components/editor/version-history-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Project, Screen } from '@/lib/types';
 import type { DeviceMode } from '@/components/prototype-viewer/device-frame';
+import type { ProjectShare } from '@/components/editor/project-toolbar';
 
 // Monaco is one of the largest deps in this project — code-split so its JS only
 // loads when someone actually opens the Code tab, not on every editor page visit.
@@ -27,15 +28,11 @@ type Tab = 'preview' | 'code' | 'handoff';
 export function ProjectWorkspace({
   project,
   screens: initialScreens,
-  shareSlug,
-  isPublic,
-  publishedAt,
+  share,
 }: {
   project: Project;
   screens: Screen[];
-  shareSlug: string;
-  isPublic: boolean;
-  publishedAt: string | null;
+  share: ProjectShare;
 }) {
   const [screens, setScreens] = useState(initialScreens);
   const [tab, setTab] = useState<Tab>('preview');
@@ -203,9 +200,7 @@ export function ProjectWorkspace({
           <ProjectToolbar
             project={project}
             screens={sorted}
-            shareSlug={shareSlug}
-            isPublic={isPublic}
-            publishedAt={publishedAt}
+            share={share}
           />
         </div>
       </div>

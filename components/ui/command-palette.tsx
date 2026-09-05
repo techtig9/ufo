@@ -105,6 +105,7 @@ export function CommandPalette() {
       { id: 'nav-projects', group: 'Go to', label: 'Projects', keywords: 'files designs', href: '/dashboard/projects' },
       { id: 'nav-templates', group: 'Go to', label: 'Templates', keywords: 'starters', href: '/dashboard/templates' },
       { id: 'nav-designer', group: 'Go to', label: 'AI Designer', keywords: 'generate create new', href: '/dashboard/ai-designer' },
+      { id: 'nav-workspaces', group: 'Go to', label: 'Workspaces', keywords: 'team members invite collaborators', href: '/dashboard/workspaces' },
       { id: 'nav-billing', group: 'Go to', label: 'Billing', keywords: 'plan credits invoice', href: '/dashboard/billing' },
       { id: 'nav-settings', group: 'Go to', label: 'Settings', keywords: 'account profile security', href: '/dashboard/settings' },
       { id: 'nav-help', group: 'Go to', label: 'Help & Support', keywords: 'docs faq', href: '/help' },
