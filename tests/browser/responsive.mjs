@@ -12,7 +12,7 @@ import fs from 'node:fs';
  */
 const BASE = process.env.BASE || 'http://localhost:3400';
 const WIDTHS = [320, 375, 390, 430, 768, 1024, 1280, 1440, 1920];
-const ROUTES = ['/', '/login', '/signup', '/forgot-password', '/help', '/contact', '/legal/terms'];
+const ROUTES = ['/', '/login', '/signup', '/forgot-password', '/help', '/contact', '/legal/terms', '/legal/privacy', '/legal/cookies', '/invite?token=phase4-gate-probe'];
 const THEMES = ['dark', 'light'];
 
 const exe = ['/opt/pw-browsers/chromium-1194/chrome-linux/chrome'].find((p) => fs.existsSync(p));

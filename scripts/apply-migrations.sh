@@ -4,7 +4,7 @@
 #
 # WHY THIS EXISTS
 # ---------------
-# Migrations 007, 008 and 009 carry three fixes that are still live problems
+# Migrations 007 through 013 carry fixes and features that are not in effect
 # until they run:
 #   007 — public.templates has NO row level security. Anyone holding the public
 #         anon key (which ships in the browser bundle) can INSERT/UPDATE/DELETE
@@ -13,16 +13,26 @@
 #   008 — credit deduction is not atomic. Two concurrent generations charge
 #         once for two. Also adds the AI/observability and email-delivery logs.
 #   009 — saved prompts.
+#   010 — workspaces, roles and invitations; share expiry and passwords. Until
+#         this runs, share passwords are accepted by the UI but not enforced.
+#   011 — comment mentions and assignment. Also revokes the client UPDATE grant
+#         that let a workspace viewer rewrite anyone's comment text.
+#   012 — project assets. Creates the PRIVATE project-assets bucket and its
+#         storage.objects policies; without them files are unreachable.
+#   013 — the publish log and prototype view analytics.
 #
 # USAGE
 # -----
 #   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh          # pending only (007+)
-#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --all    # fresh DB: schema + 001-009
+#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --all    # fresh DB: schema + 001-013
 #   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --dry-run
 #
 # Get DATABASE_URL from Supabase: Project Settings -> Database -> Connection
 # string -> URI. Use the SESSION pooler or a direct connection; the transaction
 # pooler does not support all DDL.
+#
+# Migration 012 skips its bucket setup where there is no `storage` schema, so
+# it also applies cleanly to a plain-Postgres database.
 #
 # Every migration from 007 on is written to be re-runnable (IF NOT EXISTS /
 # DO blocks / CREATE OR REPLACE), so a repeat run is a no-op rather than an

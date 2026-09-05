@@ -33,7 +33,9 @@ test('every allowed type is actually accepted', () => {
 
 test('an empty or nonsense size is rejected', () => {
   for (const size of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
-    assert.equal(validateAssetUpload({ ...base, size }).field, 'size', String(size));
+    const result = validateAssetUpload({ ...base, size });
+    assert.ok(result, `${size} must be rejected`);
+    assert.equal(result.field, 'size', String(size));
   }
 });
 
@@ -69,6 +71,7 @@ test('the Pro and Business quotas match what the pricing page sells', () => {
 
 test('the quota message says how much room is left', () => {
   const result = validateAssetUpload({ ...base, usedBytes: PLAN_STORAGE_BYTES.free - 512, size: 1024 });
+  assert.ok(result, 'the upload must be rejected');
   assert.match(result.message, /512 B free/);
 });
 

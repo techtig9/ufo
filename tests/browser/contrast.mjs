@@ -12,7 +12,7 @@ import fs from 'node:fs';
  * regression fails the build rather than merely looking wrong.
  */
 const BASE = process.env.BASE || 'http://localhost:3700';
-const ROUTES = ['/', '/login', '/signup', '/forgot-password', '/help', '/contact', '/legal/terms', '/changelog'];
+const ROUTES = ['/', '/login', '/signup', '/forgot-password', '/help', '/contact', '/legal/terms', '/legal/privacy', '/legal/cookies', '/changelog', '/invite?token=phase4-gate-probe'];
 const THEMES = ['dark', 'light'];
 
 const exe = ['/opt/pw-browsers/chromium-1194/chrome-linux/chrome'].find((p) => fs.existsSync(p));

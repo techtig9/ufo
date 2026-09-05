@@ -1,6 +1,6 @@
 # Go-live readiness — what's done, and what needs you
 
-Phases 1–3 are complete and verified. Three things remain that **only you can
+Phases 1–4 are complete and verified. Three things remain that **only you can
 do**, because they need access or facts this environment does not have. Each
 now has tooling so it is one command and independently verifiable.
 
@@ -8,14 +8,18 @@ now has tooling so it is one command and independently verifiable.
 
 ## 1. Apply the pending database migrations — **required, P0**
 
-Migrations **007, 008, 009** are written, tested and committed, but have **not
-been applied anywhere**. Until they run, three problems remain live:
+Migrations **007 through 013** are written, tested and committed, but have
+**not been applied anywhere**. Until they run, these problems remain live:
 
 | Migration | Fixes | If not applied |
 |---|---|---|
 | **007** | `public.templates` has **no RLS** | Anyone holding the public anon key — which ships in the browser bundle — can INSERT/UPDATE/DELETE templates, and `/api/templates/[id]/use` copies those rows into user projects |
 | **008** | Credit deduction is **not atomic** | Two concurrent generations charge once for two. Also adds the AI provider, credit-ledger and email-delivery logs |
 | **009** | Saved prompts | The saved-prompt endpoints 500 |
+| **010** | Workspaces, roles, invitations; share expiry and passwords | Every workspace, member, invite and share-settings endpoint 500s, and share passwords are accepted by the UI but never enforced |
+| **011** | Comment mentions and assignment | Mentions are parsed but never recorded or delivered. Also closes a hole where a workspace viewer could rewrite anyone's comment text through PostgREST |
+| **012** | Project assets on Supabase Storage | The asset library 500s. Also creates the **private** `project-assets` bucket and its object policies — without them, files would be unreachable, and a misconfigured public bucket would be readable by URL forever |
+| **013** | Publish log and prototype view analytics | The publishing panel shows nothing |
 
 ### Run it
 
@@ -26,12 +30,12 @@ been applied anywhere**. Until they run, three problems remain live:
 export DATABASE_URL='postgresql://...'
 
 npm run db:apply -- --dry-run   # shows exactly what will run
-npm run db:apply                # applies 007, 008, 009
+npm run db:apply                # applies 007 through 013
 npm run db:verify               # confirms the fixes are actually in effect
 ```
 
 For a brand-new database, `npm run db:apply -- --all` applies `schema.sql`
-plus all nine migrations.
+plus all thirteen migrations.
 
 **Take a backup first** (Supabase → Database → Backups). The migrations are
 written to be re-runnable, and a repeat run was verified to be a clean no-op,
@@ -44,12 +48,21 @@ genuinely RLS-protected, whether `reserve_credits()` exists, whether webhook
 replays can be deduplicated. It only reads catalog metadata, so it is safe
 against production, and it exits non-zero so it can gate a deploy.
 
+It now covers Phase 4 too — whether the asset bucket is private and
+size-capped, whether `comment_mentions` is client-writable, whether a comment
+body can be rewritten by a client.
+
 Verified against a database in your current production state (schema + 001–006):
 
 ```
-RESULT: 15 failed, 2 passed        ← before
-RESULT: 0 failed, 17 passed        ← after npm run db:apply
+RESULT: 24 failed, 5 passed        ← before      BUCKET: 2 failed, 0 passed
+RESULT:  0 failed, 29 passed       ← after       BUCKET: 0 failed, 2 passed
 ```
+
+That is **26 failing checks before, 0 after**, measured by applying the real
+`scripts/apply-migrations.sh` to a fresh database built from `schema.sql` plus
+migrations 001–006 — your current production state. A second run of the script
+against the same database was verified to be a clean no-op.
 
 ---
 
@@ -94,8 +107,8 @@ them Figma's own skills and docs — no design files**, and every read tool
 tool, and the account seat is **View** on a **starter** tier, which does not
 carry shared-library access.
 
-Phase 3 therefore proceeded from the code-side token foundation proposed in the
-audit and approved. That work stands on its own — 602 utilities migrated onto
+Phases 3 and 4 therefore proceeded from the code-side token foundation proposed
+in the audit and approved. That work stands on its own — 602 utilities migrated onto
 semantic tokens, and contrast measured from 181 failures to 0.
 
 If you want it re-derived from a real design system, paste one Figma **file
@@ -117,12 +130,24 @@ These are documented in the phase records rather than blocking:
   be exercised without credentials here, and refactoring it blind would risk
   working functionality.
 - **Authenticated routes are not visually measured.** The contrast, responsive
-  and accessibility sweeps cover the 8 public routes. Dashboard, editor,
-  billing, settings and admin use the same tokens, but that is inference.
+  and accessibility sweeps cover the 10 public routes. Dashboard, editor,
+  workspaces, billing, settings and admin use the same tokens, but that is
+  inference.
 - **Nothing has been verified against a live provider.** No Groq, Cerebras,
   OpenRouter, Anthropic, Paddle, Resend or Google OAuth credentials exist in
-  this environment. A real generation, payment, email send and Google sign-in
-  remain unverified and are not claimed anywhere in these notes.
+  this environment. A real generation, payment, email send, Google sign-in,
+  file upload, signed download and recorded prototype view remain unverified
+  and are not claimed anywhere in these notes.
+- **Supabase Storage policies are proven against a stand-in.** The test
+  harness gained a minimal `storage` schema so migration 012's policy block
+  actually runs and is exercised as the real anon/authenticated roles. That
+  proves the SQL and its authorisation logic; only a real project can show
+  that Supabase's Storage API enforces them identically.
+- **Legal copy was corrected in Phase 4** — Privacy and Terms named "Google
+  Gemini" as the model provider long after the code moved to the four-provider
+  cascade, and the Cookie Policy advertised an analytics category that does
+  not exist. Please read the three legal pages before launch; they now
+  describe what UFO actually does, but the company facts are still yours.
 
 ---
 
@@ -134,7 +159,7 @@ These are documented in the phase records rather than blocking:
 | `npm run typecheck` | 0 errors |
 | `npm run lint` | 0 errors, 11 warnings |
 | `npm run build` | passes |
-| `npm test` | 68 / 68 |
-| `npm run test:db` | 31 assertions |
+| `npm test` | 170 / 170 |
+| `npm run test:db` | 78 assertions |
 | `supabase/tests/concurrency_test.sh` | credit race reproduced on old path, absent on new |
-| `npm run test:browser` | 13/13 behaviour · 126 responsive · 12/12 a11y · contrast AA both themes · 7/7 palette |
+| `npm run test:browser` | 13/13 behaviour · 180 responsive · 12/12 a11y · contrast AA both themes · 7/7 palette · 17/17 inspector |
