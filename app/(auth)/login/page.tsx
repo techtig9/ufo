@@ -9,6 +9,24 @@ import { GridField } from '@/components/ui/grid-field';
 import { Panel } from '@/components/ui/panel';
 import { Button } from '@/components/ui/button';
 import { TurnstileWidget } from '@/components/ui/turnstile-widget';
+import { safeRedirectPath } from '@/lib/safe-redirect';
+import { reportAuthEvent } from '@/lib/report-auth-event';
+
+/**
+ * Failure codes set by /auth/callback. Previously a failed OAuth round-trip
+ * redirected here with nothing to show, which is what made the Google problem
+ * look like "the button does nothing".
+ */
+const CALLBACK_ERRORS: Record<string, string> = {
+  oauth_provider_error:
+    'Google declined the sign-in. If you cancelled, just try again — otherwise the Google provider may not be configured correctly.',
+  missing_code:
+    'The sign-in link came back without an authorization code. Please try signing in again.',
+  exchange_failed:
+    'We could not complete the sign-in with Google. Please try again, or use your email and password.',
+  provisioning_failed:
+    'You signed in, but we could not finish setting up your account. Please try again or contact support.',
+};
 
 function LoginForm() {
   const router = useRouter();
@@ -19,14 +37,26 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const [needsMfa, setNeedsMfa] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [factorId, setFactorId] = useState<string | null>(null);
   const [unconfirmed, setUnconfirmed] = useState(false);
 
+  // safeRedirectPath: `next` is caller-supplied, so it must not be able to
+  // send a just-authenticated user off-origin.
+  const nextPath = safeRedirectPath(searchParams.get('next'));
+
+  const errorCode = searchParams.get('error');
+  const callbackError = errorCode
+    ? (CALLBACK_ERRORS[errorCode] ?? 'Sign-in failed. Please try again.')
+    : null;
+  // Correlates the visible failure with the structured server log for support.
+  const errorRef = searchParams.get('ref');
+
   function goToNext() {
-    router.push(searchParams.get('next') || '/dashboard');
+    router.push(nextPath);
     router.refresh();
   }
 
@@ -72,6 +102,7 @@ function LoginForm() {
       }
     }
 
+    reportAuthEvent('PASSWORD_LOGIN');
     toast.success('Welcome back');
     goToNext();
   }
@@ -92,15 +123,28 @@ function LoginForm() {
       toast.error('Wrong code — try again');
       return;
     }
+    reportAuthEvent('MFA_LOGIN_SUCCESS');
     toast.success('Welcome back');
     goToNext();
   }
 
   async function handleGoogle() {
-    await supabase.auth.signInWithOAuth({
+    setGoogleLoading(true);
+    // signInWithOAuth's error was previously discarded, so a misconfigured
+    // provider produced a button that silently did nothing.
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+      },
     });
+
+    if (error) {
+      setGoogleLoading(false);
+      toast.error(error.message || 'Could not start Google sign-in. Please try again.');
+    }
+    // On success the browser navigates to Google, so the loading state stays
+    // on until the page unloads — deliberately not reset here.
   }
 
   if (needsMfa) {
@@ -133,6 +177,21 @@ function LoginForm() {
       <Panel className="relative w-full max-w-sm" hover={false}>
         <h1 className="font-display text-xl font-semibold">Log in to ufo</h1>
         <p className="mt-1 text-sm text-white/50">Welcome back. Enter your details below.</p>
+
+        {callbackError && (
+          <div
+            role="alert"
+            data-testid="callback-error"
+            className="mt-4 rounded-lg border border-status-error/30 bg-status-error/10 px-3 py-2 text-sm text-status-error"
+          >
+            <p>{callbackError}</p>
+            {errorRef && (
+              <p className="mt-1 font-mono text-[11px] text-status-error/70">
+                Reference: {errorRef}
+              </p>
+            )}
+          </div>
+        )}
 
         {unconfirmed && (
           <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-200">
@@ -188,8 +247,14 @@ function LoginForm() {
           <div className="h-px flex-1 bg-white/10" />
         </div>
 
-        <Button type="button" variant="secondary" onClick={handleGoogle} className="mt-4 w-full">
-          Continue with Google
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleGoogle}
+          disabled={googleLoading}
+          className="mt-4 w-full"
+        >
+          {googleLoading ? 'Redirecting to Google…' : 'Continue with Google'}
         </Button>
 
         <p className="mt-6 text-center text-sm text-white/40">

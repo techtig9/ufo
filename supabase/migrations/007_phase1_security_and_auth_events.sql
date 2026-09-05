@@ -73,6 +73,14 @@ create table if not exists auth_events (
   user_agent_summary text,
   email_status text not null default 'pending'
     check (email_status in ('pending', 'sent', 'skipped_preference', 'skipped_unconfigured', 'failed')),
+  -- Atomic dedup. A time-bucketed key of the form
+  -- "<user_id>:<event_type>:<epoch / window>" — UNIQUE, so two concurrent
+  -- reports of the same authentication collide at the database instead of
+  -- both passing a read-then-write check and sending two emails.
+  --
+  -- Nullable so a caller can deliberately record an event without deduping,
+  -- and because Postgres treats NULLs as distinct in a unique index.
+  dedup_key text unique,
   created_at timestamptz not null default now()
 );
 

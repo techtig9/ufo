@@ -16,7 +16,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('name, email, referral_code, notify_low_credits')
+    .select('name, email, referral_code, notify_low_credits, notify_security_emails')
     .eq('id', user!.id)
     .single();
 
@@ -37,7 +37,7 @@ export default async function SettingsPage() {
     revalidatePath('/dashboard/settings');
   }
 
-  async function toggleNotifications(formData: FormData) {
+  async function toggleLowCredits(formData: FormData) {
     'use server';
     const supabase = await createClient();
     const {
@@ -48,6 +48,21 @@ export default async function SettingsPage() {
     await supabase
       .from('users')
       .update({ notify_low_credits: formData.get('notify_low_credits') === 'on' })
+      .eq('id', user.id);
+    revalidatePath('/dashboard/settings');
+  }
+
+  async function toggleSecurityEmails(formData: FormData) {
+    'use server';
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+      .from('users')
+      .update({ notify_security_emails: formData.get('notify_security_emails') === 'on' })
       .eq('id', user.id);
     revalidatePath('/dashboard/settings');
   }
@@ -104,8 +119,23 @@ export default async function SettingsPage() {
 
       <Panel hover={false}>
         <h2 className="font-medium">Notifications</h2>
-        <NotificationToggle action={toggleNotifications} defaultChecked={profile?.notify_low_credits ?? true} />
-        <p className="mt-2 text-xs text-white/30">
+
+        <NotificationToggle
+          action={toggleSecurityEmails}
+          name="notify_security_emails"
+          label="Email me about sign-ins and security changes"
+          description="Sent when someone signs in, completes two-factor, requests a password reset, or changes your password. On by default — this is how you would find out about an account takeover."
+          defaultChecked={profile?.notify_security_emails ?? true}
+        />
+
+        <NotificationToggle
+          action={toggleLowCredits}
+          name="notify_low_credits"
+          label="Email me when credits run low"
+          defaultChecked={profile?.notify_low_credits ?? true}
+        />
+
+        <p className="mt-4 text-xs text-white/30">
           Payment and account emails are sent regardless {'\u2014'} those aren&rsquo;t optional.
         </p>
       </Panel>

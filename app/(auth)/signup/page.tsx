@@ -22,6 +22,7 @@ function SignupForm() {
   const [agreed, setAgreed] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   const extraParams = `${plan ? `&plan=${plan}` : ''}${ref ? `&ref=${ref}` : ''}`;
@@ -55,10 +56,19 @@ function SignupForm() {
   }
 
   async function handleGoogle() {
-    await supabase.auth.signInWithOAuth({
+    setGoogleLoading(true);
+    // The error was previously discarded, so a misconfigured Google provider
+    // made this button look inert instead of reporting the problem.
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`${postAuthPath}${extraParams}`)}` },
     });
+
+    if (error) {
+      setGoogleLoading(false);
+      toast.error(error.message || 'Could not start Google sign-up. Please try again.');
+    }
+    // On success the browser leaves for Google — loading state stays on.
   }
 
   if (sent) {
@@ -142,8 +152,13 @@ function SignupForm() {
         <div className="my-4 flex items-center gap-3 text-xs text-white/30">
           <span className="h-px flex-1 bg-white/10" /> or <span className="h-px flex-1 bg-white/10" />
         </div>
-        <Button variant="secondary" onClick={handleGoogle} className="w-full">
-          Continue with Google
+        <Button
+          variant="secondary"
+          onClick={handleGoogle}
+          disabled={googleLoading}
+          className="w-full"
+        >
+          {googleLoading ? 'Redirecting to Google…' : 'Continue with Google'}
         </Button>
         <p className="mt-6 text-center text-sm text-white/50">
           Already have an account? <Link href="/login" className="text-studio-coral hover:underline">Log in</Link>

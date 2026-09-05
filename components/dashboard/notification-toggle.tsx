@@ -2,21 +2,31 @@
 
 export function NotificationToggle({
   action,
+  name,
+  label,
+  description,
   defaultChecked,
 }: {
   action: (formData: FormData) => void;
+  /** Column name on `users` this switch controls. */
+  name: string;
+  label: string;
+  description?: string;
   defaultChecked: boolean;
 }) {
   return (
     <form action={action} className="mt-4">
-      <label className="flex items-center justify-between text-sm">
-        <span className="text-white/70">Email me when credits run low</span>
+      <label className="flex items-start justify-between gap-4 text-sm">
+        <span>
+          <span className="text-white/70">{label}</span>
+          {description && <span className="mt-0.5 block text-xs text-white/40">{description}</span>}
+        </span>
         <input
           type="checkbox"
-          name="notify_low_credits"
+          name={name}
           defaultChecked={defaultChecked}
           onChange={(e) => e.currentTarget.form?.requestSubmit()}
-          className="h-4 w-4 accent-studio-citron"
+          className="mt-0.5 h-4 w-4 shrink-0 accent-studio-citron"
         />
       </label>
     </form>

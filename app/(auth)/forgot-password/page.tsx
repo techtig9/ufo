@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { GridField } from '@/components/ui/grid-field';
 import { Panel } from '@/components/ui/panel';
 import { Button } from '@/components/ui/button';
+import { reportAuthEvent } from '@/lib/report-auth-event';
 
 export default function ForgotPasswordPage() {
   const supabase = createClient();
@@ -26,6 +27,12 @@ export default function ForgotPasswordPage() {
       toast.error(error.message);
       return;
     }
+
+    // Security notification for the reset request. The endpoint always answers
+    // identically whether or not the address has an account, so this cannot be
+    // used to probe for registered emails.
+    reportAuthEvent('PASSWORD_RESET_REQUESTED', email);
+
     setSent(true);
   }
 
