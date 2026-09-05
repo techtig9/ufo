@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getOrCreateReferralCode } from '@/lib/referral';
 
 export async function POST() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -9,7 +9,7 @@ import { NotificationToggle } from '@/components/dashboard/notification-toggle';
 import { MfaEnrollment } from '@/components/dashboard/mfa-enrollment';
 
 export default async function SettingsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -27,7 +27,7 @@ export default async function SettingsPage() {
 
   async function updateProfile(formData: FormData) {
     'use server';
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -39,7 +39,7 @@ export default async function SettingsPage() {
 
   async function toggleNotifications(formData: FormData) {
     'use server';
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();

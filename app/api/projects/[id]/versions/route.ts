@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-async function getOwnedProject(supabase: ReturnType<typeof createClient>, projectId: string, userId: string) {
+async function getOwnedProject(supabase: Awaited<ReturnType<typeof createClient>>, projectId: string, userId: string) {
   return supabase.from('projects').select('id').eq('id', projectId).eq('user_id', userId).single();
 }
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
@@ -36,8 +37,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
   return NextResponse.json({ versions: versions ?? [] });
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 

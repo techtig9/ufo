@@ -28,9 +28,8 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    instrumentationHook: true,
-  },
+  // `experimental.instrumentationHook` was removed in Next 15 — instrumentation.ts
+  // is picked up automatically now, so the flag is both unnecessary and rejected.
   images: {
     remotePatterns: [{ protocol: 'https', hostname: '**.supabase.co' }],
   },

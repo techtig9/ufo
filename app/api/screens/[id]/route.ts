@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-async function getOwnedScreen(supabase: ReturnType<typeof createClient>, screenId: string, userId: string) {
+async function getOwnedScreen(supabase: Awaited<ReturnType<typeof createClient>>, screenId: string, userId: string) {
   return supabase
     .from('screens')
     .select('*, projects!inner(user_id)')
@@ -11,8 +11,9 @@ async function getOwnedScreen(supabase: ReturnType<typeof createClient>, screenI
     .single();
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
@@ -63,8 +64,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   return NextResponse.json({ ok: true, screen });
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 

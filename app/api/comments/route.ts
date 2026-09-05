@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   }
   const { shareId, screenId, authorName, body, x, y, parentId } = parsed.data;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('comments')
     .insert({ share_id: shareId, screen_id: screenId, author_name: authorName, body, x, y, parent_id: parentId ?? null })

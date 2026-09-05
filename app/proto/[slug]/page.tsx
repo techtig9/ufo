@@ -5,7 +5,7 @@ import { PublicPrototype } from '@/components/prototype-viewer/public-prototype'
 import { GridField } from '@/components/ui/grid-field';
 
 async function loadShare(slug: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: share } = await supabase
     .from('shares')
     .select('id, project_id, is_public')
@@ -17,8 +17,13 @@ async function loadShare(slug: string) {
   return { share, project };
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const data = await loadShare(params.slug);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await loadShare(slug);
   if (!data?.project) return { title: 'Prototype not found' };
 
   const title = `${data.project.name} — Prototype`;
@@ -33,9 +38,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function PublicProtoPage({ params }: { params: { slug: string } }) {
-  const supabase = createClient();
-  const data = await loadShare(params.slug);
+export default async function PublicProtoPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const supabase = await createClient();
+  const data = await loadShare(slug);
   if (!data) notFound();
   const { share, project } = data;
 

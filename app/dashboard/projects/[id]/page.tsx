@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ProjectWorkspace } from '@/components/editor/project-workspace';
 
-export default async function ProjectPage({ params }: { params: { id: string } }) {
-  const supabase = createClient();
+export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -13,7 +14,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   const { data: project } = await supabase
     .from('projects')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', user.id)
     .single();
 

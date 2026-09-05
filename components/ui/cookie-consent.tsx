@@ -1,21 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from './button';
+import { useClientValue } from '@/lib/use-client-value';
 
 const STORAGE_KEY = 'ufo-cookie-consent';
 
-export function CookieConsent() {
-  const [visible, setVisible] = useState(false);
+function hasStoredChoice(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    // Private mode / storage blocked — treat as "no choice recorded yet".
+    return false;
+  }
+}
 
-  useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
-  }, []);
+export function CookieConsent() {
+  // Server-side we assume a choice exists, so the banner never flashes during
+  // SSR — matching the previous behaviour of starting hidden.
+  const alreadyChosen = useClientValue(hasStoredChoice, true);
+  const [chosenThisSession, setChosenThisSession] = useState(false);
+  const visible = !alreadyChosen && !chosenThisSession;
 
   function choose(value: 'accepted' | 'rejected') {
-    localStorage.setItem(STORAGE_KEY, value);
-    setVisible(false);
+    try {
+      localStorage.setItem(STORAGE_KEY, value);
+    } catch {
+      // Storage blocked — the banner still dismisses for this session.
+    }
+    setChosenThisSession(true);
     // Wire this up to your analytics tool's consent API (e.g. gtag('consent', 'update', ...))
     // once analytics is connected — see the Launch Checklist in README.md.
   }

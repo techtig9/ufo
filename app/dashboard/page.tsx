@@ -11,7 +11,7 @@ import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 import type { Plan } from '@/lib/types';
 
 export default async function DashboardHome() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const [{ data: subscription }, { data: projects }, { data: profile }, { count: publishedCount }, { count: projectCount }] = await Promise.all([

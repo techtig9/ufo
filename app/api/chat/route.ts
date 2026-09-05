@@ -7,7 +7,7 @@ import { buildKnowledgeBase, CHAT_SYSTEM_INSTRUCTION } from '@/lib/chatbot-knowl
 const MAX_HISTORY = 12; // trims prompt size — a decision-support chat doesn't need deep history
 
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

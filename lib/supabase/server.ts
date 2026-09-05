@@ -5,8 +5,9 @@ import { cookies } from 'next/headers';
  * Use inside Server Components, Route Handlers, and Server Actions.
  * Respects RLS as the signed-in user — reads the session from cookies.
  */
-export function createClient() {
-  const cookieStore = cookies();
+export async function createClient() {
+  // Next 15+ made cookies() async. Every caller already `await`s this factory.
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

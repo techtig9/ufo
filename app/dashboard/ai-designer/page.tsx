@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { GeneratorForm } from '@/components/generator/generator-form';
 
 export default async function AIDesignerPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

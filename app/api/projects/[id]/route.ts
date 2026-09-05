@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-async function getOwnedProject(supabase: ReturnType<typeof createClient>, projectId: string, userId: string) {
+async function getOwnedProject(supabase: Awaited<ReturnType<typeof createClient>>, projectId: string, userId: string) {
   return supabase.from('projects').select('id').eq('id', projectId).eq('user_id', userId).single();
 }
 
 /** Rename, favorite/unfavorite, or archive/unarchive a project the caller owns. */
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
@@ -54,8 +55,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
  * so this runs the cascade server-side with the admin client — but only
  * after confirming ownership with the caller's own session first.
  */
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 

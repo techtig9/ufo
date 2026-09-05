@@ -6,8 +6,9 @@ import { createClient } from '@/lib/supabase/server';
  * migration 005) is what actually restricts this to the project owner — not an
  * app-level check here, same pattern as the public POST route relying on RLS.
  */
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
@@ -31,8 +32,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   return NextResponse.json(data);
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 

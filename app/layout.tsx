@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import { CookieConsent } from '@/components/ui/cookie-consent';
 import { ChatWidgetGate } from '@/components/chat/chat-widget-gate';
+import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -50,7 +51,18 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${mono.variable}`}>
+    // suppressHydrationWarning: the theme script below intentionally mutates
+    // <html>'s className before React hydrates, so server and client markup
+    // differ on this one element by design.
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable} ${mono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Applies the saved theme before first paint — no flash of the wrong theme. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="font-sans antialiased">
         {children}
         <CookieConsent />

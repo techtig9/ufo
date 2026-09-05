@@ -11,7 +11,7 @@ interface TemplateRow {
 }
 
 export default async function TemplatesPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: templates } = await supabase
     .from('templates')
     .select('id, category, name, description, screens')

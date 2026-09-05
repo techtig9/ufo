@@ -6,8 +6,11 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { canUseFeature, PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 import { sendLowCreditsEmail } from '@/lib/email';
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+// `routeContext`, not `context` — this handler already uses `context` further
+// down for the AI prompt it builds.
+export async function POST(request: Request, routeContext: { params: Promise<{ id: string }> }) {
+  const params = await routeContext.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 

@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { cancelPaddleSubscription } from '@/lib/paddle-api';
 
 export async function POST() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

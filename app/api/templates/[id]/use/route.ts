@@ -16,8 +16,9 @@ interface TemplateScreen {
  * Creates a new project by copying a template's screens verbatim — no AI call, so no
  * credits are charged (mirrors the "duplicate project" route's pattern, not /api/generate's).
  */
-export async function POST(_request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
+export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 

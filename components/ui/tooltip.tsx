@@ -1,10 +1,27 @@
 'use client';
 
-import { type ReactElement, type ReactNode, cloneElement, useId, useState } from 'react';
+import {
+  type HTMLAttributes,
+  type ReactElement,
+  type ReactNode,
+  cloneElement,
+  useId,
+  useState,
+} from 'react';
 import clsx from 'clsx';
 
+/**
+ * React 19 narrowed `ReactElement`'s default props generic from `any` to
+ * `unknown`, so a bare `ReactElement` child can no longer be given arbitrary
+ * props via cloneElement. Declaring the child as an element that accepts
+ * standard HTML attributes restores the check without loosening it to `any` —
+ * and it is accurate, since Tooltip is documented to wrap a focusable
+ * button/link/icon-button.
+ */
+type TriggerElement = ReactElement<HTMLAttributes<HTMLElement>>;
+
 interface TooltipProps {
-  children: ReactElement;
+  children: TriggerElement;
   content: ReactNode;
   side?: 'top' | 'bottom' | 'left' | 'right';
 }
@@ -24,7 +41,7 @@ export function Tooltip({ children, content, side = 'top' }: TooltipProps) {
   const show = () => setVisible(true);
   const hide = () => setVisible(false);
 
-  const trigger = cloneElement(children, {
+  const trigger = cloneElement<HTMLAttributes<HTMLElement>>(children, {
     'aria-describedby': visible ? id : undefined,
     onMouseEnter: show,
     onMouseLeave: hide,

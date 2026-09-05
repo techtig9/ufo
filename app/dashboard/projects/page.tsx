@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ProjectSearch } from '@/components/projects/project-search';
 
 export default async function ProjectsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

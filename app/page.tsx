@@ -36,7 +36,8 @@ function StructuredData() {
   return (
     <script
       type="application/ld+json"
-      // eslint-disable-next-line react/no-danger
+      // JSON.stringify of an object we construct ourselves — no user input
+      // reaches this, and JSON-LD has to be injected as raw script content.
       dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
     />
   );
