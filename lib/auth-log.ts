@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { redact as scrub } from './redact';
 /**
  * Structured, secret-free logging for the authentication flow.
  *
@@ -59,18 +61,9 @@ const ALLOWED_FIELDS: (keyof AuthLogFields)[] = [
  * looks like a credential. `errorMessage` comes from Supabase and is the one
  * field whose content we do not fully control.
  *
- * The separator after a prefix is `[-_]`, not `-`. Supabase's own tokens use an
- * underscore — `sbp_…` for a personal access token, `sb_secret_…` and
- * `sb_publishable_…` for the newer API keys — so a hyphen-only pattern let
- * every one of them through. Legacy anon/service keys are JWTs and are caught
- * by the `eyJ` branch.
+ * The pattern itself lives in lib/redact.ts, shared with the general logger, so
+ * a gap in it only has to be closed once.
  */
-const SECRET_SHAPED =
-  /(eyJ[A-Za-z0-9_-]{10,})|(sb[ap][-_][A-Za-z0-9_-]{10,})|(sb_(secret|publishable)_[A-Za-z0-9_-]{10,})|(sk[-_][A-Za-z0-9_-]{10,})|(bearer\s+\S+)/i;
-
-function scrub(value: string): string {
-  return SECRET_SHAPED.test(value) ? '[redacted]' : value;
-}
 
 export function newRequestId(): string {
   return crypto.randomUUID().slice(0, 8);

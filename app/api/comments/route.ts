@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { commentSchema } from '@/lib/schemas';
 import { checkAnonymousRateLimit, clientIpFrom } from '@/lib/rate-limit';
 import { recordMentions, type CommentContext } from '@/lib/comment-collaboration';
+import { withObservability } from '@/lib/observability';
 
 /**
  * Post a comment on a shared prototype.
@@ -19,7 +20,7 @@ import { recordMentions, type CommentContext } from '@/lib/comment-collaboration
  * here. Volume is also capped per IP, since an open write endpoint with no
  * throttle is a spam vector.
  */
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const rate = await checkAnonymousRateLimit(clientIpFrom(request.headers), 'comments', 20, 600);
   if (!rate.allowed) {
     return NextResponse.json(
@@ -158,3 +159,11 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ...data, mentionedCount: mentioned.length });
 }
+
+/**
+ * Wrapped for observability: each request gets a correlation id (honouring an
+ * upstream `x-request-id`), is timed and logged with its status, and a thrown
+ * error becomes a 500 carrying only that id — never the exception's message,
+ * which can contain a connection string or schema detail.
+ */
+export const POST = withObservability('comments', handlePOST);

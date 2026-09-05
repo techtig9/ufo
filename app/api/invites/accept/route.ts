@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { hashInviteToken } from '@/lib/workspaces';
 import { checkAnonymousRateLimit, clientIpFrom } from '@/lib/rate-limit';
+import { withObservability } from '@/lib/observability';
 
 /**
  * Accept a workspace invitation.
@@ -17,7 +18,7 @@ import { checkAnonymousRateLimit, clientIpFrom } from '@/lib/rate-limit';
  *   * the invite's email must match the signed-in account, so a forwarded link
  *     cannot be redeemed by whoever happens to receive it.
  */
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   // Rate limited by IP: the token is high-entropy, but an unthrottled endpoint
   // that reports whether a token exists is still worth closing.
   const rate = await checkAnonymousRateLimit(clientIpFrom(request.headers), 'invite-accept', 20, 600);
@@ -101,3 +102,11 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true, workspace, role: invite.role });
 }
+
+/**
+ * Wrapped for observability: each request gets a correlation id (honouring an
+ * upstream `x-request-id`), is timed and logged with its status, and a thrown
+ * error becomes a 500 carrying only that id — never the exception's message,
+ * which can contain a connection string or schema detail.
+ */
+export const POST = withObservability('invites.accept', handlePOST);

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ASSET_BUCKET, isScriptableType, sanitizeAssetName } from '@/lib/assets';
+import { withObservability } from '@/lib/observability';
 
 /**
  * A single asset: confirm its upload, get a viewing URL, rename it, delete it.
@@ -29,7 +30,7 @@ const patchSchema = z.object({
   name: z.string().min(1).max(300).optional(),
 });
 
-export async function GET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+async function handleGET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
@@ -60,7 +61,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   return NextResponse.json({ url: signed.signedUrl, expiresInSeconds: 3600 });
 }
 
-export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
+async function handlePATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
@@ -125,7 +126,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   return NextResponse.json({ asset: fresh });
 }
 
-export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+async function handleDELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
@@ -165,3 +166,13 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
 
   return NextResponse.json({ ok: true });
 }
+
+/**
+ * Wrapped for observability: each request gets a correlation id (honouring an
+ * upstream `x-request-id`), is timed and logged with its status, and a thrown
+ * error becomes a 500 carrying only that id — never the exception's message,
+ * which can contain a connection string or schema detail.
+ */
+export const GET = withObservability('assets.item', handleGET);
+export const PATCH = withObservability('assets.item', handlePATCH);
+export const DELETE = withObservability('assets.item', handleDELETE);

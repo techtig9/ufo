@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyPaddleSignature, PADDLE_PRICE_TO_PLAN } from '@/lib/paddle';
 import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 import { sendPaymentFailedEmail, sendSubscriptionCanceledEmail } from '@/lib/email';
+import { withObservability } from '@/lib/observability';
 
 /**
  * Paddle Billing webhook.
@@ -21,7 +22,7 @@ import { sendPaymentFailedEmail, sendSubscriptionCanceledEmail } from '@/lib/ema
  * is the safer direction for money (a missed credit top-up is visible and
  * fixable, a doubled one is not), and the row is there to reconcile from.
  */
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get('Paddle-Signature');
 
@@ -180,3 +181,11 @@ export async function POST(request: Request) {
   console.log(JSON.stringify({ scope: 'paddle', eventId, eventType, outcome: 'processed' }));
   return NextResponse.json({ received: true });
 }
+
+/**
+ * Wrapped for observability: each request gets a correlation id (honouring an
+ * upstream `x-request-id`), is timed and logged with its status, and a thrown
+ * error becomes a 500 carrying only that id — never the exception's message,
+ * which can contain a connection string or schema detail.
+ */
+export const POST = withObservability('webhook.paddle', handlePOST);

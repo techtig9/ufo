@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { verifySharePassword, issueShareGrant, SHARE_GRANT_COOKIE_PREFIX } from '@/lib/share-access';
 import { checkAnonymousRateLimit, clientIpFrom } from '@/lib/rate-limit';
+import { withObservability } from '@/lib/observability';
 
 /**
  * Exchanges a share password for a short-lived grant cookie.
@@ -21,7 +22,7 @@ const schema = z.object({
   password: z.string().min(1).max(200),
 });
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const rate = await checkAnonymousRateLimit(clientIpFrom(request.headers), 'share-unlock', 10, 900);
   if (!rate.allowed) {
     return NextResponse.json(
@@ -69,3 +70,11 @@ export async function POST(request: Request) {
   });
   return response;
 }
+
+/**
+ * Wrapped for observability: each request gets a correlation id (honouring an
+ * upstream `x-request-id`), is timed and logged with its status, and a thrown
+ * error becomes a 500 carrying only that id — never the exception's message,
+ * which can contain a connection string or schema detail.
+ */
+export const POST = withObservability('shares.unlock', handlePOST);

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { hashSharePassword } from '@/lib/share-access';
 import { recordPublishEvent } from '@/lib/publishing';
+import { withObservability } from '@/lib/observability';
 
 /**
  * Publish settings for a project's share link.
@@ -27,7 +28,7 @@ const schema = z.object({
   allowComments: z.boolean().optional(),
 });
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -127,3 +128,11 @@ export async function POST(request: Request) {
   const { password_hash, ...rest } = share;
   return NextResponse.json({ ...rest, hasPassword: !!password_hash });
 }
+
+/**
+ * Wrapped for observability: each request gets a correlation id (honouring an
+ * upstream `x-request-id`), is timed and logged with its status, and a thrown
+ * error becomes a 500 carrying only that id — never the exception's message,
+ * which can contain a connection string or schema detail.
+ */
+export const POST = withObservability('shares.publish', handlePOST);

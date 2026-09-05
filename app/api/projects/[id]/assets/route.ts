@@ -11,6 +11,7 @@ import {
   PLAN_STORAGE_BYTES,
 } from '@/lib/assets';
 import type { Plan } from '@/lib/types';
+import { withObservability } from '@/lib/observability';
 
 /**
  * A project's asset library: list it, and start an upload.
@@ -47,7 +48,7 @@ async function loadProject(
   return data;
 }
 
-export async function GET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+async function handleGET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
@@ -91,7 +92,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   });
 }
 
-export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
+async function handlePOST(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
@@ -187,3 +188,12 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     upload: { path: signed.path, token: signed.token, bucket: ASSET_BUCKET },
   });
 }
+
+/**
+ * Wrapped for observability: each request gets a correlation id (honouring an
+ * upstream `x-request-id`), is timed and logged with its status, and a thrown
+ * error becomes a 500 carrying only that id — never the exception's message,
+ * which can contain a connection string or schema detail.
+ */
+export const GET = withObservability('assets', handleGET);
+export const POST = withObservability('assets', handlePOST);

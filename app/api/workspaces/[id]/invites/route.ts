@@ -11,6 +11,7 @@ import {
   type WorkspaceRole,
 } from '@/lib/workspaces';
 import { sendWorkspaceInviteEmail } from '@/lib/email';
+import { withObservability } from '@/lib/observability';
 
 /** Create, list and revoke workspace invitations. */
 
@@ -33,7 +34,7 @@ async function callerRole(
   return (data?.role as WorkspaceRole) ?? null;
 }
 
-export async function GET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+async function handleGET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
@@ -53,7 +54,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   return NextResponse.json({ invites: data ?? [] });
 }
 
-export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
+async function handlePOST(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
@@ -165,7 +166,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   return NextResponse.json({ invite, acceptUrl });
 }
 
-export async function DELETE(request: Request, ctx: { params: Promise<{ id: string }> }) {
+async function handleDELETE(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();
   const {
@@ -191,3 +192,13 @@ export async function DELETE(request: Request, ctx: { params: Promise<{ id: stri
   if (error) return NextResponse.json({ error: 'Could not revoke the invitation' }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
+
+/**
+ * Wrapped for observability: each request gets a correlation id (honouring an
+ * upstream `x-request-id`), is timed and logged with its status, and a thrown
+ * error becomes a 500 carrying only that id — never the exception's message,
+ * which can contain a connection string or schema detail.
+ */
+export const GET = withObservability('workspaces.invites', handleGET);
+export const POST = withObservability('workspaces.invites', handlePOST);
+export const DELETE = withObservability('workspaces.invites', handleDELETE);
