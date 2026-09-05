@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { PrototypeViewer } from '@/components/prototype-viewer/prototype-viewer';
 import { DesignHandoffPanel } from '@/components/editor/design-handoff-panel';
 import { ProjectToolbar } from '@/components/editor/project-toolbar';
+import { AssetLibrary } from '@/components/editor/asset-library';
 import { ScreenPanel } from '@/components/editor/screen-panel';
 import { CanvasToolbar } from '@/components/editor/canvas-toolbar';
 import { AIDesignCopilot } from '@/components/editor/ai-design-copilot';
@@ -202,6 +203,7 @@ export function ProjectWorkspace({
             screens={sorted}
             share={share}
           />
+          <AssetLibrary projectId={project.id} />
         </div>
       </div>
     </div>

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Verifies a live UFO database actually has the Phase 1-3 fixes in effect.
+# Verifies a live UFO database actually has the Phase 1-4 fixes in effect.
 #
 # This checks the RESULT, not that a file ran: whether templates is genuinely
 # RLS-protected, whether the atomic credit functions exist, whether webhook
-# replays can be deduplicated. Safe to run against production — it only reads
-# catalog metadata and writes nothing.
+# replays can be deduplicated, whether the asset bucket is private. Safe to run
+# against production — it only reads catalog metadata and writes nothing.
 #
 #   DATABASE_URL='postgresql://...' ./scripts/verify-database.sh
 #

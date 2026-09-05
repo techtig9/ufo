@@ -1,5 +1,12 @@
 import { PLAN_MONTHLY_CREDITS, PLAN_PRICE_USD, fullProjectsPerMonth } from './credits';
+import { PLAN_STORAGE_BYTES, formatBytes } from './assets';
 import type { Plan } from './types';
+
+/**
+ * Storage is quoted from PLAN_STORAGE_BYTES rather than typed as a string, so
+ * the pricing page cannot advertise a limit the quota check does not enforce.
+ */
+const storage = (plan: Plan) => `${formatBytes(PLAN_STORAGE_BYTES[plan])} asset storage`;
 
 export interface PlanCard {
   plan: Plan;
@@ -22,6 +29,7 @@ export const PLAN_CARDS: PlanCard[] = [
     fullProjects: fullProjectsPerMonth('free'),
     features: [
       'Web preview only, no export',
+      storage('free'),
       'Project folders, tags & favorites',
       'View-only shareable link',
       'Community support',
@@ -38,6 +46,7 @@ export const PLAN_CARDS: PlanCard[] = [
       'All project types',
       'Voice input',
       'Import & redesign an existing design',
+      storage('starter'),
       'Code export + Design Handoff spec sheet',
       'Shareable link with QR code + comments',
       'Email support',
@@ -56,7 +65,7 @@ export const PLAN_CARDS: PlanCard[] = [
       'Priority generation queue',
       'Figma export — coming soon',
       'CSV / JSON export',
-      '10 GB cloud storage',
+      storage('pro'),
       'Priority support',
     ],
   },
@@ -70,9 +79,9 @@ export const PLAN_CARDS: PlanCard[] = [
     features: [
       'Everything in Pro',
       'Highest-priority queue',
-      '50 GB cloud storage',
-      'Team members (Phase 2)',
-      'API access (Phase 2)',
+      storage('business'),
+      'Workspaces, roles & team invitations',
+      'API access — not available yet',
       '24/7 priority support',
     ],
   },

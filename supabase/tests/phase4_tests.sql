@@ -360,3 +360,131 @@ reset role; reset request.jwt.claim.sub;
 
 select body as body_unchanged_expect_the_original_words from comments
   where id='f0000000-0000-0000-0000-000000000003';
+
+-- ===========================================================================
+-- Migration 012 — project assets. Both halves: the metadata rows AND the
+-- storage objects, since either one unguarded is a hole.
+-- ===========================================================================
+
+\echo ''
+\echo '=== P4-32: the bucket is PRIVATE, size-capped and type-restricted ==='
+-- A public bucket would make every uploaded file readable by URL forever,
+-- including a client's unreleased work. The limits live on the bucket because
+-- the browser uploads straight to Storage through a signed URL.
+select public as public_expect_f,
+       file_size_limit as limit_expect_26214400,
+       'image/svg+xml' = any(allowed_mime_types) as allows_svg_expect_t,
+       'text/html' = any(allowed_mime_types) as allows_html_expect_f
+from storage.buckets where id='project-assets';
+
+insert into project_assets (id, project_id, uploaded_by, name, storage_path, mime_type, size_bytes, status)
+values ('aa000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000001',
+        'a0000000-0000-0000-0000-000000000003','logo.png',
+        'c0000000-0000-0000-0000-000000000001/aa000000-0000-0000-0000-000000000001.png',
+        'image/png', 1024, 'ready');
+
+\echo ''
+\echo '=== P4-33: a workspace VIEWER can list assets, an OUTSIDER cannot ==='
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000004';
+select count(*) as viewer_lists_assets_expect_1 from project_assets;
+reset role; reset request.jwt.claim.sub;
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000005';
+select count(*) as outsider_lists_assets_expect_0 from project_assets;
+reset role; reset request.jwt.claim.sub;
+set role anon;
+select count(*) as anon_lists_assets_expect_0 from project_assets;
+reset role;
+
+\echo ''
+\echo '=== P4-34: a VIEWER cannot upload or delete an asset ==='
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000004';
+insert into project_assets (project_id, uploaded_by, name, storage_path, mime_type, size_bytes)
+values ('c0000000-0000-0000-0000-000000000001','a0000000-0000-0000-0000-000000000004','x.png',
+        'c0000000-0000-0000-0000-000000000001/viewer.png','image/png',10);
+\echo '   ^ expect: ERROR — uploading needs editor'
+delete from project_assets where id='aa000000-0000-0000-0000-000000000001';
+\echo '   ^ expect: DELETE 0'
+reset role; reset request.jwt.claim.sub;
+
+\echo ''
+\echo '=== P4-35: an EDITOR can upload, and cannot forge the uploader ==='
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000003';
+insert into project_assets (project_id, uploaded_by, name, storage_path, mime_type, size_bytes)
+values ('c0000000-0000-0000-0000-000000000001','a0000000-0000-0000-0000-000000000003','ok.png',
+        'c0000000-0000-0000-0000-000000000001/ok.png','image/png',2048);
+\echo '   ^ expect: INSERT 0 1'
+insert into project_assets (project_id, uploaded_by, name, storage_path, mime_type, size_bytes)
+values ('c0000000-0000-0000-0000-000000000001','a0000000-0000-0000-0000-000000000001','forged.png',
+        'c0000000-0000-0000-0000-000000000001/forged.png','image/png',2048);
+\echo '   ^ expect: ERROR — uploaded_by must be the caller'
+reset role; reset request.jwt.claim.sub;
+
+\echo ''
+\echo '=== P4-36: SIZE and PATH are not client-writable, only the name is ==='
+-- Otherwise a client could rewrite size_bytes to 0 and defeat the quota, or
+-- repoint storage_path at another project's object.
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000003';
+update project_assets set name='renamed.png' where id='aa000000-0000-0000-0000-000000000001';
+\echo '   ^ expect: UPDATE 1 — renaming is allowed'
+update project_assets set size_bytes=0 where id='aa000000-0000-0000-0000-000000000001';
+\echo '   ^ expect: ERROR — quota accounting is not client-writable'
+update project_assets set storage_path='c0000000-0000-0000-0000-000000000003/stolen.png'
+  where id='aa000000-0000-0000-0000-000000000001';
+\echo '   ^ expect: ERROR — a client-chosen path is an overwrite primitive'
+reset role; reset request.jwt.claim.sub;
+select name as name_expect_renamed_png, size_bytes as size_expect_1024
+from project_assets where id='aa000000-0000-0000-0000-000000000001';
+
+\echo ''
+\echo '=== P4-37: the same storage path cannot be claimed twice ==='
+insert into project_assets (project_id, uploaded_by, name, storage_path, mime_type, size_bytes)
+values ('c0000000-0000-0000-0000-000000000001','a0000000-0000-0000-0000-000000000003','dupe.png',
+        'c0000000-0000-0000-0000-000000000001/aa000000-0000-0000-0000-000000000001.png','image/png',1);
+\echo '   ^ expect: ERROR duplicate key'
+
+\echo ''
+\echo '=== P4-38: STORAGE OBJECTS are guarded too, not just the metadata ==='
+-- Metadata policies alone would still let anyone holding the anon key download
+-- any file by guessing its path.
+insert into storage.objects (bucket_id, name)
+values ('project-assets','c0000000-0000-0000-0000-000000000001/aa000000-0000-0000-0000-000000000001.png');
+
+set role anon;
+select count(*) as anon_reads_object_expect_0 from storage.objects;
+reset role;
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000005';
+select count(*) as outsider_reads_object_expect_0 from storage.objects;
+reset role; reset request.jwt.claim.sub;
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000004';
+select count(*) as viewer_reads_object_expect_1 from storage.objects;
+reset role; reset request.jwt.claim.sub;
+
+\echo ''
+\echo '=== P4-39: an outsider cannot write an object into someone else’s folder ==='
+set role authenticated; set request.jwt.claim.sub = 'a0000000-0000-0000-0000-000000000005';
+insert into storage.objects (bucket_id, name)
+values ('project-assets','c0000000-0000-0000-0000-000000000001/evil.png');
+\echo '   ^ expect: ERROR — the folder names the project, and they hold nothing on it'
+delete from storage.objects where bucket_id='project-assets';
+\echo '   ^ expect: DELETE 0'
+reset role; reset request.jwt.claim.sub;
+
+\echo ''
+\echo '=== P4-40: quota counts PENDING uploads, so concurrency cannot beat it ==='
+-- Two uploads racing must not both pass a check that neither would pass after
+-- the other landed, so space is reserved at the row, not at confirmation.
+insert into project_assets (project_id, uploaded_by, name, storage_path, mime_type, size_bytes, status)
+values ('c0000000-0000-0000-0000-000000000001','a0000000-0000-0000-0000-000000000003','inflight.png',
+        'c0000000-0000-0000-0000-000000000001/inflight.png','image/png', 5000, 'pending');
+select project_storage_used('a0000000-0000-0000-0000-000000000001') as used_expect_8072;
+
+\echo ''
+\echo '=== P4-41: deleting a project takes its asset rows with it ==='
+insert into projects (id, user_id, name) values
+  ('c0000000-0000-0000-0000-000000000004','a0000000-0000-0000-0000-000000000001','Doomed');
+insert into project_assets (project_id, uploaded_by, name, storage_path, mime_type, size_bytes)
+values ('c0000000-0000-0000-0000-000000000004','a0000000-0000-0000-0000-000000000001','bye.png',
+        'c0000000-0000-0000-0000-000000000004/bye.png','image/png',1);
+delete from projects where id='c0000000-0000-0000-0000-000000000004';
+select count(*) as orphan_assets_expect_0 from project_assets
+  where project_id='c0000000-0000-0000-0000-000000000004';

@@ -1,4 +1,4 @@
--- Verifies a live UFO database has the Phase 1-3 fixes actually in effect.
+-- Verifies a live UFO database has the Phase 1-4 fixes actually in effect.
 -- Reports PASS/FAIL per check; the wrapper exits non-zero if anything fails.
 \pset pager off
 \pset tuples_only on
@@ -148,6 +148,24 @@ with checks as (
                 where table_schema='public' and table_name='users'
                   and column_name='notify_collaboration_emails'),
          'mention emails cannot be turned off, and the Settings toggle 500s'
+  union all
+  select 'project_assets table exists',
+         to_regclass('public.project_assets') is not null,
+         'the asset library 500s on every request'
+  union all
+  select 'project_assets size/path are not client-updatable',
+         not exists(
+           select 1 from information_schema.column_privileges
+            where table_schema='public' and table_name='project_assets'
+              and column_name in ('size_bytes','storage_path','status')
+              and privilege_type='UPDATE' and grantee in ('authenticated','anon')),
+         'CRITICAL: a client could zero its own usage and bypass the storage quota'
+  union all
+  select 'storage.objects has project-assets policies',
+         exists(select 1 from pg_policies
+                where schemaname='storage' and tablename='objects'
+                  and policyname like '%project asset objects%'),
+         'CRITICAL: anyone with the anon key could download any file by guessing its path'
 )
 select case when ok then 'PASS  ' else 'FAIL  ' end || label ||
        case when ok then '' else '  <-- ' || consequence end
@@ -184,4 +202,42 @@ from (
   union all select not exists(select 1 from pg_policies where schemaname='public' and tablename='comment_mentions' and cmd in ('INSERT','UPDATE','DELETE','ALL'))
   union all select not exists(select 1 from information_schema.column_privileges where table_schema='public' and table_name='comments' and column_name='body' and privilege_type='UPDATE' and grantee in ('authenticated','anon'))
   union all select exists(select 1 from information_schema.columns where table_schema='public' and table_name='users' and column_name='notify_collaboration_emails')
+  union all select to_regclass('public.project_assets') is not null
+  union all select not exists(select 1 from information_schema.column_privileges where table_schema='public' and table_name='project_assets' and column_name in ('size_bytes','storage_path','status') and privilege_type='UPDATE' and grantee in ('authenticated','anon'))
+  union all select exists(select 1 from pg_policies where schemaname='storage' and tablename='objects' and policyname like '%project asset objects%')
 ) t;
+
+
+-- ---------------------------------------------------------------------------
+-- Bucket configuration.
+--
+-- Run as its own statement, gated by a psql conditional: a query naming
+-- storage.buckets fails at parse time when the schema is absent, so no in-query
+-- guard can save it — the statement itself has to be skipped. A real Supabase
+-- project always has it; the plain-Postgres case is the test harness.
+-- ---------------------------------------------------------------------------
+\echo ''
+select to_regclass('storage.buckets') is not null as has_storage \gset
+
+\if :has_storage
+select case when ok then 'PASS  ' else 'FAIL  ' end || label ||
+       case when ok then '' else '  <-- ' || consequence end
+from (
+  select 'the project-assets bucket is PRIVATE' as label,
+         coalesce((select not public from storage.buckets where id='project-assets'), false) as ok,
+         'CRITICAL: every uploaded file would be readable by URL, forever' as consequence
+  union all
+  select 'the project-assets bucket caps file size',
+         coalesce((select file_size_limit is not null from storage.buckets where id='project-assets'), false),
+         'a modified client could upload an arbitrarily large file'
+) t order by ok, label;
+
+select 'BUCKET: ' || count(*) filter (where not ok) || ' failed, '
+       || count(*) filter (where ok) || ' passed'
+from (
+  select coalesce((select not public from storage.buckets where id='project-assets'), false) as ok
+  union all select coalesce((select file_size_limit is not null from storage.buckets where id='project-assets'), false)
+) t;
+\else
+\echo 'SKIP  bucket checks — no storage schema (expected outside Supabase)'
+\endif
