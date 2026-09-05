@@ -57,7 +57,11 @@ export class AiResponseError extends Error {
  * Throws AiResponseError, which callers treat as a failed generation — and
  * therefore refund.
  */
-export function parseAiJson<T>(raw: string, schema: z.ZodType<T>): T {
+// Generic over the SCHEMA, not over a single type parameter. `z.ZodType<T>`
+// pins input and output to the same T, so any field with a `.default()` — where
+// the input is optional but the output is not — collapses to the optional input
+// type and every caller has to null-check something zod guarantees.
+export function parseAiJson<S extends z.ZodTypeAny>(raw: string, schema: S): z.output<S> {
   const candidate = extractJson(raw);
 
   let parsed: unknown;

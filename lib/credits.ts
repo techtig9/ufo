@@ -25,23 +25,48 @@ export type CreditAction =
   | 'generate_full_project'
   | 'import_redesign'
   | 'regenerate_project'
+  | 'regenerate_screen'
   | 'generate_screen'
   | 'generate_component'
   | 'change_theme'
   | 'update_screen'
   | 'voice_transcription'
-  | 'export_figma';
+  | 'export_figma'
+  // Phase 2 AI actions (Master Command 2.C). Rewrites are priced like
+  // update_screen because that is the same class of work — one screen in, one
+  // screen out. The read-only analyses are cheaper: they return findings
+  // rather than a regenerated screen, so they use far fewer output tokens.
+  | 'improve_ux'
+  | 'improve_copy'
+  | 'make_responsive'
+  | 'improve_accessibility'
+  | 'audit_accessibility'
+  | 'check_consistency'
+  | 'extract_design_system';
 
 export const CREDIT_COSTS: Record<CreditAction, number> = {
   generate_full_project: 1500,
   import_redesign: 1900,
   regenerate_project: 400,
+  regenerate_screen: 250,
   generate_screen: 250,
   generate_component: 100,
   change_theme: 40,
   update_screen: 90,
   voice_transcription: 50,
   export_figma: 150,
+
+  // Screen rewrites — same shape of work as update_screen.
+  improve_ux: 90,
+  improve_copy: 90,
+  make_responsive: 90,
+  improve_accessibility: 90,
+
+  // Read-only analyses. Cheaper because the model returns a short findings
+  // document rather than a full regenerated screen.
+  audit_accessibility: 40,
+  check_consistency: 60,
+  extract_design_system: 80,
 };
 
 // Actions below are always free regardless of plan — never call

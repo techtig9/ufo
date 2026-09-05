@@ -31,6 +31,28 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (typeof body.archived === 'boolean') {
     update.archived_at = body.archived ? new Date().toISOString() : null;
   }
+  // Applied by the change_theme AI action. Validated rather than trusted: the
+  // tokens end up interpolated into generated markup, so only the five known
+  // colour roles with plausible values are accepted.
+  if (body.colorTheme && typeof body.colorTheme === 'object') {
+    const roles = ['primary', 'secondary', 'accent', 'background', 'text'] as const;
+    const incoming = body.colorTheme as Record<string, unknown>;
+    const clean: Record<string, string> = {};
+    for (const role of roles) {
+      const value = incoming[role];
+      if (typeof value !== 'string') continue;
+      const trimmed = value.trim();
+      // Hex, rgb()/rgba(), hsl()/hsla(), or a plain CSS colour keyword.
+      if (!/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%/]+\)|hsla?\([\d\s.,%/deg]+\)|[a-z]{3,20})$/i.test(trimmed)) {
+        return NextResponse.json({ error: `Invalid colour for "${role}"` }, { status: 400 });
+      }
+      clean[role] = trimmed;
+    }
+    if (Object.keys(clean).length) update.color_theme = clean;
+  }
+  if (typeof body.fontPairing === 'string' && body.fontPairing.trim()) {
+    update.font_pairing = body.fontPairing.trim().slice(0, 120);
+  }
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
@@ -41,7 +63,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     .update(update)
     .eq('id', params.id)
     .eq('user_id', user.id)
-    .select('id, name, project_type, created_at, is_favorite, tags, archived_at')
+    .select('id, name, project_type, created_at, is_favorite, tags, archived_at, color_theme, font_pairing')
     .single();
 
   if (error) return NextResponse.json({ error: 'Could not update the project' }, { status: 500 });

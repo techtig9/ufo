@@ -120,3 +120,35 @@ delete from subscriptions where user_id = '22222222-2222-2222-2222-222222222222'
 delete from users where id = '22222222-2222-2222-2222-222222222222';
 select count(*) as orphaned_ledger_rows_expect_0
   from credit_ledger where user_id = '22222222-2222-2222-2222-222222222222';
+
+\echo ''
+\echo '=== P2-16: saved prompts are private to their owner ==='
+insert into auth.users (id, email) values ('44444444-4444-4444-4444-444444444444','p2@example.com');
+insert into users (id, email) values ('44444444-4444-4444-4444-444444444444','p2@example.com');
+insert into saved_prompts (user_id, title, body) values
+  ('11111111-1111-1111-1111-111111111111','Owner prompt','make it calmer'),
+  ('44444444-4444-4444-4444-444444444444','Other prompt','make it louder');
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select count(*) as owner_sees_own_prompts_expect_1 from saved_prompts;
+reset role;
+reset request.jwt.claim.sub;
+
+\echo ''
+\echo '=== P2-17: a user cannot write a prompt for someone else ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into saved_prompts (user_id, title, body)
+  values ('44444444-4444-4444-4444-444444444444','Planted','payload');
+\echo '   ^ expect: ERROR — with check (auth.uid() = user_id)'
+reset role;
+reset request.jwt.claim.sub;
+
+\echo ''
+\echo '=== P2-18: re-saving the same title updates rather than duplicating ==='
+insert into saved_prompts (user_id, title, body)
+  values ('11111111-1111-1111-1111-111111111111','Owner prompt','changed');
+\echo '   ^ expect: ERROR duplicate key (the route upserts on this constraint)'
+select count(*) as owner_prompt_rows_expect_1
+  from saved_prompts
+ where user_id = '11111111-1111-1111-1111-111111111111' and title = 'Owner prompt';

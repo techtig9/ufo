@@ -9,6 +9,7 @@ import { ProjectToolbar } from '@/components/editor/project-toolbar';
 import { ScreenPanel } from '@/components/editor/screen-panel';
 import { CanvasToolbar } from '@/components/editor/canvas-toolbar';
 import { AIDesignCopilot } from '@/components/editor/ai-design-copilot';
+import { AIActionsPanel } from '@/components/editor/ai-actions-panel';
 import { VersionHistoryPanel } from '@/components/editor/version-history-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Project, Screen } from '@/lib/types';
@@ -144,6 +145,15 @@ export function ProjectWorkspace({
             project={project}
             screen={activeScreen}
             onApplied={(screen) => updateScreen(screen, true)}
+          />
+          <AIActionsPanel
+            project={project}
+            screen={activeScreen}
+            onApplied={(screen) => updateScreen(screen, true)}
+            onScreenCreated={(screen) => {
+              setScreens((current) => [...current, screen]);
+              setActiveScreenId(screen.id);
+            }}
           />
           <VersionHistoryPanel
             projectId={project.id}
