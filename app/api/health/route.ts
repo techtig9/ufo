@@ -7,11 +7,15 @@ export async function GET() {
     const { error } = await admin.from('users').select('id').limit(1);
 
     if (error) {
-      return NextResponse.json({ status: 'degraded', db: 'error', message: error.message }, { status: 503 });
+      // The message is logged for operators but not returned: this endpoint is
+      // unauthenticated, and Postgres errors can disclose schema details.
+      console.error('[health] database check failed', error.message);
+      return NextResponse.json({ status: 'degraded', db: 'error' }, { status: 503 });
     }
 
     return NextResponse.json({ status: 'ok', db: 'connected', time: new Date().toISOString() });
   } catch (err) {
-    return NextResponse.json({ status: 'down', error: String(err) }, { status: 503 });
+    console.error('[health] check threw', err);
+    return NextResponse.json({ status: 'down' }, { status: 503 });
   }
 }

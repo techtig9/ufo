@@ -35,7 +35,7 @@ export function validateEnv() {
   const missingRecommended = RECOMMENDED.filter((key) => !process.env[key]);
   if (missingRecommended.length) {
     console.warn(
-      `[ufo] Running without: ${missingRecommended.join(', ')} \u2014 the features that depend on them (billing, email, cron, AI rate-limit fallback) will no-op or degrade rather than error. Fine for local dev, not for production.`
+      `[ufo] Running without: ${missingRecommended.join(', ')} \u2014 the features that depend on them degrade rather than crash the app. Specifically: billing and email no-op, the AI cascade loses its fallback providers, and /api/cron/reset-credits returns 503 (it fails closed without CRON_SECRET, so Free-tier credits never reset). Fine for local dev, not for production.`
     );
   }
 }

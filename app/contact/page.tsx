@@ -25,7 +25,13 @@ export default function ContactPage() {
     setSending(false);
 
     if (!res.ok) {
-      toast.error('Could not send — try emailing us directly instead');
+      // Prefer the server's reason — it distinguishes "you are rate limited"
+      // and "messaging is not configured" from a generic failure.
+      const reason = await res
+        .json()
+        .then((body: { error?: string }) => body?.error)
+        .catch(() => undefined);
+      toast.error(reason || 'Could not send — try emailing us directly instead');
       return;
     }
     setSent(true);

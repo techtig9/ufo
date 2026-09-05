@@ -20,6 +20,10 @@ document.addEventListener('click', function (e) {
   var el = e.target.closest('[data-hotspot]');
   if (el) {
     e.preventDefault();
+    /* targetOrigin '*' is unavoidable: this frame is sandboxed without
+       allow-same-origin, so its origin is "null" and it cannot name the
+       parent's. The payload is only a screen name, and the parent validates
+       the sender's origin before acting on it. */
     window.parent.postMessage({ type: 'ufo-hotspot', target: el.getAttribute('data-hotspot') }, '*');
   }
 });
@@ -80,8 +84,21 @@ export function PrototypeViewer({
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
-      if (e.source === window || e.data?.type !== 'ufo-hotspot') return;
-      const target = sorted.find((s) => s.name.toLowerCase() === String(e.data.target).toLowerCase());
+      // The prototype iframe is sandboxed WITHOUT allow-same-origin, so its
+      // messages arrive with origin "null". Accepting only that (plus this
+      // page's own origin) means a message from any other embedded frame or
+      // opener is ignored, rather than being able to drive navigation here.
+      if (e.origin !== 'null' && e.origin !== window.location.origin) return;
+      if (e.source === window) return;
+
+      const data = e.data as { type?: unknown; target?: unknown } | null;
+      if (!data || data.type !== 'ufo-hotspot') return;
+      if (typeof data.target !== 'string') return;
+
+      // The target is matched against this project's own screen names, so an
+      // unexpected value can only fail to match — never navigate somewhere else.
+      const wanted = data.target.toLowerCase();
+      const target = sorted.find((s) => s.name.toLowerCase() === wanted);
       if (target) setActiveId(target.id);
     }
     window.addEventListener('message', handleMessage);

@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
@@ -5,8 +6,28 @@ import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const secret = process.env.CRON_SECRET;
+
+  // Fail closed. Previously the comparison was against
+  // `Bearer ${process.env.CRON_SECRET}`, so with the variable unset a request
+  // sending the literal string "Bearer undefined" authenticated and could
+  // reset every user's credit balance.
+  if (!secret) {
+    console.error('[cron] CRON_SECRET is not configured — refusing to run.');
+    return NextResponse.json({ error: 'Not configured' }, { status: 503 });
+  }
+
+  const authHeader = request.headers.get('authorization') ?? '';
+  const expected = `Bearer ${secret}`;
+
+  // Constant-time compare so the secret cannot be recovered byte-by-byte from
+  // response timing.
+  const provided = Buffer.from(authHeader);
+  const expectedBuf = Buffer.from(expected);
+  const authorized =
+    provided.length === expectedBuf.length && timingSafeEqual(provided, expectedBuf);
+
+  if (!authorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
