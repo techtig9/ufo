@@ -45,6 +45,24 @@ const config = [
       'react-hooks/refs': 'warn',
     },
   },
+
+  // ---------------------------------------------------------------------
+  // Playwright specs are not React.
+  //
+  // A fixture's second argument is conventionally named `use`, and
+  // eslint-plugin-react-hooks reads any call to `use(...)` as React's `use`
+  // hook — then reports it as a hook called outside a component. There is no
+  // React in this directory at all, so the React rule sets are switched off
+  // here rather than the call being renamed to something less idiomatic.
+  // ---------------------------------------------------------------------
+  {
+    files: ['e2e/**/*.ts'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/refs': 'off',
+    },
+  },
 ];
 
 export default config;

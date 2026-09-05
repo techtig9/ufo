@@ -2,7 +2,7 @@
   "name": "ufo",
   "version": "0.1.0",
   "private": true,
-  "description": "ufo — AI UI/UX design platform. Describe a project, get a full clickable multi-screen prototype.",
+  "description": "ufo \u2014 AI UI/UX design platform. Describe a project, get a full clickable multi-screen prototype.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +14,9 @@
     "test:db": "./supabase/tests/run.sh",
     "test:browser": "node tests/browser/phase1.mjs && node tests/browser/responsive.mjs && node tests/browser/a11y.mjs && node tests/browser/contrast.mjs && node tests/browser/palette.mjs && node tests/browser/inspector.mjs",
     "db:apply": "./scripts/apply-migrations.sh",
-    "db:verify": "./scripts/verify-database.sh"
+    "db:verify": "./scripts/verify-database.sh",
+    "test:e2e": "playwright test",
+    "test:e2e:public": "playwright test e2e/public"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
@@ -31,6 +33,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^20.14.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.2.18",
