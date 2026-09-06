@@ -16,7 +16,8 @@
     "db:apply": "./scripts/apply-migrations.sh",
     "db:verify": "./scripts/verify-database.sh",
     "test:e2e": "playwright test",
-    "test:e2e:public": "playwright test e2e/public"
+    "test:e2e:public": "playwright test e2e/public",
+    "test:perf": "node tests/browser/performance.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
