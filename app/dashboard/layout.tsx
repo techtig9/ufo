@@ -1,10 +1,17 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { isSupabaseConfigured } from '@/lib/supabase/config';
+import { SetupNotice } from '@/components/ui/setup-notice';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Topnav } from '@/components/dashboard/topnav';
 import { GridField } from '@/components/ui/grid-field';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // Checked before any query: without credentials every call below fails, and
+  // redirecting to /login would send the visitor somewhere equally unable to
+  // help them.
+  if (!isSupabaseConfigured) return <SetupNotice what="The dashboard" />;
+
   const supabase = await createClient();
   const {
     data: { user },

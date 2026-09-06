@@ -1,8 +1,25 @@
 {
-  "crons": [
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run preflight && npm run build",
+  "framework": "nextjs",
+  "headers": [
     {
-      "path": "/api/cron/reset-credits",
-      "schedule": "0 3 * * *"
+      "source": "/proto/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/invite",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ]
 }

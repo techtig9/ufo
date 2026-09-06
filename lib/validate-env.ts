@@ -24,11 +24,32 @@ const RECOMMENDED = [
   'OPENROUTER_API_KEY',
 ] as const;
 
+/**
+ * Reports what is missing. Loudly — but it does NOT throw.
+ *
+ * It used to throw, which killed the process. That is the right instinct for a
+ * server that is meant to be configured, but it made the failure mode worse in
+ * the one case that matters most: a first deploy. `register()` runs during
+ * `next build` too, so a missing key failed the BUILD, and a build that never
+ * produces a deployment leaves nowhere to add the keys. "Deploy first,
+ * configure after" was impossible.
+ *
+ * The app now boots into an explicit setup state instead — see
+ * lib/supabase/config.ts and components/ui/setup-notice.tsx. The guarantee that
+ * an unconfigured build cannot ship to production quietly is kept where it
+ * belongs and where it can actually stop a release: `npm run preflight`, which
+ * still FAILS under CI and NODE_ENV=production.
+ */
 export function validateEnv() {
   const missing = REQUIRED.filter((key) => !process.env[key]);
   if (missing.length) {
-    throw new Error(
-      `Missing required environment variable(s): ${missing.join(', ')}. Copy .env.example to .env.local and fill them in.`
+    console.error(
+      `[ufo] NOT CONFIGURED — missing: ${missing.join(', ')}. ` +
+        'The app will boot and serve its public pages, but anything needing the ' +
+        'database (sign-in, the dashboard, generation) will show a setup notice ' +
+        'until these are set. Add them to your host\u2019s environment variables and ' +
+        'redeploy \u2014 NEXT_PUBLIC_* values are compiled into the client bundle, so a ' +
+        'redeploy is required, not just a restart.'
     );
   }
 

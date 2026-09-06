@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { GridField } from '@/components/ui/grid-field';
+import { isSupabaseConfigured } from '@/lib/supabase/config';
+import { SetupNotice } from '@/components/ui/setup-notice';
 import { Logo } from '@/components/ui/logo';
 
 const LINKS = [
@@ -14,6 +16,8 @@ const LINKS = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  if (!isSupabaseConfigured) return <SetupNotice what="The admin panel" />;
+
   return (
     <div className="relative min-h-screen">
       <GridField strength="subtle" className="fixed" />

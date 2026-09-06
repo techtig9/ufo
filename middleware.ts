@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { REQUEST_ID_HEADER, requestIdFrom } from '@/lib/observability';
+import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from '@/lib/supabase/config';
 
 export async function middleware(request: NextRequest) {
   // One id per request, honouring an upstream proxy's if it set one, so a page
@@ -17,8 +18,8 @@ export async function middleware(request: NextRequest) {
   response.headers.set(REQUEST_ID_HEADER, requestId);
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
@@ -41,6 +42,11 @@ export async function middleware(request: NextRequest) {
       },
     }
   );
+
+  // With no credentials every getUser() fails, so a protected route would
+  // redirect to /login, which cannot sign anyone in either — a loop with no
+  // explanation. Let it through instead; the page renders the setup notice.
+  if (!isSupabaseConfigured) return response;
 
   const {
     data: { user },

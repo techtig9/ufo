@@ -51,20 +51,78 @@ const COMPANY_VARS = [
   "UFO_LAUNCH_DATE",
 ];
 
-const unset = COMPANY_VARS.filter((v) => !(process.env[v] ?? "").trim());
+/**
+ * Is this build a RELEASE, or a preview someone is iterating on?
+ *
+ * The distinction matters because the two want opposite things. A preview
+ * deploy of an unconfigured app is useful — it is how you get a URL before you
+ * have the keys. A production deploy of one is a broken launch.
+ *
+ * On Vercel, VERCEL_ENV answers this exactly: "production" for a real deploy,
+ * "preview" for everything else. Off Vercel, a CI run is a release gate and an
+ * explicit NODE_ENV=production is a deliberate production build.
+ *
+ * Two earlier bugs this replaces: `CI === "true"` never matched Vercel, which
+ * sets CI=1 — so the guard was silent on the one host it most needed to cover.
+ * And keying on NODE_ENV alone would block every preview, since NODE_ENV is
+ * "production" throughout any `next build`.
+ */
+const onVercel = Boolean(process.env.VERCEL);
+const ci = (process.env.CI ?? "").toLowerCase();
+const ciIsSet = ci !== "" && ci !== "0" && ci !== "false";
 
-if (unset.length) {
-  const isProduction = process.env.CI === "true" || process.env.NODE_ENV === "production";
-  const message =
-    `Company details are not configured: ${unset.join(", ")}.\n` +
-    "These appear on the Terms, Privacy, Refunds and Cookie pages, the footer " +
-    "and the contact page. Set them in your deployment environment before launch.";
+const isProduction = onVercel
+  ? process.env.VERCEL_ENV === "production"
+  : ciIsSet || process.env.NODE_ENV === "production";
 
+let failed = false;
+
+function requireInProduction(message) {
   if (isProduction) {
     console.error("Preflight failed:", message);
-    process.exit(1);
+    failed = true;
+    return;
   }
   console.warn("Preflight warning:", message);
 }
+
+const unsetCompany = COMPANY_VARS.filter((v) => !(process.env[v] ?? "").trim());
+if (unsetCompany.length) {
+  requireInProduction(
+    `Company details are not configured: ${unsetCompany.join(", ")}.\n` +
+      "These appear on the Terms, Privacy, Refunds and Cookie pages, the footer " +
+      "and the contact page. Set them in your deployment environment before launch."
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Service credentials.
+//
+// The app no longer refuses to BUILD without these — that made a first deploy
+// impossible, because a build that fails produces nothing to add the keys to.
+// It boots into a visible setup state instead. This is where the guarantee now
+// lives: a production build without them fails here, deliberately, so the
+// leniency helps a first deploy without letting an unconfigured one ship
+// quietly to customers.
+// ---------------------------------------------------------------------------
+const SERVICE_VARS = [
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "GROQ_API_KEY",
+];
+
+const unsetService = SERVICE_VARS.filter((v) => !(process.env[v] ?? "").trim());
+if (unsetService.length) {
+  requireInProduction(
+    `Service credentials are not configured: ${unsetService.join(", ")}.\n` +
+      "The app will build and serve its public pages, but sign-in, the dashboard " +
+      "and generation will show a setup notice. Set these and redeploy \u2014 the " +
+      "NEXT_PUBLIC_ values are compiled into the browser bundle, so a rebuild is " +
+      "required, not just a restart."
+  );
+}
+
+if (failed) process.exit(1);
 
 console.log("UFO static preflight passed.");
