@@ -80,15 +80,15 @@ export function GeneratorForm({
   // not a streaming job with real per-stage checkpoints), so we show what's actually
   // true (time passing) instead of fabricating stage-by-stage claims.
   useEffect(() => {
-    if (!generating) {
-      setElapsedSeconds(0);
-      return;
-    }
+    if (!generating) return;
     const start = Date.now();
     const interval = setInterval(() => {
       setElapsedSeconds(Math.floor((Date.now() - start) / 1000));
     }, 1000);
     return () => clearInterval(interval);
+    // The counter is zeroed where generation STARTS, not by an early return in
+    // this effect. Setting state synchronously in an effect body costs an extra
+    // render pass, and the reset belongs with the event that causes it.
   }, [generating]);
 
   const [answers, setAnswers] = useState<FollowUpAnswers>({
@@ -176,6 +176,7 @@ export function GeneratorForm({
   }, [step, projectName, description, answers, generating, elapsedSeconds]);
 
   async function handleGenerate() {
+    setElapsedSeconds(0);
     setGenerating(true);
     try {
       const res = await fetch('/api/generate', {

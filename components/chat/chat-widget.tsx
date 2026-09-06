@@ -10,7 +10,6 @@ import type { ChatMessage } from '@/lib/ai';
 const GREETING = "Hi \u2014 I'm Compass. Ask me which plan fits, what a feature does, or what project type suits what you're building.";
 
 export function ChatWidget() {
-  const supabase = createClient();
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [open, setOpen] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
@@ -20,7 +19,13 @@ export function ChatWidget() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setAuthed(!!data.user));
+    // The client is created inside the effect: createClient() returns a new
+    // object each call, so holding it in the component body made it a changing
+    // value that the dependency array could never satisfy honestly. It is used
+    // nowhere else in this component.
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => setAuthed(!!data.user));
     // Proactive greeting bubble — appears once per visit, a few seconds
     // in, rather than instantly (less jarring on page load).
     const t = setTimeout(() => setShowBubble(true), 2500);

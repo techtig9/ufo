@@ -15,16 +15,44 @@ export function CodeEditorPanel({
   screen: Screen;
   onSaved?: (screen: Screen) => void;
 }) {
-  const [code, setCode] = useState(screen.code);
   const [saving, setSaving] = useState(false);
-  const originalRef = useRef(screen.code);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
-  const dirty = code !== originalRef.current;
 
-  useEffect(() => {
-    setCode(screen.code);
-    originalRef.current = screen.code;
-  }, [screen.id, screen.code]);
+  /**
+   * The user's unsaved edit, or null when they have not touched this screen.
+   *
+   * Previously the saved text lived in a ref and `dirty` was computed from it
+   * during render — refs are not reactive, so the Save button could stay
+   * enabled after a save until something else re-rendered the panel. The
+   * baseline is now state, and both `code` and `dirty` are derived from it.
+   */
+  const [draft, setDraft] = useState<string | null>(null);
+  /** What is on the server for this screen. `dirty` is the draft against this. */
+  const [baseline, setBaseline] = useState({ id: screen.id, code: screen.code });
+
+  // Adjusting state during render is React's documented way to reset derived
+  // state when a prop changes; the previous effect cost an extra render pass
+  // and could show the old text for a frame.
+  if (screen.id !== baseline.id) {
+    // A different screen entirely.
+    setBaseline({ id: screen.id, code: screen.code });
+    setDraft(null);
+  } else if (draft === null && screen.code !== baseline.code) {
+    // The same screen changed underneath us — the AI copilot applying an edit,
+    // or a version being restored — and there is nothing unsaved to lose.
+    //
+    // Guarded on `draft === null` deliberately. The previous version keyed its
+    // effect on [screen.id, screen.code] with no such guard, so an AI edit
+    // landing while the user had unsaved changes in the editor discarded them
+    // silently. Their work now survives; the save button stays enabled and the
+    // decision is theirs.
+    setBaseline({ id: screen.id, code: screen.code });
+  }
+
+  const code = draft ?? baseline.code;
+  const dirty = draft !== null && draft !== baseline.code;
+  const setCode = (next: string | ((current: string) => string)) =>
+    setDraft((current) => (typeof next === 'function' ? next(current ?? baseline.code) : next));
 
   // Warn before leaving the tab/browser with unsaved edits — a real, honest signal
   // (the browser only fires this for actual navigation/close, never fabricated).
@@ -53,7 +81,11 @@ export function CodeEditorPanel({
       return;
     }
 
-    originalRef.current = code;
+    // The saved text IS the new server state. Set it here rather than waiting
+    // for the parent to echo it back through `screen`, so the editor never
+    // flashes the pre-save text between the response and the parent updating.
+    setBaseline({ id: screen.id, code });
+    setDraft(null);
     onSaved?.(data.screen);
     toast.success('Saved');
   }

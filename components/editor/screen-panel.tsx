@@ -197,7 +197,16 @@ export function ScreenPanel({
             <button onClick={() => onSelect(screen.id)} className="block w-full text-left">
               <div className="aspect-video overflow-hidden rounded-lg bg-white">
                 {screen.thumbnail ? (
-                  <img src={screen.thumbnail} alt="" className="h-full w-full object-cover" />
+                  <>
+                    {/* A base64 data URI captured client-side by html-to-image.
+                        next/image has nothing to optimise on a data URI and
+                        cannot be given a remote pattern for one. The box is a
+                        fixed aspect-video, so there is no layout shift.
+                        alt="" is deliberate: the screen's name is rendered as
+                        text right beside it, so announcing it twice is noise. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={screen.thumbnail} alt="" className="h-full w-full object-cover" />
+                  </>
                 ) : (
                   <div className="flex h-full items-end bg-gradient-to-br from-studio-citron/20 via-white to-studio-coral/10 p-2">
                     <span className="text-[9px] font-semibold uppercase tracking-wider text-black/45">

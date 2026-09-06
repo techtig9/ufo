@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,9 @@ interface Factor {
 }
 
 export function MfaEnrollment() {
-  const supabase = createClient();
+  // Memoised because createClient() returns a new object per call, which would
+  // otherwise make every callback that touches it a changing dependency.
+  const supabase = useMemo(() => createClient(), []);
   const [factors, setFactors] = useState<Factor[]>([]);
   const [enrolling, setEnrolling] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -20,15 +22,28 @@ export function MfaEnrollment() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    refreshFactors();
-  }, []);
-
-  async function refreshFactors() {
+  /** Re-read the enrolled factors. Called from event handlers after enrol/unenrol. */
+  const refreshFactors = useCallback(async () => {
     const { data } = await supabase.auth.mfa.listFactors();
     setFactors((data?.totp ?? []) as Factor[]);
     setLoading(false);
-  }
+  }, [supabase]);
+
+  // The initial load is written out here rather than calling refreshFactors():
+  // state is set in the promise callback, guarded by `cancelled`, which is the
+  // shape an effect is for — subscribing to an external system and reacting
+  // when it answers, rather than setting state as the effect runs.
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.mfa.listFactors().then(({ data }) => {
+      if (cancelled) return;
+      setFactors((data?.totp ?? []) as Factor[]);
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   async function startEnroll() {
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });

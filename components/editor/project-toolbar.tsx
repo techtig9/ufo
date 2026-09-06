@@ -174,7 +174,16 @@ export function ProjectToolbar({
         </div>
         {isPublic && (
           <div className="mt-3 flex items-center gap-3">
-            {qr && <img src={qr} alt="QR code" className="h-16 w-16 rounded bg-white p-1" />}
+            {qr && (
+              <>
+                {/* A data: URI generated in the browser by the qrcode library.
+                    next/image cannot optimise a data URI — it would have to be
+                    passed through unoptimized, which is exactly what this is.
+                    Fixed 64px, so there is no layout shift and nothing to size. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={qr} alt={`QR code linking to ${shareUrl}`} className="h-16 w-16 rounded bg-white p-1" />
+              </>
+            )}
             <div className="min-w-0 flex-1">
               <code className="block truncate rounded bg-surface-subtle px-2 py-1 text-xs text-fg-muted">{shareUrl}</code>
               <button onClick={copyLink} className="mt-1.5 text-[10px] text-brand-text hover:underline">

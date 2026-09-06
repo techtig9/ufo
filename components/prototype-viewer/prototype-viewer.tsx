@@ -133,7 +133,18 @@ export function PrototypeViewer({
   onInspectSelect?: (path: string, additive: boolean) => void;
 }) {
   const sorted = useMemo(() => [...screens].sort((a, b) => a.order_index - b.order_index), [screens]);
-  const [activeId, setActiveId] = useState(initialScreenId ?? sorted[0]?.id);
+  /**
+   * Which screen is shown.
+   *
+   * Held as "what the user picked", with the effective screen DERIVED below,
+   * rather than as a copy of the prop kept in sync by effects. The previous
+   * version needed two effects — one to follow `initialScreenId`, one to clamp
+   * the selection when a screen was deleted — and each of them set state during
+   * an effect, which costs an extra render pass and can flash the wrong screen
+   * for a frame.
+   */
+  const [pickedId, setPickedId] = useState<string | undefined>(undefined);
+  const [lastInitialId, setLastInitialId] = useState(initialScreenId);
   const [internalDevice, setInternalDevice] = useState<DeviceMode>('mobile');
   const [presentation, setPresentation] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -145,17 +156,25 @@ export function PrototypeViewer({
     onDeviceChange?.(mode);
   };
 
-  useEffect(() => {
-    if (initialScreenId && sorted.some((s) => s.id === initialScreenId)) setActiveId(initialScreenId);
-  }, [initialScreenId, sorted]);
+  // A parent changing `initialScreenId` (the screen list, a hotspot elsewhere)
+  // overrides the local pick. Adjusting state during render like this is
+  // React's documented way to reset derived state when a prop changes: it
+  // re-renders before committing, so nothing is painted with the stale value.
+  if (initialScreenId !== lastInitialId) {
+    setLastInitialId(initialScreenId);
+    setPickedId(undefined);
+  }
+
+  // Derived, so it can never disagree with the screens that actually exist:
+  // deleting the active screen falls back to the first one with no effect and
+  // no intermediate render showing a screen that is gone.
+  const candidateId = pickedId ?? initialScreenId;
+  const activeId =
+    candidateId && sorted.some((s) => s.id === candidateId) ? candidateId : sorted[0]?.id;
 
   useEffect(() => {
     if (activeId) onScreenChange?.(activeId);
   }, [activeId, onScreenChange]);
-
-  useEffect(() => {
-    if (!sorted.some((s) => s.id === activeId)) setActiveId(sorted[0]?.id);
-  }, [sorted, activeId]);
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
@@ -184,7 +203,7 @@ export function PrototypeViewer({
       // unexpected value can only fail to match — never navigate somewhere else.
       const wanted = data.target.toLowerCase();
       const target = sorted.find((s) => s.name.toLowerCase() === wanted);
-      if (target) setActiveId(target.id);
+      if (target) setPickedId(target.id);
     }
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
@@ -216,7 +235,7 @@ export function PrototypeViewer({
   function go(delta: number) {
     const index = sorted.findIndex((s) => s.id === active.id);
     const next = sorted[index + delta];
-    if (next) setActiveId(next.id);
+    if (next) setPickedId(next.id);
   }
 
   async function toggleFullscreen() {
@@ -235,7 +254,7 @@ export function PrototypeViewer({
           {sorted.map((s) => (
             <button
               key={s.id}
-              onClick={() => setActiveId(s.id)}
+              onClick={() => setPickedId(s.id)}
               className={`whitespace-nowrap rounded-full px-3 py-1 text-xs ${
                 s.id === active.id ? 'bg-surface-strong text-fg' : 'text-fg-faint hover:text-fg'
               }`}

@@ -33,8 +33,18 @@ export function AIDesignCopilot({
   // change, then appended to optimistically as edits are applied this session — so history
   // survives a reload or switching screens and back, addressing spec Section 36 (AI Memory)
   // without a parallel chat-log table.
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  // Stored WITH the screen it belongs to, and read back below only when the two
+  // still agree. The previous version kept a bare array that an effect cleared
+  // and refilled on every screen change, which meant a render could briefly
+  // show one screen's AI history under another screen's name.
+  const [historyFor, setHistoryFor] = useState<{ screenId: string; entries: HistoryEntry[] } | null>(null);
+
+  const history = historyFor && historyFor.screenId === screen?.id ? historyFor.entries : [];
+  // Derived rather than a separate flag: we are loading exactly while there is
+  // a screen whose history we have not stored yet. A flag would be a second
+  // source of truth that could disagree with the first — and setting it in the
+  // effect body cost an extra render pass on every screen change.
+  const historyLoading = !!screen && historyFor?.screenId !== screen.id;
 
   useEffect(() => {
     fetch('/api/account/plan')
@@ -43,28 +53,41 @@ export function AIDesignCopilot({
       .catch(() => undefined);
   }, []);
 
+  const screenId = screen?.id;
+
   useEffect(() => {
-    if (!screen) { setHistory([]); return; }
+    // No screen: nothing to fetch, and nothing to clear either — `history`
+    // above already reads as empty because the stored screenId cannot match.
+    if (!screenId) return;
+
     let cancelled = false;
-    setHistoryLoading(true);
-    fetch(`/api/projects/${project.id}/versions?screenId=${screen.id}`)
+
+    fetch(`/api/projects/${project.id}/versions?screenId=${screenId}`)
       .then((res) => (res.ok ? res.json() : { versions: [] }))
       .then((data) => {
         if (cancelled) return;
         const aiVersions = (data.versions ?? []).filter((v: { source?: string }) => v.source === 'ai');
-        setHistory(
-          aiVersions.map((v: { id: string; instruction?: string | null; created_at: string }) => ({
+        setHistoryFor({
+          screenId,
+          entries: aiVersions.map((v: { id: string; instruction?: string | null; created_at: string }) => ({
             id: v.id,
             instruction: v.instruction ?? '(no prompt recorded)',
             changes: [],
             appliedAt: v.created_at,
-          }))
-        );
+          })),
+        });
       })
-      .catch(() => undefined)
-      .finally(() => { if (!cancelled) setHistoryLoading(false); });
-    return () => { cancelled = true; };
-  }, [project.id, screen?.id]);
+      .catch(() => {
+        // Store an empty history for this screen rather than leaving nothing:
+        // `historyLoading` is derived from whether we have a result, so
+        // failing silently would leave the panel loading forever.
+        if (!cancelled) setHistoryFor({ screenId, entries: [] });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [project.id, screenId]);
 
   async function generateProposal(overrideInstruction?: string) {
     const activeInstruction = overrideInstruction ?? instruction;
@@ -124,10 +147,13 @@ export function AIDesignCopilot({
     }
 
     onApplied(data.screen);
-    setHistory((current) => [
-      { id: crypto.randomUUID(), instruction, changes: proposal.changes, appliedAt: new Date().toISOString() },
-      ...current,
-    ].slice(0, 20));
+    setHistoryFor((current) => ({
+      screenId: screen.id,
+      entries: [
+        { id: crypto.randomUUID(), instruction, changes: proposal.changes, appliedAt: new Date().toISOString() },
+        ...(current?.screenId === screen.id ? current.entries : []),
+      ].slice(0, 20),
+    }));
     setProposal(null);
     setInstruction('');
     toast.success('AI changes applied and versioned');
