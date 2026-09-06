@@ -1,6 +1,17 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Panel } from '@/components/ui/panel';
 
+/**
+ * Rendered per request, not prerendered.
+ *
+ * Without this Next statically generated this page at build time: it reads the
+ * database from a server component but touches no dynamic API, so it qualified
+ * for static generation and would have served the numbers as they stood when
+ * the build ran — for the life of the deployment. An admin page showing stale
+ * counts is worse than one showing none.
+ */
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPaymentsPage() {
   const admin = createAdminClient();
   const { data: payments } = await admin

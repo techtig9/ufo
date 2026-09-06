@@ -8,6 +8,9 @@ const LINKS = [
   { href: '/admin/subscriptions', label: 'Subscriptions' },
   { href: '/admin/payments', label: 'Payments' },
   { href: '/admin/activity', label: 'Activity' },
+  { href: '/admin/ai', label: 'AI' },
+  { href: '/admin/email', label: 'Email' },
+  { href: '/admin/system', label: 'System' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Logo />
             <span className="text-sm text-fg-faint">Admin</span>
           </div>
-          <nav className="flex gap-4 text-sm text-fg-muted">
+          <nav className="flex flex-wrap gap-4 text-sm text-fg-muted">
             {LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="hover:text-fg">
                 {l.label}
