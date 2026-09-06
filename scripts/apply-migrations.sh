@@ -4,8 +4,11 @@
 #
 # WHY THIS EXISTS
 # ---------------
-# Migrations 007 through 013 carry fixes and features that are not in effect
+# Migrations 006a through 014 carry fixes and features that are not in effect
 # until they run:
+#   006a — backfill for a database whose 001-005 were applied by hand and left
+#         pieces out (comments.resolved, shares.published_at, notifications).
+#         A no-op where 001-005 really ran; without it, 011 fails outright.
 #   007 — public.templates has NO row level security. Anyone holding the public
 #         anon key (which ships in the browser bundle) can INSERT/UPDATE/DELETE
 #         template rows, and /api/templates/[id]/use copies those rows into
@@ -20,11 +23,14 @@
 #   012 — project assets. Creates the PRIVATE project-assets bucket and its
 #         storage.objects policies; without them files are unreachable.
 #   013 — the publish log and prototype view analytics.
+#   014 — closes reserve_credits/refund_credits and three other server-only
+#         helpers to the public API. Until this runs, any signed-in user can
+#         call /rest/v1/rpc/refund_credits and top up their own balance.
 #
 # USAGE
 # -----
-#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh          # pending only (007+)
-#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --all    # fresh DB: schema + 001-013
+#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh          # pending only (006a+)
+#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --all    # fresh DB: schema + 001-014
 #   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --dry-run
 #
 # Get DATABASE_URL from Supabase: Project Settings -> Database -> Connection
@@ -34,7 +40,7 @@
 # Migration 012 skips its bucket setup where there is no `storage` schema, so
 # it also applies cleanly to a plain-Postgres database.
 #
-# Every migration from 007 on is written to be re-runnable (IF NOT EXISTS /
+# Every migration from 006a on is written to be re-runnable (IF NOT EXISTS /
 # DO blocks / CREATE OR REPLACE), so a repeat run is a no-op rather than an
 # error. Take a backup first anyway — Supabase: Database -> Backups.
 
@@ -66,7 +72,10 @@ if [[ "$MODE" == "all" ]]; then
   while IFS= read -r f; do FILES+=("$f"); done < <(ls "$REPO"/supabase/migrations/*.sql | sort)
 else
   FILES=()
-  while IFS= read -r f; do FILES+=("$f"); done < <(ls "$REPO"/supabase/migrations/*.sql | sort | awk -F/ '$NF >= "007"')
+  # "006a" rather than "007": the backfill sorts between 006 and 007, and 011
+  # depends on it. ASCII puts '_' (0x5F) below 'a' (0x61), so 006_fix_rls stays
+  # out of the pending set while 006a_backfill comes in.
+  while IFS= read -r f; do FILES+=("$f"); done < <(ls "$REPO"/supabase/migrations/*.sql | sort | awk -F/ '$NF >= "006a"')
 fi
 
 echo "Target : $(echo "$DATABASE_URL" | sed -E 's#(//[^:]+):[^@]+@#\1:****@#')"
