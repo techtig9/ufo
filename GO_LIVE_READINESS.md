@@ -1,6 +1,6 @@
 # Go-live readiness — what's done, and what needs you
 
-Phases 1–4 are complete and verified. Three things remain that **only you can
+Phases 1–5 are complete and verified. Three things remain that **only you can
 do**, because they need access or facts this environment does not have. Each
 now has tooling so it is one command and independently verifiable.
 
@@ -133,6 +133,16 @@ These are documented in the phase records rather than blocking:
   and accessibility sweeps cover the 10 public routes. Dashboard, editor,
   workspaces, billing, settings and admin use the same tokens, but that is
   inference.
+- **The authenticated E2E suite is written and waiting.** `e2e/authenticated`
+  skips with a stated reason until `UFO_E2E_EMAIL` and `UFO_E2E_PASSWORD` name
+  a real account. Run it as soon as they do — it signs in through the real
+  form and covers the dashboard, command palette, workspace creation, the
+  settings toggles, and console errors across every authenticated route.
+- **No error-tracking vendor is wired.** `reportError()` in
+  `lib/observability.ts` forwards to a Sentry-compatible global at call time,
+  so installing `@sentry/nextjs` and initialising it is all that is needed. No
+  SDK was added blind: a half-wired one that silently drops events looks like
+  error tracking is working.
 - **Nothing has been verified against a live provider.** No Groq, Cerebras,
   OpenRouter, Anthropic, Paddle, Resend or Google OAuth credentials exist in
   this environment. A real generation, payment, email send, Google sign-in,
@@ -159,7 +169,9 @@ These are documented in the phase records rather than blocking:
 | `npm run typecheck` | 0 errors |
 | `npm run lint` | 0 errors, 11 warnings |
 | `npm run build` | passes |
-| `npm test` | 170 / 170 |
-| `npm run test:db` | 78 assertions |
+| `npm test` | 246 / 246 |
+| `npm run test:db` | 83 assertions |
 | `supabase/tests/concurrency_test.sh` | credit race reproduced on old path, absent on new |
-| `npm run test:browser` | 13/13 behaviour · 180 responsive · 12/12 a11y · contrast AA both themes · 7/7 palette · 17/17 inspector |
+| `npm run test:browser` | 13/13 behaviour · 180 responsive · 12/12 a11y · contrast AA both themes · 7/7 palette · 17/17 inspector · 9/9 UX audit |
+| `npx playwright test` | 50 passed, 6 skipped (authenticated suite, no credentials) |
+| `npm run test:perf` | 7/7 budget checks |

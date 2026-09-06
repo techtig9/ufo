@@ -1,156 +1,233 @@
-# UFO Upgrade — Phase 5 Notes (Billing, Settings, Help, Reliability, Accessibility, Performance, Security)
+# Phase 5 — QA, performance, observability, final release
 
-Implements spec Sections 22 (Billing), 23 (Usage limits — already solid, no change needed), 25
-(Settings), 26 (Help/Support), 27 (error/loading/empty states), 28 (toasts — already solid), 29
-(confirmations), 30 (Accessibility), 31 (Performance), 32 (SEO — mostly already solid), 33
-(Security), 43 (production quality bar). No existing route, table row, or working feature was
-reset or removed. No new migration was needed this phase.
+Executed against `UFO_TechTig_Master_Command_v2.md` Phase 5.
 
-## Found and fixed a real bug: Cancel Subscription was invisible
-
-`CancelSubscriptionButton` was imported into the billing page but **never rendered anywhere in
-the JSX**. The free-plan card's own copy says "Cancel above to move to Free" — but there was no
-"above." Paid users had no way to cancel from the billing page at all. Now rendered on the
-current-plan panel (only shown when the user is actually on a paid plan), and upgraded to use
-the Phase 1 `Modal` for the confirmation instead of an inline two-step toggle, matching every
-other destructive-action confirmation built in Phases 2-4.
-
-## Security (Section 33)
-
-- Bumped `next` (and `eslint-config-next`) `14.2.5 → 14.2.35` — a patch-level release within the
-  same minor version, zero breaking changes, confirmed via a clean `tsc`/lint/build afterward.
-  This resolves the **critical**-severity advisory from the Phase 1 baseline audit and several
-  highs.
-- **Did not** force-upgrade to Next 16 (what `npm audit fix --force` offers for the remaining
-  handful of lower-severity advisories) — that's a major version jump with real breaking-change
-  risk across the App Router, well outside what an automated pass should do without a dedicated
-  QA cycle. Documenting this as a deliberate, known residual: `npm audit` will still show a
-  handful of moderate/high advisories tied to Next 14's line itself and a couple of transitive
-  deps (`dompurify` via `monaco-editor`, `nanoid`) that only resolve via breaking upgrades.
-
-## Accessibility (Section 30) — the light-mode contrast gap flagged since Phase 1
-
-Most components set explicit `text-white/NN` utility classes rather than inheriting the page's
-text color, so the `html.light body { color: ink }` rule from the original theme toggle never
-reached them — light mode was rendering white-on-paper text across most of the dashboard,
-functionally invisible. Editing the ~270 call sites individually across dozens of files would've
-been slow and error-prone, so this fixes it once at the CSS layer: every `text-white` variant
-actually used in the codebase (13 distinct opacity levels, enumerated by grepping the whole
-tree) is remapped to the same opacity against ink instead of white, scoped entirely to
-`html.light` — dark mode (the default) is untouched.
-
-- Two places legitimately need to **stay** white regardless of theme — a status pin marker and
-  the account-menu avatar initial, both solid-colored circles where white text is the contrast
-  choice, not a page-text inheritance — protected with `!text-white`, the same pattern the
-  existing toast styling already used for the same reason.
-- **Known scope boundary**: this fix covers the dashboard and everywhere else `text-white` is
-  used (which is where light mode is actually reachable — the toggle only lives in Settings).
-  The public marketing pages weren't individually audited for the same issue since they're
-  outside where the toggle lives in practice; flagging rather than silently leaving unstated.
-
-## Help & Support (Section 26)
-
-- Built a real `/help` page: 8 genuine FAQ entries (accurate to what the product does today —
-  e.g. explicitly says prototypes are shared via link, not hosted on your own domain, and that
-  Figma export is "coming soon," not glossed over) using native `<details>/<summary>` disclosures
-  — real keyboard/screen-reader accessibility for free, no custom accordion component needed.
-  Links through to `/contact` for anything not covered.
-- Sidebar and account-menu "Help & Support" links now point to `/help` instead of straight to
-  `/contact`, added to the sitemap.
-
-## Error / Loading / Empty States (Section 27)
-
-- Added missing `loading.tsx` for the Projects list and Settings pages (Skeleton-based, matching
-  the pattern already used for the Dashboard, AI Designer, Billing, and the project editor).
-- Root-level `error.tsx`, `global-error.tsx`, and `not-found.tsx` already existed and were solid
-  — no change needed there.
-- Billing's "No payments yet" plain text swapped for the Phase 1 `EmptyState` component, for the
-  same visual consistency reason as everywhere else this phase.
-
-## Performance (Section 31)
-
-- Monaco (`@monaco-editor/react`) is one of the largest dependencies in this project and was
-  statically imported into the project editor, meaning its JS loaded on every editor page visit
-  even if you never opened the Code tab. Code-split it with `next/dynamic` (`ssr: false`, with a
-  Skeleton placeholder) — it now only loads when the Code tab is actually opened.
-- Left the two remaining `<img>` lint warnings (QR code, screen thumbnail) as plain `<img>`
-  deliberately: both are small, one is a client-generated data URL and the other is a nullable
-  dynamic source — `next/image` needs known dimensions or a configured remote pattern to do
-  anything useful, and forcing it here would trade a soft lint suggestion for real risk of
-  broken rendering, for negligible benefit on these particular images.
-
-## Referrals / Confirmations consistency pass
-
-- No new functionality here — confirmed the account-deletion flow (`DangerZone`, "type DELETE to
-  confirm") was already a stronger pattern than a modal for the highest-stakes destructive
-  action in the app and left it as-is.
-
-## Test results after this phase
-
-- `tsc --noEmit`: clean, 0 errors.
-- `next lint`: 0 errors, same 6 pre-existing warnings as Phases 3-4 (no new ones).
-- `next build`: webpack/TS compile succeeds, all **46** routes generate (was 45 — the new `/help`
-  page). Static-export failures are the same pre-existing set as every prior phase's baseline,
-  plus `/help` failing for the identical reason `/contact` already did (same Nav/Footer chrome,
-  same missing-Supabase-env cause in this sandbox) — not a new problem.
-- Re-ran `npm audit` after the Next.js bump: critical-severity advisory is gone; documented the
-  remaining ones above rather than force-upgrading past them.
+Phase records: `PHASE1_UPGRADE_NOTES.md`, `PHASE2_NOTES_V2.md`,
+`PHASE3_NOTES_V2.md`, `PHASE4_NOTES.md`, this file.
 
 ---
 
-# All 5 phases — summary
+## How to re-run
 
-| Phase | Focus | Zip |
-|---|---|---|
-| 1 | Audit + centralized design system (Input, Select, Badge, Modal, Drawer, Tabs, Tooltip, Dropdown, Skeleton, EmptyState, ErrorState, semantic colors) | UFO-PHASE1-design-system.zip |
-| 2 | Dashboard real stats, full project management (rename/duplicate/favorite/archive/delete), AI generation honesty pass, accessible notifications | UFO-PHASE2-dashboard-projects.zip |
-| 3 | Persistent AI edit history, editor cohesion fixes, component library, working template system | UFO-PHASE3-ai-designer-editor.zip |
-| 4 | Real publishing metadata, full collaboration (click-to-pin, resolve, replies), sharing metadata, export clarity, referral stats | UFO-PHASE4-publish-collab-sharing.zip |
-| 5 | Fixed invisible Cancel Subscription bug, security patch, site-wide light-mode contrast fix, Help Center, missing loading states, editor bundle-splitting | UFO-PHASE5-final.zip (this one) |
+```bash
+npm audit && npm run typecheck && npm run lint && npm run build
+npm test              # 246 unit
+npm run test:db       # 83 database assertions
+./supabase/tests/concurrency_test.sh
+npm run preflight
 
-**Real bugs found and fixed along the way** (beyond the spec's planned feature list): missing
-cascade-delete on both projects and screens (would throw a hard 500 on delete), a duplicated
-device-switcher/fullscreen control in the editor, three separate instances of a `\u2026`-style
-JS escape sitting inside bare JSX literals (silently rendering literal backslash-text instead of
-the intended character), and the invisible Cancel Subscription button above.
+npm run build && npm run start &
+BASE=http://localhost:3000 npm run test:browser   # 7 suites incl. the UX audit
+BASE=http://localhost:3000 npm run test:perf
+npx playwright test
+```
 
-**Real gaps identified and explicitly not built**, because building them would have meant
-inventing backend that doesn't exist or fabricating controls that don't persist anywhere (per
-the spec's own Section 47 rule): Asset management (no storage backend), Analytics (no tracking
-backend), a true visual style-property inspector (screens are raw HTML strings, not a component
-tree), real mid-generation cancellation (no server-side abort wiring), and the full ten-category
-template gallery (3 real ones were built; the rest is content-authoring, not engineering).
+Authenticated E2E is written and committed but skips unless credentials exist:
 
-Every phase was independently tested (`tsc` + `next lint` + `next build`) before moving to the
-next, with each phase's build confirmed against the same pre-existing baseline failures (missing
-Supabase credentials and blocked Google Fonts access — both sandbox-only, unrelated to the code)
-so real regressions would have been caught if introduced.
+```bash
+UFO_E2E_EMAIL='you@example.com' UFO_E2E_PASSWORD='...' npm run test:e2e
+```
 
-## Final integrity pass (after all 5 phases were reported done)
+---
 
-Doing a full sweep before calling this final confirmed a few more things worth fixing rather
-than leaving quietly:
+## A. Playwright
 
-- **Swept the entire codebase** (not just files touched this project) for the `\u2026`-in-bare-
-  JSX-literal bug found three times across Phases 3-4. Found a **fourth instance** in
-  `chat-widget.tsx` (a file never touched in any phase) — fixed.
-- **Every Phase 1 design-system component now has a real caller.** Two were built but never
-  wired in anywhere: `ErrorState` and `Drawer`. Rather than ship unused files:
-  - **Found a real, serious gap while investigating `Drawer`'s absence**: the dashboard sidebar
-    is `hidden md:flex` — below that breakpoint there was **no navigation at all**. No hamburger
-    menu, no bottom bar, nothing. A mobile visitor had no way to reach Projects, Templates,
-    Billing, or Settings except typing the URL directly. Built `MobileNav` (using `Drawer`) and
-    wired a hamburger button into `Topnav`, mobile-only (`md:hidden`), containing the same nav
-    structure as the desktop sidebar.
-  - **Wired `ErrorState` into a new `app/dashboard/error.tsx`.** Previously, an error anywhere
-    under `/dashboard` bubbled all the way to the root `app/error.tsx`, which replaces the whole
-    screen — including the sidebar and topnav, so the only way out was a full reload. The new
-    dashboard-scoped boundary renders inside `DashboardLayout`, so the sidebar stays usable while
-    the broken page shows a real retry option.
-- Re-ran the full `tsc` + `next lint` + `next build` pass after these additions: still clean, 0
-  lint errors, same 6 pre-existing warnings, all 46 routes generate, and the static-export
-  failure list is byte-for-byte identical to every prior phase's baseline.
+`@playwright/test` with a config and 56 specs, split by what they need.
 
-**Before deploying**: run all 5 migrations in order (`001` through `005`) against your real
-Supabase project — none of them were applied here since this sandbox has no live database, only
-validated for correct SQL structure and, where checkable, JSON payload correctness.
+**`e2e/public` — 50 tests, no credentials required.** Every header, nav and
+footer link is fetched and must not 4xx/5xx. The callback error banner is
+checked for all four failure codes. The invitation token is followed through
+login and signup. A missing and a malformed prototype slug must answer
+identically, and the unlock endpoint must return one byte-identical response
+to every failure so it cannot be used as a slug oracle. 22 authenticated
+endpoints are called with no session and must 401/403 — RLS would still refuse
+the query, but a route that returns 200 with an empty body hides the mistake
+from everything except a test like this.
+
+**`e2e/authenticated` — 6 tests that skip with a stated reason.** They sign in
+through the real form rather than injecting a cookie. Stubbing a session and
+asserting against the stub would produce a suite that passes while proving
+nothing about whether sign-in works — worse than no suite, because it looks
+like coverage.
+
+`retries: 0` deliberately: a test that only passes on a retry reports
+something other than the truth.
+
+## B. The eight areas
+
+Existing coverage was audited first. The AI provider router was covered;
+project authorization and RLS were covered **for reads**.
+
+| Area | Added |
+|---|---|
+| Credits, plan gating | `tests/credits.test.ts` — 20 tests |
+| AI provider router | already covered |
+| Webhook signature validation | `tests/paddle-webhook.test.ts` — 13 tests |
+| Auth callback | `tests/auth-callback.test.ts` — 13 tests |
+| Project authorization | `rls_tests.sql` TESTS 14–18 — cross-user **writes** |
+| RLS-sensitive operations | 83 assertions total |
+| Email event deduplication | `tests/auth-events.test.ts` +8 |
+
+Things worth calling out:
+
+- **Plan gating is asserted to be categorical.** A blocked feature stays
+  blocked however many credits are held — buying credits must not unlock a
+  tier. Exactly-enough credits is allowed, because an off-by-one either blocks
+  a paid-for action or gives one away.
+- **The pricing cards are asserted against the enforced constants**, so the
+  page cannot advertise a number the code does not honour.
+- **Webhook verification is asserted to fail closed** when the secret is unset.
+  A missing secret must never mean "accept everything".
+- **Different auth event types must never share a dedup key** — otherwise a
+  sign-in would suppress the password-changed warning that follows it, the one
+  email a victim most needs to see.
+- **Write authorization**, not just read. A read leak is serious; a write leak
+  is unrecoverable.
+
+## C. Performance
+
+`npm run test:perf` measures, then checks a budget.
+
+```
+35 client chunks, 1315.8 KB on disk uncompressed
+Public routes: 216–218 KB of JS over the wire (741.8 KB parsed)
+TTFB 4–6 ms · FCP/LCP 144–208 ms · CLS 0
+```
+
+Lighthouse is deliberately not used: it is a large extra dependency, and on a
+single unthrottled container its composite score mostly measures the
+container. LCP and CLS are read from the browser's own `PerformanceObserver`
+rather than a hand-rolled proxy, which is not the same measurement.
+
+The budget checks what a regression looks like — total JS, JS per route,
+CLS ≤ 0.1, LCP ≤ 2.5 s, **Monaco not loaded on a public page**, and no source
+maps served. Thresholds are generous on purpose: a budget tight enough to fail
+on noise is a budget that gets deleted.
+
+> A bug in the first version of this file: it summed `Content-Length` and
+> reported **1.9 KB** of JavaScript for a page loading over a megabyte. Next
+> serves chunked, compressed responses with no `Content-Length`, so the check
+> was passing because it measured nothing. It now reads `encodedBodySize` and
+> fails explicitly on a zero measurement.
+
+## C2. Observability
+
+- **`lib/redact.ts`** — the credential scrubber, extracted so one definition
+  covers every log line. Now also catches Groq, Paddle and Resend key shapes.
+- **`lib/observability.ts`** — `log()` (one JSON line, scrubbed),
+  `reportError()`, `timed()`, and `withObservability()` for route handlers.
+- **Request correlation** — one id per request, honouring an upstream
+  `x-request-id`, accepted only if it matches `[A-Za-z0-9_-]{6,64}`: it ends up
+  in a log line, so an unbounded value from the internet is a log-injection
+  vector. Verified live for all three cases.
+- **`/api/health`** is now a real system check — database with latency, AI
+  providers, email, billing — reporting **status only**, because it is
+  unauthenticated by design. The detail goes to the log line.
+
+**On Sentry:** no SDK is added as a dependency. It needs a DSN and runtime
+config that cannot be tested here, and a half-wired SDK that silently drops
+events is worse than an honest console line because it looks like error
+tracking is working. `reportError()` forwards to a Sentry-compatible global at
+call time — install `@sentry/nextjs`, initialise it, and every call starts
+flowing with no change to this code.
+
+Two things measurement changed: the database health check took **7.05 s**
+against an unreachable host, past most uptime monitors' own timeout, and is
+now bounded at 3 s; and the route wrapper rebuilds the `Response`, which would
+have dropped `Set-Cookie` and silently broken password-protected prototypes.
+
+## D. Admin
+
+Every table Phases 2–4 wrote to now has somewhere to be read.
+
+- **`/admin/ai`** — usage and provider health computed from `ai_requests`.
+  Measured, not probed: probing four paid APIs per page load would cost money
+  and describe only one moment.
+- **`/admin/email`** — delivery per template, plus failure reasons. Recipients
+  are a salted hash shown truncated, so the page answers "is a template
+  failing?" without becoming a list of everyone's address.
+- **`/admin/system`** — database probe, webhooks, and the credit audit log with
+  the request id that lets a disputed charge be traced end to end.
+  Configuration reports **presence only, never a value**.
+- **`/admin` overview** — MRR and money collected computed and labelled
+  separately. They differ legitimately through refunds, part-months and failed
+  renewals, and a single "revenue" number hides which.
+
+> Bug found here: `/admin/activity`, `/admin/payments`, `/admin/subscriptions`
+> and `/admin/users` were being **statically prerendered** — they would have
+> served whatever the numbers were when the build ran, for the life of the
+> deployment.
+
+## E. Security audit
+
+`npm audit` — **0 vulnerabilities**. `@supabase/ssr` remains 0.4.1; its
+`cookie` advisory is neutralised by an npm override, and upgrading to 0.12.x
+replaces the whole cookie API in the auth layer, which should be done where a
+real sign-in can be exercised. `@google/generative-ai` was removed in Phase 4
+as an unused dependency.
+
+## F. Final UX audit
+
+`npm run test:ux` automates the honesty list. **Two real bugs:**
+
+1. **The landing page advertised $0/mo for every paid plan.** `CountUp`
+   initialised to 0 and only animated on intersection, so the server-rendered
+   HTML — what a crawler indexes and a no-JS visitor sees — said "$0 /mo" and
+   "0 credits", and it stayed 0 for anyone who had not scrolled the section
+   into view. Since `CountUp` was used for nothing except the price and the
+   credit count, the animation was removed and the component deleted. A
+   count-up is decoration; a price is a claim.
+2. **A focusable dead control in the decorative hero mockup.** The mockup is
+   `aria-hidden`, but that does not remove an element from the tab order — a
+   keyboard user could Tab to a button a screen reader would not announce and
+   that did nothing. Now a `span`.
+
+"Coming soon" was replaced with "not available" everywhere and added to the
+forbidden-copy list. Figma export is not built and has no date; the Master
+Command asks for unavailable, not deferred.
+
+---
+
+## Verification results
+
+| Gate | Result |
+|---|---|
+| `npm audit` | **0 vulnerabilities** |
+| `npm run typecheck` | **0 errors** (both tsconfigs) |
+| `npm run lint` | **0 errors**, 11 warnings |
+| `npm run build` | **passes** |
+| `npm test` | **246 / 246** (68 at end of Phase 3) |
+| `npm run test:db` | **83 assertions** (31 at end of Phase 3) |
+| `concurrency_test.sh` | passes |
+| `npm run db:verify` | 0 failed / 29 passed + 2 bucket checks |
+| `npm run preflight` | passes |
+| Behaviour · responsive · a11y | 13/13 · **180 combinations** · 12/12 |
+| Contrast | **22 combinations**, WCAG AA both themes |
+| Palette · inspector | 7/7 · 17/17 |
+| **UX audit** | **9/9 clean** — 12 routes, 217 files, 16 links |
+| **Playwright** | **50 passed**, 6 skipped (no credentials) |
+| **Performance** | **7/7 budget checks** |
+
+---
+
+## Remaining risks
+
+1. **Migrations 007–013 are still unapplied.** Nothing database-dependent from
+   Phases 1–5 is live until `npm run db:apply` runs.
+2. **Nothing has been exercised against a live service.** No Supabase, Resend,
+   Paddle, Google OAuth or AI provider credentials exist here. A real
+   generation, payment, email send, Google sign-in, file upload, signed
+   download, recorded view and publish-log write are **unverified and not
+   claimed**. The authenticated E2E suite exists to be run the moment
+   credentials do.
+3. **Authenticated routes are not visually measured.** The sweeps cover 12
+   public routes.
+4. **Storage policies are proven against a harness stand-in**, not Supabase's
+   own Storage API.
+5. **No error-tracking vendor is wired.** `reportError()` is ready for one; the
+   structured log line is the record until then.
+6. **Company details are unset** in any real environment. CI fails until they
+   are filled — deliberately.
+7. **Carried:** `@supabase/ssr` 0.4.1; two editor components keep a scoped
+   `react-hooks` lint relaxation; no Figma-derived design foundation, because
+   the connector still exposes only Figma's own skills and docs.
