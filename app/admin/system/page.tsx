@@ -37,7 +37,10 @@ async function timedCount(
   }
 }
 
-export default async function AdminSystemPage() {
+/** Loaded outside the component: the probe and the 24h window both depend on
+ *  the current time, which `react-hooks/purity` rightly refuses in a render
+ *  body. */
+async function loadSystemState() {
   const admin = createAdminClient();
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -58,6 +61,12 @@ export default async function AdminSystemPage() {
       admin.from('auth_events').select('id', { count: 'exact', head: true }).gte('created_at', dayAgo)
     ),
   ]);
+
+  return { dbProbe, webhooks, recentWebhooks, ledger, authEvents };
+}
+
+export default async function AdminSystemPage() {
+  const { dbProbe, webhooks, recentWebhooks, ledger, authEvents } = await loadSystemState();
 
   const configuredProviders = PROVIDER_CASCADE.filter((p) => p.isConfigured());
 

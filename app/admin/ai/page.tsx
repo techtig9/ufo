@@ -43,9 +43,16 @@ function percentile(values: number[], p: number): number {
   return sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))];
 }
 
-export default async function AdminAiPage() {
+/**
+ * Data loading lives outside the component.
+ *
+ * Not only for tidiness: `react-hooks/purity` correctly refuses an impure call
+ * like Date.now() in a render body, and the reporting window has to be
+ * computed from the current time. Doing it here keeps the component a pure
+ * function of what it is handed.
+ */
+async function loadAiUsage() {
   const admin = createAdminClient();
-
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const [{ data: recent }, { count: totalAll }] = await Promise.all([
@@ -58,7 +65,11 @@ export default async function AdminAiPage() {
     admin.from('ai_requests').select('id', { count: 'exact', head: true }),
   ]);
 
-  const rows = (recent ?? []) as AiRequest[];
+  return { rows: (recent ?? []) as AiRequest[], totalAll: totalAll ?? 0 };
+}
+
+export default async function AdminAiPage() {
+  const { rows, totalAll } = await loadAiUsage();
   const successes = rows.filter((r) => r.outcome === 'success');
   const failures = rows.filter((r) => r.outcome !== 'success');
   const latencies = successes.map((r) => r.latency_ms ?? 0).filter((n) => n > 0);

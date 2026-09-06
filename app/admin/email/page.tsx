@@ -24,7 +24,9 @@ interface EmailEvent {
   created_at: string;
 }
 
-export default async function AdminEmailPage() {
+/** Loaded outside the component: the window depends on the current time, and
+ *  `react-hooks/purity` rightly refuses an impure call in a render body. */
+async function loadEmailEvents(): Promise<EmailEvent[]> {
   const admin = createAdminClient();
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -35,7 +37,11 @@ export default async function AdminEmailPage() {
     .order('created_at', { ascending: false })
     .limit(1000);
 
-  const rows = (data ?? []) as EmailEvent[];
+  return (data ?? []) as EmailEvent[];
+}
+
+export default async function AdminEmailPage() {
+  const rows = await loadEmailEvents();
   const sent = rows.filter((r) => r.status === 'sent');
   const failed = rows.filter((r) => r.status === 'failed');
   const skipped = rows.filter((r) => r.status === 'skipped_unconfigured');
