@@ -28,7 +28,7 @@ const FAQS = [
   },
   {
     q: 'Is Figma export available?',
-    a: 'Not yet \u2014 it\u2019s clearly marked "coming soon" wherever it appears. We don\u2019t enable buttons for features that aren\u2019t built.',
+    a: 'No. It is marked \u201cnot available\u201d wherever it appears, and the button is disabled rather than failing when clicked. We don\u2019t enable controls for features that aren\u2019t built, and we won\u2019t promise a date we can\u2019t keep.',
   },
   {
     q: 'Can I use a starter template instead of describing my project?',

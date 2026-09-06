@@ -63,7 +63,7 @@ export const PLAN_CARDS: PlanCard[] = [
     features: [
       'Everything in Starter',
       'Priority generation queue',
-      'Figma export — coming soon',
+      'Figma export — not available yet',
       'CSV / JSON export',
       storage('pro'),
       'Priority support',

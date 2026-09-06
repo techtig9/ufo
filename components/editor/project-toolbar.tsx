@@ -147,8 +147,13 @@ export function ProjectToolbar({
             Export ZIP — Starter+
           </Button>
         )}
-        <Button size="sm" variant="secondary" disabled title="Figma export is coming soon">
-          Figma export — coming soon
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled
+          title="Figma export is not built. The button is disabled rather than failing when clicked."
+        >
+          Figma export — not available
         </Button>
         <Button size="sm" variant="secondary" onClick={handleDuplicate}>
           Duplicate

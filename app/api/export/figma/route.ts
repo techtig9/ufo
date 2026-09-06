@@ -11,7 +11,7 @@ export async function POST() {
 
   return NextResponse.json(
     {
-      error: 'Figma export is coming soon. Your project and credits were not changed.',
+      error: 'Figma export is not available. Your project and credits were not changed.',
       status: 'unavailable',
     },
     { status: 501 }

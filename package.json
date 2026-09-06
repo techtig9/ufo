@@ -12,12 +12,13 @@
     "preflight": "node scripts/preflight.mjs",
     "test": "node --experimental-strip-types --import ./tests/ts-resolver.mjs --test tests/*.test.ts",
     "test:db": "./supabase/tests/run.sh",
-    "test:browser": "node tests/browser/phase1.mjs && node tests/browser/responsive.mjs && node tests/browser/a11y.mjs && node tests/browser/contrast.mjs && node tests/browser/palette.mjs && node tests/browser/inspector.mjs",
+    "test:browser": "node tests/browser/phase1.mjs && node tests/browser/responsive.mjs && node tests/browser/a11y.mjs && node tests/browser/contrast.mjs && node tests/browser/palette.mjs && node tests/browser/inspector.mjs && npm run test:ux",
     "db:apply": "./scripts/apply-migrations.sh",
     "db:verify": "./scripts/verify-database.sh",
     "test:e2e": "playwright test",
     "test:e2e:public": "playwright test e2e/public",
-    "test:perf": "node tests/browser/performance.mjs"
+    "test:perf": "node tests/browser/performance.mjs",
+    "test:ux": "node --experimental-strip-types tests/browser/ux-audit.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",

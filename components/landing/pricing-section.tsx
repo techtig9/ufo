@@ -6,7 +6,6 @@ import { Panel } from '@/components/ui/panel';
 import { Reveal } from '@/components/ui/reveal';
 import { GridField } from '@/components/ui/grid-field';
 import { TiltCard } from '@/components/ui/tilt-card';
-import { CountUp } from '@/components/ui/count-up';
 
 export function PricingSection() {
   return (
@@ -43,14 +42,24 @@ export function PricingSection() {
                 )}
                 <h3 className="font-display text-lg font-medium">{card.label}</h3>
                 <p className="mt-1 text-sm text-fg-muted">{card.tagline}</p>
+                {/*
+                  Rendered plainly, not animated.
+
+                  These were counted up from 0 on scroll, which meant the price
+                  read "$0 /mo" and "0 credits" in the server-rendered HTML —
+                  what a crawler indexes and a visitor without JavaScript sees —
+                  and stayed at 0 for anyone who had not yet scrolled the
+                  section into view. A count-up animation is decoration; a
+                  price is a claim. Where the two conflict, the price wins.
+                */}
                 <div className="mt-5 flex items-baseline gap-1">
                   <span className="font-display text-3xl font-semibold">
-                    $<CountUp to={card.price} duration={800} />
+                    ${card.price.toLocaleString()}
                   </span>
                   <span className="text-sm text-fg-faint">/mo</span>
                 </div>
                 <p className="mt-1 font-mono text-xs text-fg-faint">
-                  <CountUp to={card.credits} duration={1000} /> credits &middot; ~{card.fullProjects} full projects/mo
+                  {card.credits.toLocaleString()} credits &middot; ~{card.fullProjects} full projects/mo
                 </p>
                 <ul className="mt-6 flex-1 space-y-2.5 text-sm text-fg-secondary">
                   {card.features.map((f) => (
