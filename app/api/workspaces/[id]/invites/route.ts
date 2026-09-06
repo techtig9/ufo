@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { siteUrl } from '@/lib/site-url';
 import {
   generateInviteToken,
   hashInviteToken,
@@ -144,7 +145,7 @@ async function handlePOST(request: Request, ctx: { params: Promise<{ id: string 
     .eq('id', id)
     .maybeSingle();
 
-  const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const base = siteUrl();
   const acceptUrl = `${base}/invite?token=${encodeURIComponent(token)}`;
 
   await sendWorkspaceInviteEmail(email, {

@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseMentions, toPlainText } from '@/lib/mentions';
 import { sendMentionEmail, sendCommentAssignmentEmail } from '@/lib/email';
+import { siteUrl } from '@/lib/site-url';
 
 /**
  * Server-side handling of comment mentions and assignment.
@@ -41,7 +42,7 @@ export async function collaboratorIds(context: CommentContext): Promise<Set<stri
 }
 
 function commentUrl(context: CommentContext, commentId: string): string {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const base = siteUrl();
   // Collaborators are signed in, so the editor is the right destination — it
   // shows resolved and unresolved threads, which the public view does not.
   return `${base}/dashboard/projects/${context.projectId}#comment-${commentId}`;

@@ -4,13 +4,14 @@ import { Toaster } from 'react-hot-toast';
 import { CookieConsent } from '@/components/ui/cookie-consent';
 import { ChatWidgetGate } from '@/components/chat/chat-widget-gate';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
+import { siteUrl } from '@/lib/site-url';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const SITE_URL = siteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
