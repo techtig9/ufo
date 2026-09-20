@@ -1,5 +1,6 @@
 import { ProviderError } from './errors';
 import { log } from '../observability';
+import { checkAiBudget } from './budget';
 import {
   PROVIDER_CASCADE,
   anthropic,
@@ -144,10 +145,30 @@ export class AllProvidersFailedError extends Error {
  * failures — an unset key is a deployment choice, not an outage, and treating
  * it as a failure would make the logs useless for spotting real problems.
  */
+/**
+ * Thrown when the spend cap or the kill switch blocks a call. A distinct class
+ * so routes can answer 503 with the operator's message instead of turning a
+ * deliberate stop into a generic 500 that looks like a bug.
+ */
+export class AiBudgetError extends Error {
+  readonly reason: 'kill_switch' | 'over_budget';
+
+  constructor(reason: 'kill_switch' | 'over_budget', message: string) {
+    super(message);
+    this.name = 'AiBudgetError';
+    this.reason = reason;
+  }
+}
+
 export async function route(
   messages: ChatTurn[],
   options: RouteOptions
 ): Promise<RouteResult> {
+  // Checked HERE rather than in each route handler, because there are eleven
+  // ways into the AI layer and a cap that covers ten of them is not a cap.
+  const block = await checkAiBudget();
+  if (block) throw new AiBudgetError(block.reason, block.message);
+
   const providers = cascadeFor(options);
   const failures: { provider: ProviderName; kind: string; message: string }[] = [];
   let attempts = 0;

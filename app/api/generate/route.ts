@@ -10,6 +10,8 @@ import { sendLowCreditsEmail } from '@/lib/email';
 import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 import { reserveCredits, refundCredits } from '@/lib/credits-server';
 import type { ProjectType } from '@/lib/types';
+import { AiBudgetError } from '@/lib/ai/router';
+import { reportError } from '@/lib/observability';
 
 function randomSlug(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 10);
@@ -130,7 +132,14 @@ export async function POST(request: Request) {
               signal: request.signal,
             });
     } catch (err) {
-      console.error('Generation failed', { requestId, error: String(err) });
+      // A deliberate stop (kill switch or spend cap) is not a failure of this
+      // request: refund the credits and say so plainly, rather than telling
+      // the user to "try again" against a switch that is off on purpose.
+      if (err instanceof AiBudgetError) {
+        await refund('refund_generation_failed');
+        return NextResponse.json({ error: err.message, requestId }, { status: 503 });
+      }
+      reportError(err, 'generate', { requestId });
       await refund('refund_generation_failed');
       return NextResponse.json(
         { error: 'Generation failed — no credits were charged. Please try again.', requestId },

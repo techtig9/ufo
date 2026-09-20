@@ -6,6 +6,8 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { canUseFeature, PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 import { reserveCredits, refundCredits } from '@/lib/credits-server';
 import { sendLowCreditsEmail } from '@/lib/email';
+import { AiBudgetError } from '@/lib/ai/router';
+import { reportError } from '@/lib/observability';
 
 // `routeContext`, not `context` — this handler already uses `context` further
 // down for the AI prompt it builds.
@@ -126,7 +128,11 @@ Preserve the existing information architecture and working data-hotspot attribut
     // user should be charged for and then asked to apply.
     if (!cleanCode) throw new Error('the model returned an empty screen');
   } catch (error) {
-    console.error('AI edit failed', { requestId, error: String(error) });
+    if (error instanceof AiBudgetError) {
+      await refund('refund_ai_edit_failed');
+      return NextResponse.json({ error: error.message, requestId }, { status: 503 });
+    }
+    reportError(error, 'ai-edit', { requestId });
     await refund('refund_ai_edit_failed');
     return NextResponse.json(
       { error: 'AI editing failed — no credits were charged. Please try again.', requestId },

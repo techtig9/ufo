@@ -6,6 +6,8 @@ import { reserveCredits, refundCredits } from '@/lib/credits-server';
 import { route as routeAi } from '@/lib/ai/router';
 import { parseAiJson } from '@/lib/ai/json';
 import { AI_ACTIONS, isAiActionId, type ActionContext } from '@/lib/ai/actions';
+import { AiBudgetError } from '@/lib/ai/router';
+import { reportError } from '@/lib/observability';
 
 /**
  * Runs one AI action against a project (Master Command 2.C).
@@ -190,7 +192,11 @@ export async function POST(request: Request, routeContext: { params: Promise<{ i
       result: parsed,
     });
   } catch (err) {
-    console.error('[ai-action] failed', { requestId, action: def.id, error: String(err) });
+    if (err instanceof AiBudgetError) {
+      await refund('refund_ai_action_failed');
+      return NextResponse.json({ error: err.message, requestId }, { status: 503 });
+    }
+    reportError(err, 'ai-action', { requestId, action: def.id });
     await refund('refund_ai_action_failed');
     return NextResponse.json(
       {
