@@ -40,6 +40,9 @@ Priority: P0 build/crash/login · P1 core feature broken · P2 buttons/UX/layout
 | 12 | No usage meters or near-limit upgrade prompts | dashboard | P2 | fixed |
 | 13 | No in-app feedback widget | app | P2 | fixed |
 | 14 | No Dependabot, no PR template | `.github/` | P2 | fixed |
+| 15 | `/api/chat` read its body with a cast, not a check: `text` could be any type, and had no length cap — twelve multi-megabyte messages were a rate-limit-compliant way to run up an AI bill | `app/api/chat/route.ts:29` | P1 | fixed |
+| 16 | `/api/chat` returned 500 on a malformed JSON body instead of 400 | `app/api/chat/route.ts` | P2 | fixed |
+| 17 | 16 write routes have hand-rolled validation rather than zod. Reviewed: the ones that write user input use explicit allow-lists and are correct. Converting them is Phase 7's "zod on every route" item, via a shared `readJson(request, schema)` helper — not a Phase 2 bug fix | `app/api/**` | P3 | deferred to Phase 7 |
 
 ## Design direction
 
@@ -57,7 +60,7 @@ component gaps (no Table, Avatar, Progress or Toast primitive in
 ## Phase status
 
 - [x] Phase 1 — audit
-- [ ] Phase 2 — fix
+- [x] Phase 2 — fix
 - [ ] Phase 3 — design
 - [ ] Phase 4 — clean repo
 - [ ] Phase 5 — verify and package
@@ -66,6 +69,22 @@ component gaps (no Table, Avatar, Progress or Toast primitive in
 - [ ] Phase 8 — product advantage
 - [ ] Phase 9 — trust and operations
 
+### Checked and found already correct (no change made)
+
+- `/api/chat` cannot be used to inject a `system` turn: `chatWithAssistant`
+  maps any role that is not `'model'` to `'user'`. The role is constrained by
+  the new schema anyway, so that stays true if the mapping is rewritten.
+- `.env.example` already lists every variable the code reads, each marked
+  required or optional with its purpose. Verified by diffing the file against
+  every `process.env.*` in `app`, `lib`, `components`, `middleware.ts` and
+  `instrumentation.ts`: nothing missing.
+- No Supabase or API client is constructed at import or build time
+  (`lib/supabase/config.ts` supplies placeholders).
+- The remaining `console.log` calls are the logger's own sink in
+  `lib/observability.ts` and `lib/auth-log.ts`, not debug leftovers.
+
 ## Next step
 
-Phase 2: fix findings 1–6.
+Phase 3: design. Audit the existing token layer against the quality bar and
+add the missing `components/ui` primitives (Table, Avatar, Progress, Toast
+wrapper).
