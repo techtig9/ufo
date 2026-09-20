@@ -12,6 +12,7 @@ import { reserveCredits, refundCredits } from '@/lib/credits-server';
 import type { ProjectType } from '@/lib/types';
 import { AiBudgetError } from '@/lib/ai/router';
 import { reportError } from '@/lib/observability';
+import { readJson } from '@/lib/api/read-json';
 
 function randomSlug(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 10);
@@ -43,13 +44,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = generateRequestSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? 'Invalid request' },
-      { status: 400 }
-    );
-  }
+  // readJson rather than safeParse(await request.json()): the bare call throws
+  // on a malformed body, which turned the client's mistake into our 500.
+  const parsed = await readJson(request, generateRequestSchema);
+  if (!parsed.ok) return parsed.response;
   const { mode, projectName, answers, description, importSource, importInstruction } = parsed.data;
 
   const admin = createAdminClient();

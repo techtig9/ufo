@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { readJson } from '@/lib/api/read-json';
+import { z } from 'zod';
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
@@ -16,7 +18,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
-  const body = await request.json();
+  const parsed = await readJson(request, z.record(z.string(), z.unknown()));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
   const name = String(body.name ?? '').trim();
   const code = typeof body.code === 'string'
     ? body.code

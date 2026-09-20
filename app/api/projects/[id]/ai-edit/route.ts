@@ -8,6 +8,8 @@ import { reserveCredits, refundCredits } from '@/lib/credits-server';
 import { sendLowCreditsEmail } from '@/lib/email';
 import { AiBudgetError } from '@/lib/ai/router';
 import { reportError } from '@/lib/observability';
+import { readJson } from '@/lib/api/read-json';
+import { z } from 'zod';
 
 // `routeContext`, not `context` — this handler already uses `context` further
 // down for the AI prompt it builds.
@@ -24,7 +26,9 @@ export async function POST(request: Request, routeContext: { params: Promise<{ i
     return NextResponse.json({ error: 'Too many AI edits. Please wait a moment.' }, { status: 429 });
   }
 
-  const body = await request.json();
+  const parsed = await readJson(request, z.record(z.string(), z.unknown()));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
   const screenId = String(body.screenId ?? '');
   const instruction = String(body.instruction ?? '').trim();
 
