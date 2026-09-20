@@ -3,6 +3,13 @@
 import JSZip from 'jszip';
 import { toPng } from 'html-to-image';
 import type { Project, Screen } from '@/lib/types';
+import { screenToComponent, componentName } from './export/html-to-jsx';
+import {
+  tokensCss,
+  tokensJson,
+  tailwindPreset,
+  designSystemReadme,
+} from './export/design-system';
 
 /**
  * The live prototype viewer renders screens with sandbox="allow-scripts"
@@ -64,14 +71,23 @@ export async function exportProjectZip(project: Project, screens: Screen[]) {
   const zip = new JSZip();
 
   zip.file('style-guide.md', styleGuideMarkdown(project));
+  zip.file('README.md', exportReadme(project, screens.length));
+
+  // The design system, as something importable rather than a list of hex
+  // codes someone has to retype.
+  zip.file('design-system/README.md', designSystemReadme(project));
+  zip.file('design-system/tokens.css', tokensCss(project));
+  zip.file('design-system/tokens.json', tokensJson(project));
+  zip.file('design-system/tailwind-preset.js', tailwindPreset(project));
 
   for (const screen of screens) {
-    zip.file(`${screen.name}.html`, screen.code);
+    zip.file(`html/${screen.name}.html`, screen.code);
+    zip.file(`react/${componentFileName(screen.name)}`, screenToComponent(screen.name, screen.code));
     try {
       const png = await snapshotScreen(screen.code);
       if (png) {
         const base64 = png.split(',')[1];
-        zip.file(`${screen.name}.png`, base64, { base64: true });
+        zip.file(`png/${screen.name}.png`, base64, { base64: true });
       }
     } catch (err) {
       console.error(`Snapshot failed for ${screen.name}`, err);
@@ -86,4 +102,47 @@ export async function exportProjectZip(project: Project, screens: Screen[]) {
   a.download = `${project.name.replace(/\s+/g, '-').toLowerCase()}.zip`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/** `Home page` → `HomePage.tsx`, matching the component name inside. */
+function componentFileName(screenName: string): string {
+  return `${componentName(screenName)}.tsx`;
+}
+
+/**
+ * The README that explains what is in the zip — including, deliberately, what
+ * the React conversion does NOT do. A mechanical converter with stated limits
+ * is usable; one that quietly mangles an edge case is not.
+ */
+function exportReadme(project: Project, screenCount: number): string {
+  return `# ${project.name}
+
+Exported from ufo. ${screenCount} screen${screenCount === 1 ? '' : 's'}.
+
+| Folder | What's in it |
+|---|---|
+| \`html/\` | One standalone HTML file per screen. Opens in a browser as-is. |
+| \`react/\` | One \`.tsx\` component per screen. |
+| \`png/\` | A rendered snapshot of each screen. |
+| \`design-system/\` | Tokens as CSS variables, a Tailwind preset and JSON. |
+
+## About the React export
+
+The components are converted mechanically from the HTML: attributes renamed to
+their JSX spellings, inline styles turned into objects, void elements
+self-closed, comments converted.
+
+Two things it deliberately does **not** do, so you are not surprised by them:
+
+- **Inline event handlers are dropped.** An \`onclick="..."\` string is not
+  valid as a JSX prop, and emitting it would produce code that looks wired up
+  and is not.
+- **No components are extracted.** Each screen is one component. Finding the
+  repeated card in three screens is a judgement call about your codebase, not
+  something to guess.
+
+Tailwind classes are preserved, so the components expect Tailwind in the target
+project — wire up \`design-system/tailwind-preset.js\` and they will match the
+originals.
+`;
 }

@@ -66,8 +66,8 @@ component gaps (no Table, Avatar, Progress or Toast primitive in
 - [x] Phase 5 — verify and package
 - [x] Phase 6 — growth and conversion
 - [x] Phase 7 — backend, security, reliability
-- [ ] Phase 8 — product advantage
-- [ ] Phase 9 — trust and operations
+- [x] Phase 8 — product advantage
+- [x] Phase 9 — trust and operations
 
 ### Checked and found already correct (no change made)
 
@@ -192,6 +192,64 @@ responses. Each is a real feature rather than a gap — none is load-bearing at
 current scale, and the versioning commitment of a public API in particular
 should not be taken on speculatively.
 
-## Next step
+### Phase 8 result
 
-Phase 8: product advantage — at most three items, chosen by impact ÷ effort.
+Of the six ufo.ai advantage items, four already existed (shareable links with
+comments, device frames, version history, handoff specs). The two genuinely
+missing were built — both, rather than padding to the allowed three:
+
+- **React export.** A `.tsx` component per screen, beside the HTML. Written as
+  a scanner rather than a regex, because `html.replace(/class=/g, …)` also
+  rewrites prose — a screen whose copy mentions `class="btn"` would be
+  silently corrupted. Its limits are stated in the export README rather than
+  hidden: inline handlers dropped, no component extraction.
+- **Design-system generation.** `tokens.css`, a Tailwind preset and
+  `tokens.json` from one source. The preset points at the CSS variables rather
+  than inlining hex, so a theme change is made once. A project with no theme
+  gets empty files that say so.
+
+**A production bug surfaced as a 1-in-6 flaky test** and was fixed at the
+cause: `recordAttempt`'s lazy import was documented as failing harmlessly
+without Supabase, which stopped being true when `lib/supabase/config.ts`
+introduced placeholder values for deploy-before-keys. Every AI attempt was
+firing a doomed connection to `not-configured.invalid` and swallowing it.
+`lib/email.ts` had the same bug per email. Both guarded; eight consecutive
+clean suite runs.
+
+### Phase 9 result
+
+| Item | State |
+|---|---|
+| Legal pages, subprocessors, AI-use disclosure | Already existed |
+| Data-deletion and export flows | Already existed |
+| Contact form with spam protection, transactional templates | Already existed |
+| Admin: users, subscriptions, payments, activity, AI cost, email, system | Already existed |
+| **Credit grants** | Built — mandatory reason, bounded amount, re-checked admin role, audit row |
+| **Feature flags** | Built — a missing flag is OFF, and they are explicitly not a permission system |
+| **`docs/UNIT_ECONOMICS.md`** | Built, as a runnable script so the numbers come from the code |
+
+The economics script found a real inconsistency: `generate_component` charges
+100 credits for the same 8,000-token ceiling `import_redesign` charges 1,900
+for — **19× cheaper per credit** for comparable work. Deliberately not changed:
+credit pricing is a product decision with customer impact, not something to
+alter inside a refactor. Three options are written up with a recommendation.
+
+No paid plan has a negative worst-case margin (52% / 35% / 37%). Free costs
+about $2.16 per user per month at worst.
+
+### Final verification
+
+From a clean clone in a temp directory under `env -i`, nothing inherited:
+
+```
+npm ci          ok
+typecheck       clean
+lint            clean
+test            343 passed, 0 failed
+build           Compiled successfully   <- zero env vars
+```
+
+## Status
+
+All nine phases complete. Three branches, three PRs, stacked in order:
+`release/clean` → `release/growth` → `release/advantage`.
