@@ -1,6 +1,7 @@
 import { ProviderError } from './errors';
 import { log } from '../observability';
 import { checkAiBudget } from './budget';
+import { isSupabaseAdminConfigured } from '../supabase/config';
 import {
   PROVIDER_CASCADE,
   anthropic,
@@ -90,12 +91,22 @@ function recordAttempt(row: {
     completionTokens: row.completionTokens,
   });
 
+  // Skipped entirely when there is no database to write to.
+  //
+  // This guard used to be implicit: the comment below said the lazy import
+  // "simply fails" without Supabase configured. That stopped being true when
+  // lib/supabase/config.ts introduced placeholder values so the app could be
+  // deployed before its keys — the import now SUCCEEDS, returns a working
+  // client pointed at https://not-configured.invalid, and fires a doomed DNS
+  // lookup and connection attempt on every single AI call, swallowing the
+  // failure. A test caught it as a phantom fifth fetch inside a four-provider
+  // cascade assertion.
+  if (!isSupabaseAdminConfigured) return;
+
   void (async () => {
     try {
       // Imported lazily so the router carries no database dependency at module
-      // load. That keeps it importable anywhere — including a bare Node test
-      // process with no Supabase configured, where this import simply fails
-      // and telemetry is skipped, exactly as intended for a best-effort sink.
+      // load, which keeps it importable from a bare Node test process.
       const { createAdminClient } = await import('../supabase/admin');
       const admin = createAdminClient();
       await admin.from('ai_requests').insert({

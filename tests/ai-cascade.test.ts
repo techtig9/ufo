@@ -186,3 +186,33 @@ test('an already-aborted signal stops before any provider is called', async () =
   );
   assert.equal(calls.length, 1, 'attempted once, then stopped — no cascade');
 });
+
+/**
+ * Regression: the router's telemetry write fired even with no database
+ * configured.
+ *
+ * The lazy import was commented as failing harmlessly when Supabase is unset.
+ * That stopped being true once lib/supabase/config.ts introduced placeholder
+ * values so the app could be deployed before its keys: the import succeeds,
+ * the client constructs, and every AI attempt fires a doomed DNS lookup and
+ * connection to https://not-configured.invalid — swallowed, so nothing said so.
+ *
+ * It surfaced as a flaky assertion: a phantom fifth 'unknown' entry landing in
+ * a four-provider cascade, about one run in six, only under full-suite load.
+ */
+test('no telemetry request is made when no database is configured', async () => {
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  stubFetch({});
+
+  await route(msgs, opts);
+  // Give any fire-and-forget write a chance to land before asserting, so this
+  // fails loudly rather than racing the way the original bug did.
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  assert.deepEqual(
+    calls,
+    ['groq'],
+    'a doomed request to the placeholder host must not be attempted'
+  );
+  assert.ok(!calls.includes('unknown'), 'nothing may be sent to not-configured.invalid');
+});

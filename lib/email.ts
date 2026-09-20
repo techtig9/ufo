@@ -3,6 +3,7 @@ import { PLAN_MONTHLY_CREDITS } from './credits';
 import { escapeHtml } from './escape-html';
 import { createAdminClient } from './supabase/admin';
 import { log } from './observability';
+import { isSupabaseAdminConfigured } from './supabase/config';
 
 // Re-exported so existing importers of '@/lib/email' are unaffected.
 export { escapeHtml };
@@ -54,6 +55,12 @@ function logEmailEvent(row: {
     emailStatus: row.status,
     errorClass: row.errorClass ?? undefined,
   });
+
+  // Same guard as lib/ai/router.ts, for the same reason: with placeholder
+  // Supabase config the client constructs happily and fires a request at
+  // https://not-configured.invalid, so an unconfigured deployment pays a
+  // doomed connection attempt per email and swallows the failure.
+  if (!isSupabaseAdminConfigured) return;
 
   void (async () => {
     try {
