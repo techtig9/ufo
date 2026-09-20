@@ -162,3 +162,62 @@ it is off.
    be **disabled and say why**, not silently do nothing. Then set it and confirm
    the Paddle overlay opens.
 6. `curl -s https://your-domain/api/health | jq` → every component `up`.
+
+---
+
+# Phases 6–9 (branches `release/growth`, `release/advantage`)
+
+## New migrations, in order
+
+Apply **after** 006a–015. Each is additive and idempotent, and **none has been
+applied to any database**.
+
+| Migration | What it adds | Notes |
+|---|---|---|
+| **016** | `feedback` | Insert-only for clients, **no select policy at all** — feedback quotes private work, so no client key can read it back |
+| **017** | `admin_actions`, `feature_flags` | `admin_actions` is service-role only (nothing client-side reads an audit trail). `feature_flags` is world-readable, writable by nobody through the API |
+
+```bash
+npm run db:apply    # picks up 016 and 017
+npm run db:verify   # must print 0 failed
+```
+
+## New environment variables
+
+All optional; everything degrades honestly without them.
+
+| Variable | Effect if unset |
+|---|---|
+| `AI_DISABLED` | No kill switch. Set to `1` to stop all generation immediately — no database dependency, cannot fail open |
+| `AI_MONTHLY_BUDGET_USD` | **No spend ceiling at all.** Past the cap, generation returns 503 and refunds credits. The admin console says loudly when no cap is set |
+| `AI_RATE_<MODEL>` | Cost estimates use the built-in rate table. Format `"input,output"` in USD per million tokens |
+| `NEXT_PUBLIC_PADDLE_PRICE_{STARTER,PRO,BUSINESS}_YEARLY` | The yearly tab renders plans disabled naming the missing variable, rather than selling a monthly subscription to someone who chose yearly |
+
+## MANUAL ACTIONS FOR ME
+
+1. **Set `AI_MONTHLY_BUDGET_USD`.** This is the single most valuable variable
+   added. Without it there is no ceiling on what the product can spend. Pick a
+   number you would be unhappy but not ruined to see on an invoice.
+2. **Create the three annual Paddle prices** at 10× the monthly price, and set
+   the `_YEARLY` variables. The webhook already maps them to the right plans —
+   without that mapping an annual customer is charged and *not* upgraded.
+3. **Decide on `generate_component`.** It is ~19× underpriced per credit
+   against comparable actions. `docs/UNIT_ECONOMICS.md` sets out three options;
+   the least disruptive is lowering its `maxTokens` from 8,000 to ~2,000, which
+   is not a pricing change at all.
+4. **Reconcile the AI rate table** in `lib/ai/cost.ts` against a real provider
+   invoice once there is one. Every number in the economics analysis rests on it.
+5. Still outstanding from phases 1–5: enable **leaked-password protection** in
+   Supabase Auth.
+
+## Five-minute test checklist (additions)
+
+7. Toggle the pricing page to **Yearly** — the headline stays a per-month
+   figure, the annual total appears beneath it, and the two agree when
+   multiplied.
+8. On the dashboard, confirm the credit meter shows a prompt only past 75%.
+9. Open `/admin/ai` — the spend panel must state which of the four states it is
+   in (capped / no cap / over budget / could not read).
+10. Export a project: the zip should contain `html/`, `react/`, `png/` and
+    `design-system/`, and the React components should open without syntax
+    errors in your editor.
