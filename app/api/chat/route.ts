@@ -5,6 +5,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { chatWithAssistant } from '@/lib/ai';
 import { reportError } from '@/lib/observability';
 import { buildKnowledgeBase, CHAT_SYSTEM_INSTRUCTION } from '@/lib/chatbot-knowledge';
+import { AiBudgetError } from '@/lib/ai/router';
 
 const MAX_HISTORY = 12; // trims prompt size — a decision-support chat doesn't need deep history
 
@@ -99,6 +100,10 @@ export async function POST(request: Request) {
     const reply = await chatWithAssistant(systemContext, messages.slice(-MAX_HISTORY));
     return NextResponse.json({ reply });
   } catch (err) {
+    // A deliberate stop is not an outage: say so with 503 rather than 502.
+    if (err instanceof AiBudgetError) {
+      return NextResponse.json({ error: err.message }, { status: 503 });
+    }
     // Through reportError so the line is redacted and correlated like every
     // other scope, rather than a bare console.error.
     reportError(err, 'chat', { userId: user.id });

@@ -6,6 +6,10 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { canUseFeature, PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 import { reserveCredits, refundCredits } from '@/lib/credits-server';
 import { sendLowCreditsEmail } from '@/lib/email';
+import { AiBudgetError } from '@/lib/ai/router';
+import { reportError } from '@/lib/observability';
+import { readJson } from '@/lib/api/read-json';
+import { z } from 'zod';
 
 // `routeContext`, not `context` — this handler already uses `context` further
 // down for the AI prompt it builds.
@@ -22,7 +26,9 @@ export async function POST(request: Request, routeContext: { params: Promise<{ i
     return NextResponse.json({ error: 'Too many AI edits. Please wait a moment.' }, { status: 429 });
   }
 
-  const body = await request.json();
+  const parsed = await readJson(request, z.record(z.string(), z.unknown()));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
   const screenId = String(body.screenId ?? '');
   const instruction = String(body.instruction ?? '').trim();
 
@@ -126,7 +132,11 @@ Preserve the existing information architecture and working data-hotspot attribut
     // user should be charged for and then asked to apply.
     if (!cleanCode) throw new Error('the model returned an empty screen');
   } catch (error) {
-    console.error('AI edit failed', { requestId, error: String(error) });
+    if (error instanceof AiBudgetError) {
+      await refund('refund_ai_edit_failed');
+      return NextResponse.json({ error: error.message, requestId }, { status: 503 });
+    }
+    reportError(error, 'ai-edit', { requestId });
     await refund('refund_ai_edit_failed');
     return NextResponse.json(
       { error: 'AI editing failed — no credits were charged. Please try again.', requestId },

@@ -1,0 +1,23 @@
+---
+title: Design tokens that survive handoff
+description: Why a generated palette is worth little unless the names travel with it.
+date: 2026-09-12
+author: ufo
+draft: true
+---
+
+Draft. Replace this with the real article before publishing.
+
+## The outline this should follow
+
+1. The handoff problem: a developer receives hex codes and has to guess intent.
+2. Naming a role, not a colour — `surface`, `fg-muted`, `edge` rather than `#111218`.
+3. What breaks without it: dark mode, contrast compliance, theming a white label.
+4. How ufo emits tokens alongside screens, and what to do with them.
+
+## Notes for whoever writes this
+
+There is a concrete story here from this product: light mode was broken because
+the chrome was hardcoded near-black, and every `bg-white/5` surface was
+white-on-white. Semantic tokens fixed it. Use that — a real failure is more
+convincing than a principle.

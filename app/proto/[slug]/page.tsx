@@ -8,6 +8,7 @@ import { SharePasswordGate } from '@/components/prototype-viewer/share-password-
 import { GridField } from '@/components/ui/grid-field';
 import { verifyShareGrant, SHARE_GRANT_COOKIE_PREFIX } from '@/lib/share-access';
 import { recordShareView } from '@/lib/publishing';
+import { MadeWithBadge } from '@/components/prototype-viewer/made-with-badge';
 
 /**
  * Public prototype.
@@ -131,6 +132,22 @@ export default async function PublicProtoPage({ params }: { params: Promise<{ sl
   } = await supabase.auth.getUser();
   const isOwner = !!user && user.id === project?.user_id;
 
+  // The owner's plan decides whether this share carries the badge. Read with
+  // the service role and scoped to the project owner: the VISITOR has no
+  // business reading a subscription row, and on an anonymous view there is no
+  // session to read it with anyway. A missing row means Free — failing open to
+  // "unbranded" would hand every free user the paid benefit.
+  let ownerPlan = 'free';
+  if (project?.user_id) {
+    const { data: ownerSub } = await createAdminClient()
+      .from('subscriptions')
+      .select('plan')
+      .eq('user_id', project.user_id)
+      .maybeSingle();
+    ownerPlan = (ownerSub?.plan as string | undefined) ?? 'free';
+  }
+  const showBadge = ownerPlan === 'free';
+
   // Record the view. Deliberately not awaited into the render path beyond the
   // insert itself, never throws, and stores nothing identifying — no IP, no
   // user agent string, only a coarse device bucket and the referrer's host.
@@ -154,7 +171,6 @@ export default async function PublicProtoPage({ params }: { params: Promise<{ sl
         <div className="mb-8 text-center">
           <p className="text-xs uppercase tracking-wide text-fg-faint">Prototype</p>
           <h1 className="font-display text-2xl font-semibold">{project?.name}</h1>
-          <p className="mt-1 text-xs text-fg-faint">Built with ufo</p>
           {share.expires_at && (
             <p className="mt-2 text-[11px] text-fg-faint">
               This link expires on {new Date(share.expires_at).toLocaleDateString()}
@@ -172,6 +188,8 @@ export default async function PublicProtoPage({ params }: { params: Promise<{ sl
             viewerId={user?.id ?? null}
           />
         </div>
+
+        {showBadge ? <MadeWithBadge /> : null}
       </div>
     </div>
   );

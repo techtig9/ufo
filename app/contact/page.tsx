@@ -5,6 +5,8 @@ import { Footer } from '@/components/landing/footer';
 import { ContactForm } from '@/components/contact/contact-form';
 
 export const metadata: Metadata = {
+  // Canonical: relative, resolved against metadataBase in app/layout.tsx.
+  alternates: { canonical: '/contact' },
   title: 'Contact',
   description: 'Get in touch with the UFO team.',
 };

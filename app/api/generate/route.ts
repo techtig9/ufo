@@ -10,6 +10,9 @@ import { sendLowCreditsEmail } from '@/lib/email';
 import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 import { reserveCredits, refundCredits } from '@/lib/credits-server';
 import type { ProjectType } from '@/lib/types';
+import { AiBudgetError } from '@/lib/ai/router';
+import { reportError } from '@/lib/observability';
+import { readJson } from '@/lib/api/read-json';
 
 function randomSlug(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 10);
@@ -41,13 +44,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = generateRequestSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? 'Invalid request' },
-      { status: 400 }
-    );
-  }
+  // readJson rather than safeParse(await request.json()): the bare call throws
+  // on a malformed body, which turned the client's mistake into our 500.
+  const parsed = await readJson(request, generateRequestSchema);
+  if (!parsed.ok) return parsed.response;
   const { mode, projectName, answers, description, importSource, importInstruction } = parsed.data;
 
   const admin = createAdminClient();
@@ -130,7 +130,14 @@ export async function POST(request: Request) {
               signal: request.signal,
             });
     } catch (err) {
-      console.error('Generation failed', { requestId, error: String(err) });
+      // A deliberate stop (kill switch or spend cap) is not a failure of this
+      // request: refund the credits and say so plainly, rather than telling
+      // the user to "try again" against a switch that is off on purpose.
+      if (err instanceof AiBudgetError) {
+        await refund('refund_generation_failed');
+        return NextResponse.json({ error: err.message, requestId }, { status: 503 });
+      }
+      reportError(err, 'generate', { requestId });
       await refund('refund_generation_failed');
       return NextResponse.json(
         { error: 'Generation failed — no credits were charged. Please try again.', requestId },

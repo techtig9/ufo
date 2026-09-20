@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { readJson } from '@/lib/api/read-json';
+import { z } from 'zod';
 
 async function getOwnedProject(supabase: Awaited<ReturnType<typeof createClient>>, projectId: string, userId: string) {
   return supabase.from('projects').select('id').eq('id', projectId).eq('user_id', userId).single();
@@ -46,7 +48,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { data: project } = await getOwnedProject(supabase, params.id, user.id);
   if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
-  const { screenId, versionId } = await request.json();
+  const parsed = await readJson(request, z.object({ screenId: z.string().min(1), versionId: z.string().min(1) }));
+  if (!parsed.ok) return parsed.response;
+  const { screenId, versionId } = parsed.data;
   if (!screenId || !versionId) {
     return NextResponse.json({ error: 'screenId and versionId are required' }, { status: 400 });
   }

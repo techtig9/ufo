@@ -64,8 +64,8 @@ component gaps (no Table, Avatar, Progress or Toast primitive in
 - [x] Phase 3 — design
 - [x] Phase 4 — clean repo
 - [x] Phase 5 — verify and package
-- [ ] Phase 6 — growth and conversion
-- [ ] Phase 7 — backend, security, reliability
+- [x] Phase 6 — growth and conversion
+- [x] Phase 7 — backend, security, reliability
 - [ ] Phase 8 — product advantage
 - [ ] Phase 9 — trust and operations
 
@@ -128,6 +128,70 @@ build           Compiled successfully   <- with zero env vars
 Archive: `../ufo-clean.zip` (654 KB), verified to contain no `node_modules`,
 no `.next` and no `.env`.
 
+### Phase 6 result
+
+Branched `release/growth` from `release/clean`, not from `main`: the
+prerequisite is a clean base, and `main` is still the pre-audit code.
+
+Built:
+
+| Item | Note |
+|---|---|
+| Annual billing, end to end | Was advertised and not implemented. One constant (`ANNUAL_MONTHS_CHARGED = 10`) drives the saving, both price grids and the Paddle price map — without the yearly ids in that map an annual customer is charged and not upgraded |
+| Usage meter with a near-limit prompt | Quiet until 75%, states a checkable fact, offers a top-up rather than a dead Upgrade link on Business |
+| Canonical URLs | On the 8 public marketing/legal pages. The 3 auth pages are client components, where Next forbids a metadata export |
+| FAQPage + both-period offers in JSON-LD | Built from the same array the page renders |
+| MDX blog scaffold, 3 draft posts | Drafts 404 in production and never reach the sitemap; verified in both directions |
+| In-app feedback (migration 016) | Insert-only, no select policy at all — feedback quotes private work |
+| "Made with ufo" badge on Free shares | Replaces a plain-text line that branded paid customers' client work and was not a link |
+
+Measured against a production build:
+
+```
+PERFORMANCE BUDGET MET
+  landing JS 221.8 KB compressed · CLS 0 on every route · LCP 160-292ms
+  no source maps served · Monaco absent from public pages
+```
+
+Four Phase 6 items were deliberately not built and are ranked in `ROADMAP.md`
+with the reason — chiefly the try-before-signup demo, which needs a cost
+ceiling and an abuse model decided before an anonymous visitor can spend AI
+budget.
+
+### Phase 7 result
+
+Most of this phase's checklist was already built and was verified rather than
+rebuilt. What the audit found genuinely missing, and what was done:
+
+| Finding | Action |
+|---|---|
+| **No AI spend ceiling of any kind** | `AI_DISABLED` kill switch + `AI_MONTHLY_BUDGET_USD` cap, checked inside `route()` so all eleven entry points are covered. A block refunds credits and returns 503 with the operator's message |
+| Nine routes turned a malformed body into a 500 | `lib/api/read-json.ts`; all now 400 with the field named and the value never echoed |
+| Token cost was logged but never priced | `lib/ai/cost.ts`, erring high by construction — unknown model → most expensive known rate, missing usage → a floor, not free |
+
+Verified as already correct, no change made:
+
+- **No SSRF surface.** Every server-side `fetch` targets a fixed provider
+  endpoint. `import_redesign` takes pasted markup, not a URL the server
+  retrieves.
+- Security headers (CSP, HSTS, frame, referrer) are set in `next.config.js`.
+- RLS with policies on every table; `EXECUTE` revoked from `anon` on the
+  server-only SECURITY DEFINER helpers (migration 014).
+- Email verification, password reset, rate-limited auth, account deletion and
+  data export all exist and are wired.
+- Entitlements have one source (`lib/credits.ts` + `lib/plan-features.ts`) and
+  are enforced server-side.
+- Paddle webhooks verify HMAC in constant time and dedupe on `event_id`.
+- Foreign keys are indexed (migration 015); every list query is bounded.
+- CI now runs typecheck, lint, tests and a no-env-var build, plus an advisory
+  dependency audit.
+
+Deferred to `ROADMAP.md` with reasons: the public `/api/v1` with scoped keys
+and OpenAPI, outbound webhooks, the background job queue, and streaming
+responses. Each is a real feature rather than a gap — none is load-bearing at
+current scale, and the versioning commitment of a public API in particular
+should not be taken on speculatively.
+
 ## Next step
 
-Phase 6: growth and conversion.
+Phase 8: product advantage — at most three items, chosen by impact ÷ effort.

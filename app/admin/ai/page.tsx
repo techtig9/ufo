@@ -3,6 +3,8 @@ import { Panel } from '@/components/ui/panel';
 import { Badge } from '@/components/ui/badge';
 import { StatGrid, NoData, type Stat } from '@/components/admin/stat-grid';
 import { PROVIDER_CASCADE } from '@/lib/ai/providers';
+import { budgetStatus } from '@/lib/ai/budget';
+import { BudgetPanel } from '@/components/admin/budget-panel';
 
 /**
  * AI usage, provider health and failed generations.
@@ -69,7 +71,7 @@ async function loadAiUsage() {
 }
 
 export default async function AdminAiPage() {
-  const { rows, totalAll } = await loadAiUsage();
+  const [{ rows, totalAll }, budget] = await Promise.all([loadAiUsage(), budgetStatus()]);
   const successes = rows.filter((r) => r.outcome === 'success');
   const failures = rows.filter((r) => r.outcome !== 'success');
   const latencies = successes.map((r) => r.latency_ms ?? 0).filter((n) => n > 0);
@@ -130,6 +132,11 @@ export default async function AdminAiPage() {
           sampled or estimated.
         </p>
       </div>
+
+      {/* Spend first: an operator opening this page during an incident is
+          usually asking "is this costing me money right now?" before they ask
+          which provider is slow. */}
+      <BudgetPanel status={budget} />
 
       <StatGrid stats={stats} />
 

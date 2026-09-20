@@ -21,6 +21,45 @@ export const PLAN_PRICE_USD: Record<Plan, number> = {
   business: 59,
 };
 
+/**
+ * Annual billing: two months free, i.e. pay for ten, get twelve.
+ *
+ * Expressed as a divisor rather than a percentage so the saving is exact and
+ * there is one number to change. A "15% off" figure written into marketing
+ * copy and a price computed somewhere else is how a product ends up charging
+ * something different from what it advertises.
+ *
+ * The landing page, the billing page and the plan comparison all read these,
+ * so they cannot disagree.
+ */
+export const ANNUAL_MONTHS_CHARGED = 10;
+
+export const PLAN_PRICE_USD_YEARLY: Record<Plan, number> = {
+  free: 0,
+  starter: PLAN_PRICE_USD.starter * ANNUAL_MONTHS_CHARGED,
+  pro: PLAN_PRICE_USD.pro * ANNUAL_MONTHS_CHARGED,
+  business: PLAN_PRICE_USD.business * ANNUAL_MONTHS_CHARGED,
+};
+
+/**
+ * What a yearly plan works out at per month, for the "$X /mo billed yearly" line.
+ *
+ * Floored to the cent, never rounded. $290 / 12 is $24.1666…; rounding gives
+ * $24.17, and $24.17 x 12 is $290.04 — four cents MORE than the annual total
+ * printed directly underneath it. A customer who checks the arithmetic finds
+ * the two numbers disagreeing, on a pricing page, which is the worst place to
+ * look approximate. Flooring makes the per-month figure a lower bound: it can
+ * understate the total by a few cents, never overstate it.
+ */
+export function monthlyEquivalent(plan: Plan): number {
+  return Math.floor((PLAN_PRICE_USD_YEARLY[plan] / 12) * 100) / 100;
+}
+
+/** The headline saving, derived rather than asserted. 2/12 = 17%. */
+export const ANNUAL_SAVING_PCT = Math.round(((12 - ANNUAL_MONTHS_CHARGED) / 12) * 100);
+
+export type BillingPeriod = 'monthly' | 'yearly';
+
 export type CreditAction =
   | 'generate_full_project'
   | 'import_redesign'

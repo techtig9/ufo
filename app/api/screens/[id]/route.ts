@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { readJson } from '@/lib/api/read-json';
+import { z } from 'zod';
 
 async function getOwnedScreen(supabase: Awaited<ReturnType<typeof createClient>>, screenId: string, userId: string) {
   return supabase
@@ -20,7 +22,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const { data: current, error: currentError } = await getOwnedScreen(supabase, params.id, user.id);
   if (currentError || !current) return NextResponse.json({ error: 'Screen not found' }, { status: 404 });
 
-  const body = await request.json();
+  const parsed = await readJson(request, z.record(z.string(), z.unknown()));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
   const patch: Record<string, string> = {};
 
   if (typeof body.code === 'string') {

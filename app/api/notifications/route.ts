@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { readJson } from '@/lib/api/read-json';
+import { z } from 'zod';
 
 export async function GET() {
   const supabase = await createClient();
@@ -26,7 +28,9 @@ export async function PATCH(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  const body = await request.json();
+  const parsed = await readJson(request, z.record(z.string(), z.unknown()));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   if (body.markAll === true) {
     const { error } = await supabase
