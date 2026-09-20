@@ -30,11 +30,14 @@
 #         covering indexes for twelve foreign keys.
 #   016 — the feedback table. Insert-only for clients, with NO select policy:
 #         feedback quotes private work, so no client key can read it back.
+#   017 — admin_actions (service-role only; every credit grant is recorded with
+#         who did it and WHY) and feature_flags (world-readable, writable by
+#         nobody through the API — a flag the client can set is not a gate).
 #
 # USAGE
 # -----
 #   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh          # pending only (006a+)
-#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --all    # fresh DB: schema + 001-016
+#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --all    # fresh DB: schema + 001-017
 #   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --dry-run
 #
 # Get DATABASE_URL from Supabase: Project Settings -> Database -> Connection
