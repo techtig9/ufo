@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import { CookieConsent } from '@/components/ui/cookie-consent';
 import { ChatWidgetGate } from '@/components/chat/chat-widget-gate';
+import { FeedbackGate } from '@/components/ui/feedback-gate';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import { siteUrl } from '@/lib/site-url';
 import './globals.css';
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <CookieConsent />
         <ChatWidgetGate />
+        <FeedbackGate />
         <Toaster
           position="bottom-right"
           toastOptions={{

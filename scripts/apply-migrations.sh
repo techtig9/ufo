@@ -26,11 +26,15 @@
 #   014 — closes reserve_credits/refund_credits and three other server-only
 #         helpers to the public API. Until this runs, any signed-in user can
 #         call /rest/v1/rpc/refund_credits and top up their own balance.
+#   015 — RLS evaluates auth.uid() once per statement rather than per row, and
+#         covering indexes for twelve foreign keys.
+#   016 — the feedback table. Insert-only for clients, with NO select policy:
+#         feedback quotes private work, so no client key can read it back.
 #
 # USAGE
 # -----
 #   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh          # pending only (006a+)
-#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --all    # fresh DB: schema + 001-014
+#   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --all    # fresh DB: schema + 001-016
 #   DATABASE_URL='postgresql://...' ./scripts/apply-migrations.sh --dry-run
 #
 # Get DATABASE_URL from Supabase: Project Settings -> Database -> Connection
