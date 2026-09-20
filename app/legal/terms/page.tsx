@@ -2,7 +2,9 @@ import { aiProviderSentence } from '@/lib/subprocessors';
 import { LegalPage } from '@/components/legal/legal-page';
 import { companyValue } from '@/lib/company';
 
-export const metadata = { title: 'Terms of Service' };
+export const metadata = {
+  // Canonical: relative, resolved against metadataBase in app/layout.tsx.
+  alternates: { canonical: '/legal/terms' }, title: 'Terms of Service' };
 
 export default function TermsPage() {
   return (

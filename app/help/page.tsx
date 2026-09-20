@@ -4,6 +4,15 @@ import { Footer } from '@/components/landing/footer';
 import { GridField } from '@/components/ui/grid-field';
 import { Panel } from '@/components/ui/panel';
 import { Button } from '@/components/ui/button';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Help & FAQ',
+  description: 'Answers about credits, exports, sharing and billing in ufo.',
+  // Canonical: relative, resolved against metadataBase in app/layout.tsx.
+  alternates: { canonical: '/help' },
+};
+
 
 const FAQS = [
   {

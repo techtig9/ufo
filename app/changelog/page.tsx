@@ -2,6 +2,15 @@ import { Nav } from '@/components/landing/nav';
 import { companyValue } from '@/lib/company';
 import { Footer } from '@/components/landing/footer';
 import { Panel } from '@/components/ui/panel';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Changelog',
+  description: 'What shipped in ufo, and when.',
+  // Canonical: relative, resolved against metadataBase in app/layout.tsx.
+  alternates: { canonical: '/changelog' },
+};
+
 
 const ENTRIES = [
   {

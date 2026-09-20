@@ -2,7 +2,9 @@ import { aiProviderSentence, INFRASTRUCTURE_SUBPROCESSORS } from '@/lib/subproce
 import { LegalPage } from '@/components/legal/legal-page';
 import { companyValue } from '@/lib/company';
 
-export const metadata = { title: 'Privacy Policy' };
+export const metadata = {
+  // Canonical: relative, resolved against metadataBase in app/layout.tsx.
+  alternates: { canonical: '/legal/privacy' }, title: 'Privacy Policy' };
 
 export default function PrivacyPage() {
   return (

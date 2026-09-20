@@ -1,7 +1,9 @@
 import { LegalPage } from '@/components/legal/legal-page';
 import { companyValue } from '@/lib/company';
 
-export const metadata = { title: 'Refund Policy' };
+export const metadata = {
+  // Canonical: relative, resolved against metadataBase in app/layout.tsx.
+  alternates: { canonical: '/legal/refunds' }, title: 'Refund Policy' };
 
 export default function RefundsPage() {
   return (
