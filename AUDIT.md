@@ -62,8 +62,8 @@ component gaps (no Table, Avatar, Progress or Toast primitive in
 - [x] Phase 1 — audit
 - [x] Phase 2 — fix
 - [x] Phase 3 — design
-- [ ] Phase 4 — clean repo
-- [ ] Phase 5 — verify and package
+- [x] Phase 4 — clean repo
+- [x] Phase 5 — verify and package
 - [ ] Phase 6 — growth and conversion
 - [ ] Phase 7 — backend, security, reliability
 - [ ] Phase 8 — product advantage
@@ -112,7 +112,22 @@ responsive  180 theme x breakpoint x route combinations — NO OVERFLOW, THEME O
 palette     ALL COMMAND PALETTE CHECKS PASSED
 ```
 
+### Phase 5 — fresh-clone verification
+
+Run in a temp directory from a clean clone of `release/clean`, with
+`env -i` so **no** environment variable was inherited:
+
+```
+npm ci          ok
+typecheck       clean
+lint            clean
+test            262 passed, 0 failed
+build           Compiled successfully   <- with zero env vars
+```
+
+Archive: `../ufo-clean.zip` (654 KB), verified to contain no `node_modules`,
+no `.next` and no `.env`.
+
 ## Next step
 
-Phase 4: clean the repo — 21 status-report markdown files at the root, no
-`docs/`, no `docs/DEPLOY_VERCEL.md`, README needs the deploy section.
+Phase 6: growth and conversion.
