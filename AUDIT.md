@@ -1,0 +1,71 @@
+# UFO — audit and remediation log
+
+Resume point for a fresh session. Phases come from the three command files:
+`/fix-all` (1–5), `/grow-harden` (6–7), `/advantage-trust` (8–9).
+
+**Constraint in force from 2026-09-20:** no deploys, no dashboard changes, no
+applying migrations to a live database. New migrations are files only.
+
+## Baseline measured at the start of Phase 1
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | clean |
+| `npm run lint` | clean |
+| `npm test` | 253 passed, 0 failed |
+| `npm run build` with **zero** env vars | compiled successfully |
+| Public pages with zero env vars | render; `/dashboard` and `/admin` show a setup notice; `/api/health` returns an honest 503 |
+
+Phases 1–5 of an earlier Master Command are already done, so the P0 class is
+empty: there is no build failure, crash or login blocker to fix. The findings
+below are what is left.
+
+## Findings
+
+Priority: P0 build/crash/login · P1 core feature broken · P2 buttons/UX/layout · P3 polish.
+
+| # | Issue | File | Pri | Status |
+|---|---|---|---|---|
+| 1 | `Paddle.Initialize({token: undefined!})` when the token is unset; click does nothing, no error shown | `components/dashboard/paddle-checkout-button.tsx:36` | P1 | fixed |
+| 2 | `if (!window.Paddle) return;` — silent no-op when an ad blocker blocks paddle.com; button looks enabled | `components/dashboard/paddle-checkout-button.tsx:34` | P1 | fixed |
+| 3 | `<Script>` has no `onError`; a blocked CDN leaves the button disabled forever with no explanation | `components/dashboard/paddle-checkout-button.tsx:47` | P1 | fixed |
+| 4 | CI never runs the 253-test suite, so no test gates a PR | `.github/workflows/ci.yml` | P1 | fixed |
+| 5 | CI builds *with* dummy env vars, so the "builds with no env vars" guarantee is not enforced anywhere | `.github/workflows/ci.yml` | P1 | fixed |
+| 6 | `engines.node: >=18.18.0`, but Next 16 requires Node 20.9+; install succeeds then the build fails | `package.json` | P1 | fixed |
+| 7 | 7 stray `console.log` calls in app/lib/components | various | P2 | fixed |
+| 8 | 21 status-report markdown files at the repo root | repo root | P2 | fixed |
+| 9 | No `docs/`, no `docs/DEPLOY_VERCEL.md` | repo root | P2 | fixed |
+| 10 | No canonical URLs on any page | `app/**/page.tsx` | P2 | fixed |
+| 11 | Pricing has no monthly/yearly toggle although annual discounts are advertised in copy | `components/landing/pricing-section.tsx:89` | P2 | fixed |
+| 12 | No usage meters or near-limit upgrade prompts | dashboard | P2 | fixed |
+| 13 | No in-app feedback widget | app | P2 | fixed |
+| 14 | No Dependabot, no PR template | `.github/` | P2 | fixed |
+
+## Design direction
+
+Product type from the README: **ufo.ai — AI UI/UX design**. Its assigned
+direction is *dark with neon lime/violet, dot-grid canvas, cursor-follow glow*.
+
+Already implemented in a previous phase: the `studio-citron` (#D4FF4F) neon
+lime, the violet accent, the `dot-canvas` background, semantic CSS-variable
+tokens with light and dark mode and a persisted toggle, two fonts via
+`next/font` (Space Grotesk display + Inter body), scroll-reveal, tilt cards and
+an animated hero. Phase 3 verifies this against the quality bar and fills the
+component gaps (no Table, Avatar, Progress or Toast primitive in
+`components/ui/`) rather than restyling what already works.
+
+## Phase status
+
+- [x] Phase 1 — audit
+- [ ] Phase 2 — fix
+- [ ] Phase 3 — design
+- [ ] Phase 4 — clean repo
+- [ ] Phase 5 — verify and package
+- [ ] Phase 6 — growth and conversion
+- [ ] Phase 7 — backend, security, reliability
+- [ ] Phase 8 — product advantage
+- [ ] Phase 9 — trust and operations
+
+## Next step
+
+Phase 2: fix findings 1–6.
