@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyPaddleSignature, PADDLE_PRICE_TO_PLAN } from '@/lib/paddle';
 import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 import { sendPaymentFailedEmail, sendSubscriptionCanceledEmail } from '@/lib/email';
-import { withObservability } from '@/lib/observability';
+import { log, withObservability } from '@/lib/observability';
 
 /**
  * Paddle Billing webhook.
@@ -61,7 +61,7 @@ async function handlePOST(request: Request) {
   if (claimError) {
     if (claimError.code === '23505') {
       // Already processed. 200 so Paddle stops retrying.
-      console.log(JSON.stringify({ scope: 'paddle', eventId, eventType, outcome: 'duplicate_skipped' }));
+      log('info', 'paddle', { eventId, eventType, outcome: 'ok', paddleOutcome: 'duplicate_skipped' });
       return NextResponse.json({ received: true, duplicate: true });
     }
     // Could not record the claim — fail loudly so Paddle retries rather than
@@ -178,7 +178,7 @@ async function handlePOST(request: Request) {
       break; // events we deliberately do not act on
   }
 
-  console.log(JSON.stringify({ scope: 'paddle', eventId, eventType, outcome: 'processed' }));
+  log('info', 'paddle', { eventId, eventType, outcome: 'ok', paddleOutcome: 'processed' });
   return NextResponse.json({ received: true });
 }
 

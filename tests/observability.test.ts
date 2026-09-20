@@ -316,3 +316,39 @@ test('the wrapper preserves other response headers', async () => {
   assert.equal(response.headers.get('Retry-After'), '600');
   assert.equal(response.headers.get('Cache-Control'), 'no-store');
 });
+
+/**
+ * Regression: three scopes (ai, email, paddle) used to emit their own
+ * `console.log(JSON.stringify(...))` instead of going through `log()`, which
+ * meant those lines never passed the credential redactor. The AI router is the
+ * dangerous one — `fallbackReason` carries provider error text verbatim, and
+ * some providers echo the request back, Authorization header included.
+ */
+test('a provider error containing an API key is redacted by the shared logger', () => {
+  const lines: string[] = [];
+  const original = console.warn;
+  console.warn = (line: string) => void lines.push(line);
+  try {
+    log('warn', 'ai', {
+      provider: 'groq',
+      outcome: 'failed',
+      fallbackReason: '401 from upstream: Authorization: Bearer gsk_LIVEKEY0000000000000000000000',
+    });
+  } finally {
+    console.warn = original;
+  }
+
+  assert.equal(lines.length, 1);
+  assert.ok(!lines[0].includes('gsk_LIVEKEY0000000000000000000000'), 'the key must not survive');
+
+  // The whole value goes, not just the matched substring. That loses the
+  // "401 from upstream" context, which is a real cost — but splicing a secret
+  // out of free text means trusting the pattern to have found every one of
+  // them, and a missed key is unrecoverable once it is in a log pipeline.
+  // The surrounding fields carry enough to diagnose: provider, outcome, and
+  // (at the call site) requestId, httpStatus and latency.
+  assert.match(lines[0], /"fallbackReason":"\[redacted\]"/);
+  assert.match(lines[0], /"scope":"ai"/);
+  assert.match(lines[0], /"provider":"groq"/);
+  assert.match(lines[0], /"outcome":"failed"/);
+});

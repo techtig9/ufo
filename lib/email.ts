@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import { PLAN_MONTHLY_CREDITS } from './credits';
 import { escapeHtml } from './escape-html';
 import { createAdminClient } from './supabase/admin';
+import { log } from './observability';
 
 // Re-exported so existing importers of '@/lib/email' are unaffected.
 export { escapeHtml };
@@ -43,14 +44,16 @@ function logEmailEvent(row: {
   providerMessageId?: string | null;
   errorClass?: string | null;
 }): void {
-  console.log(
-    JSON.stringify({
-      scope: 'email',
-      template: row.template,
-      status: row.status,
-      errorClass: row.errorClass ?? undefined,
-    })
-  );
+  // Through log() rather than console.log so the line passes the credential
+  // redactor, and so email lines carry the same level/timestamp shape as every
+  // other scope. The recipient is deliberately absent: it is logged only as a
+  // salted hash, in the database row below.
+  log(row.status === 'failed' ? 'warn' : 'info', 'email', {
+    template: row.template,
+    outcome: row.status === 'failed' ? 'failed' : 'ok',
+    emailStatus: row.status,
+    errorClass: row.errorClass ?? undefined,
+  });
 
   void (async () => {
     try {
