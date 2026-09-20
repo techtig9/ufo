@@ -64,7 +64,7 @@ component gaps (no Table, Avatar, Progress or Toast primitive in
 - [x] Phase 3 — design
 - [x] Phase 4 — clean repo
 - [x] Phase 5 — verify and package
-- [ ] Phase 6 — growth and conversion
+- [x] Phase 6 — growth and conversion
 - [ ] Phase 7 — backend, security, reliability
 - [ ] Phase 8 — product advantage
 - [ ] Phase 9 — trust and operations
@@ -128,6 +128,36 @@ build           Compiled successfully   <- with zero env vars
 Archive: `../ufo-clean.zip` (654 KB), verified to contain no `node_modules`,
 no `.next` and no `.env`.
 
+### Phase 6 result
+
+Branched `release/growth` from `release/clean`, not from `main`: the
+prerequisite is a clean base, and `main` is still the pre-audit code.
+
+Built:
+
+| Item | Note |
+|---|---|
+| Annual billing, end to end | Was advertised and not implemented. One constant (`ANNUAL_MONTHS_CHARGED = 10`) drives the saving, both price grids and the Paddle price map — without the yearly ids in that map an annual customer is charged and not upgraded |
+| Usage meter with a near-limit prompt | Quiet until 75%, states a checkable fact, offers a top-up rather than a dead Upgrade link on Business |
+| Canonical URLs | On the 8 public marketing/legal pages. The 3 auth pages are client components, where Next forbids a metadata export |
+| FAQPage + both-period offers in JSON-LD | Built from the same array the page renders |
+| MDX blog scaffold, 3 draft posts | Drafts 404 in production and never reach the sitemap; verified in both directions |
+| In-app feedback (migration 016) | Insert-only, no select policy at all — feedback quotes private work |
+| "Made with ufo" badge on Free shares | Replaces a plain-text line that branded paid customers' client work and was not a link |
+
+Measured against a production build:
+
+```
+PERFORMANCE BUDGET MET
+  landing JS 221.8 KB compressed · CLS 0 on every route · LCP 160-292ms
+  no source maps served · Monaco absent from public pages
+```
+
+Four Phase 6 items were deliberately not built and are ranked in `ROADMAP.md`
+with the reason — chiefly the try-before-signup demo, which needs a cost
+ceiling and an abuse model decided before an anonymous visitor can spend AI
+budget.
+
 ## Next step
 
-Phase 6: growth and conversion.
+Phase 7: backend, security and reliability.
