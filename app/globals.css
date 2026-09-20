@@ -84,6 +84,45 @@
   --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
+
+  /* --- 9-step neutral ramp ----------------------------------------------
+     The semantic tokens above name a ROLE (fg, surface, edge) and cover most
+     of the product. This ramp exists for the cases a role cannot answer:
+     table zebra striping, chart series, skeleton gradients, and the generated
+     prototype markup, which needs intermediate greys that stay correct when
+     the theme flips. --n0 is the furthest from the text colour, --n8 the
+     closest. In dark mode that runs near-black -> near-white; in light mode
+     the ramp inverts, so a component written against --n2 keeps its intent.
+     --------------------------------------------------------------------- */
+  --n0: #0b0c10;
+  --n1: #14161c;
+  --n2: #1d2027;
+  --n3: #2a2e37;
+  --n4: #3d434f;
+  --n5: #5a616f;
+  --n6: #858c9b;
+  --n7: #b9c0cc;
+  --n8: #f7f9fc;
+
+  /* --- Elevation. Previously every shadow was written inline, so "a card
+         shadow" meant four different values across the codebase. ---------- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.45);
+
+  /* --- Spacing. Tailwind's scale covers utilities; these exist so the
+         generated prototype CSS and any raw stylesheet can use the same
+         rhythm rather than inventing pixel values. ------------------------ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
   /* --- Dot-grid canvas texture ------------------------------------------- */
   --grid-dot: rgba(255, 255, 255, 0.055);
 }
@@ -121,6 +160,26 @@ html.light {
   --info: #4338ca;
 
   --grid-dot: rgba(16, 17, 20, 0.1);
+
+  /* The neutral ramp inverts: --n0 stays "furthest from the text colour",
+     which on paper means lightest. A component written against --n2 for a
+     subtle fill therefore keeps its intent across both themes instead of
+     turning into a near-black block. */
+  --n0: #ffffff;
+  --n1: #f4f6f9;
+  --n2: #e8ebf0;
+  --n3: #d8dde5;
+  --n4: #bcc3ce;
+  --n5: #939bab;
+  --n6: #6b7383;
+  --n7: #3d4352;
+  --n8: #101114;
+
+  /* Paper needs a shorter, cooler shadow: the dark-mode values read as smudges
+     on white. */
+  --shadow-sm: 0 1px 2px rgba(16, 17, 20, 0.06);
+  --shadow-md: 0 8px 24px rgba(16, 17, 20, 0.08);
+  --shadow-lg: 0 24px 64px rgba(16, 17, 20, 0.12);
 }
 
 html { scroll-behavior: smooth; }

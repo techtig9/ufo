@@ -61,7 +61,7 @@ component gaps (no Table, Avatar, Progress or Toast primitive in
 
 - [x] Phase 1 — audit
 - [x] Phase 2 — fix
-- [ ] Phase 3 — design
+- [x] Phase 3 — design
 - [ ] Phase 4 — clean repo
 - [ ] Phase 5 — verify and package
 - [ ] Phase 6 — growth and conversion
@@ -83,8 +83,36 @@ component gaps (no Table, Avatar, Progress or Toast primitive in
 - The remaining `console.log` calls are the logger's own sink in
   `lib/observability.ts` and `lib/auth-log.ts`, not debug leftovers.
 
+### Phase 3 result
+
+The design direction, semantic token layer, light/dark themes, persisted
+toggle, two-font pairing, motion tiers and component state matrix were built in
+an earlier phase and verified rather than rebuilt. Four spec items were
+genuinely missing and were added:
+
+| Added | Why |
+|---|---|
+| 9-step neutral ramp `--n0..--n8`, inverting between themes | The semantic tokens name a role and cannot answer "a grey between surface and border" — table striping, chart series, skeleton gradients and the generated prototype markup all needed one |
+| `--shadow-sm/md/lg`, theme-aware | Every shadow was written inline, so "a card shadow" meant four different values |
+| `--space-1..9` + matching Tailwind scale | So raw stylesheets and generated CSS land on the same rhythm as the utilities |
+| `text-display-xs..xl` with `clamp()` | Headings stepped at breakpoints; they now scale with the viewport, so there is no reflow jump at 767/768px |
+| `components/ui/table.tsx` | Six screens had each grown their own `<table>`. Owns its scroll container, because a data table is the top cause of horizontal page scroll on a phone |
+| `components/ui/avatar.tsx` | Initials only — there is no avatar upload, so an `<img>` was a network request and a broken-image state for nothing. Colour is hashed from the name, so a person is the same colour everywhere |
+| `components/ui/progress.tsx` | Needed by the Phase 6 usage meters. Reports its own numbers through ARIA, animates `scaleX` not `width`, and never uses colour as the only signal |
+
+Toast was already covered by `react-hot-toast` plus the configured `<Toaster>`
+in `app/layout.tsx` — one animation library, as the spec requires.
+
+Measured after the change, against a production build on localhost:
+
+```
+contrast    22 theme x route combinations — ALL TEXT MEETS WCAG AA IN BOTH THEMES
+a11y        ALL ACCESSIBILITY CHECKS PASSED (incl. prefers-reduced-motion: 0 still animating)
+responsive  180 theme x breakpoint x route combinations — NO OVERFLOW, THEME OR CONSOLE FAILURES
+palette     ALL COMMAND PALETTE CHECKS PASSED
+```
+
 ## Next step
 
-Phase 3: design. Audit the existing token layer against the quality bar and
-add the missing `components/ui` primitives (Table, Avatar, Progress, Toast
-wrapper).
+Phase 4: clean the repo — 21 status-report markdown files at the root, no
+`docs/`, no `docs/DEPLOY_VERCEL.md`, README needs the deploy section.

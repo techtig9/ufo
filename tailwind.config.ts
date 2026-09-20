@@ -74,12 +74,37 @@ const config: Config = {
         },
         line: 'var(--edge)',
 
+        // 9-step neutral ramp. n0 is furthest from the text colour, n8 closest,
+        // and the scale inverts between themes — see app/globals.css.
+        n: {
+          0: 'var(--n0)', 1: 'var(--n1)', 2: 'var(--n2)', 3: 'var(--n3)',
+          4: 'var(--n4)', 5: 'var(--n5)', 6: 'var(--n6)', 7: 'var(--n7)',
+          8: 'var(--n8)',
+        },
+
         status: {
           success: 'var(--success)',
           warning: 'var(--warning)',
           error: 'var(--error)',
           info: 'var(--info)',
         },
+      },
+      fontSize: {
+        // Fluid display sizes. Each clamps between a phone-readable floor and
+        // a desktop ceiling, so headings scale with the viewport instead of
+        // stepping at breakpoints — no reflow jump at 767/768px.
+        'display-xs': ['clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem)', { lineHeight: '1.25' }],
+        'display-sm': ['clamp(1.5rem, 1.25rem + 1.25vw, 2rem)', { lineHeight: '1.2' }],
+        'display-md': ['clamp(1.875rem, 1.4rem + 2.4vw, 3rem)', { lineHeight: '1.15' }],
+        'display-lg': ['clamp(2.25rem, 1.5rem + 3.75vw, 4rem)', { lineHeight: '1.08' }],
+        'display-xl': ['clamp(2.75rem, 1.6rem + 5.75vw, 5.5rem)', { lineHeight: '1.02' }],
+      },
+      spacing: {
+        // Mirrors the --space-* custom properties so a utility and a raw
+        // stylesheet land on the same rhythm.
+        's1': 'var(--space-1)', 's2': 'var(--space-2)', 's3': 'var(--space-3)',
+        's4': 'var(--space-4)', 's5': 'var(--space-5)', 's6': 'var(--space-6)',
+        's7': 'var(--space-7)', 's8': 'var(--space-8)', 's9': 'var(--space-9)',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
@@ -104,6 +129,12 @@ const config: Config = {
         reveal: 'var(--motion-reveal)',
       },
       boxShadow: {
+        // Theme-aware elevation. The literal shadows below stay as they are:
+        // `glow` is brand-coloured on purpose and `lift` carries an inset
+        // highlight that only reads on a dark ground.
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
         lift: '0 1px 0 rgba(255,255,255,0.06) inset, 0 12px 32px rgba(0,0,0,0.35)',
         glow: '0 0 0 1px rgba(212,255,79,0.4), 0 8px 24px rgba(212,255,79,0.12)',
         palette: '0 24px 64px rgba(0,0,0,0.45)',
