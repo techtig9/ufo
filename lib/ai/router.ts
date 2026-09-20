@@ -1,4 +1,5 @@
 import { ProviderError } from './errors';
+import { log } from '../observability';
 import {
   PROVIDER_CASCADE,
   anthropic,
@@ -67,21 +68,26 @@ function recordAttempt(row: {
   completionTokens?: number;
 }): void {
   // Structured line first — this works even when the database does not.
-  console.log(
-    JSON.stringify({
-      scope: 'ai',
-      requestId: row.requestId,
-      task: row.task,
-      provider: row.provider,
-      model: row.model,
-      outcome: row.outcome,
-      httpStatus: row.httpStatus,
-      latencyMs: row.latencyMs,
-      fallbackReason: row.fallbackReason,
-      promptTokens: row.promptTokens,
-      completionTokens: row.completionTokens,
-    })
-  );
+  // Through log() rather than console.log so the line passes the credential
+  // redactor: fallbackReason carries provider error text verbatim, and a
+  // provider that echoes the Authorization header into its message would
+  // otherwise put an API key straight into the log pipeline.
+  log(row.outcome === 'success' ? 'info' : 'warn', 'ai', {
+    requestId: row.requestId,
+    task: row.task,
+    provider: row.provider,
+    model: row.model,
+    // `outcome` is the field every scope shares, so one query can count
+    // failures across ai, email, paddle and http alike; aiOutcome keeps the
+    // distinction between a retryable failure and a fatal one.
+    outcome: row.outcome === 'success' ? 'ok' : 'failed',
+    aiOutcome: row.outcome,
+    httpStatus: row.httpStatus,
+    latencyMs: row.latencyMs,
+    fallbackReason: row.fallbackReason,
+    promptTokens: row.promptTokens,
+    completionTokens: row.completionTokens,
+  });
 
   void (async () => {
     try {

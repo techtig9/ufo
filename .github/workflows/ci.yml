@@ -4,17 +4,16 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - run: npm ci
@@ -25,13 +24,28 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Build
+      - name: Test
+        run: npm test
+
+      # Deliberately NO env vars. The product promise is that a clean clone
+      # builds and serves its public pages with nothing configured, so that a
+      # deployment can be created first and the keys added afterwards. Passing
+      # placeholder values here would have hidden exactly the regression this
+      # step exists to catch.
+      - name: Build with no environment configured
         run: npm run build
-        env:
-          # Dummy values so the build step can complete — real secrets are
-          # only needed at runtime, not build time, for this app. Replace
-          # with real repo secrets if any env var ends up needed at build
-          # time (e.g. if you add static generation that calls Supabase).
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
-          NEXT_PUBLIC_SITE_URL: https://placeholder.example.com
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      # Advisory: a high-severity advisory in a transitive dev dependency
+      # should not block a PR, but it should be visible in the run.
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+        continue-on-error: true

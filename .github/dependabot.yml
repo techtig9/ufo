@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One PR per ecosystem rather than per package: Next, React and the
+      # Tailwind toolchain move together, and separate PRs for each would
+      # neither build nor be reviewable.
+      next:
+        patterns: ['next', '@next/*', 'eslint-config-next']
+      react:
+        patterns: ['react', 'react-dom', '@types/react', '@types/react-dom']
+      dev:
+        dependency-type: development
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
