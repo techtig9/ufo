@@ -29,8 +29,27 @@ export function verifyPaddleSignature(rawBody: string, signatureHeader: string |
   }
 }
 
-export const PADDLE_PRICE_TO_PLAN: Record<string, 'starter' | 'pro' | 'business'> = {
-  [process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER ?? '']: 'starter',
-  [process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO ?? '']: 'pro',
-  [process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS ?? '']: 'business',
-};
+/**
+ * Every Paddle price that maps to a plan, monthly and yearly alike.
+ *
+ * The yearly ids matter here more than anywhere else: a customer who buys an
+ * annual subscription sends a webhook carrying the ANNUAL price id, and if this
+ * map does not know it, `plan` comes back undefined and they are charged
+ * without being upgraded. Unset variables collapse to '' and are stripped
+ * below, so an id is never accidentally mapped to the empty string.
+ */
+export const PADDLE_PRICE_TO_PLAN: Record<string, 'starter' | 'pro' | 'business'> =
+  Object.fromEntries(
+    (
+      [
+        [process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER, 'starter'],
+        [process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO, 'pro'],
+        [process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS, 'business'],
+        [process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY, 'starter'],
+        [process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEARLY, 'pro'],
+        [process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS_YEARLY, 'business'],
+      ] as const
+    ).filter((entry): entry is readonly [string, 'starter' | 'pro' | 'business'] =>
+      Boolean(entry[0])
+    )
+  );

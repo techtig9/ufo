@@ -9,6 +9,7 @@ import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting';
 import { ProjectCard } from '@/components/projects/project-card';
 import { PLAN_MONTHLY_CREDITS } from '@/lib/credits';
 import type { Plan } from '@/lib/types';
+import { CreditMeter } from '@/components/dashboard/credit-meter';
 
 export default async function DashboardHome() {
   const supabase = await createClient();
@@ -35,7 +36,6 @@ export default async function DashboardHome() {
   const plan = (subscription?.plan ?? 'free') as Plan;
   const total = PLAN_MONTHLY_CREDITS[plan];
   const remaining = subscription?.credits_remaining ?? 0;
-  const usedPct = total > 0 ? Math.min(100, Math.round(((total - remaining) / total) * 100)) : 0;
 
   // Real generation count for the current billing cycle — every successful call to
   // /api/generate writes a `request_log` row (route: 'generate'), so this is an exact
@@ -92,15 +92,7 @@ export default async function DashboardHome() {
         ))}
       </div>
 
-      <Panel className="bg-gradient-to-br from-violet-500/10 via-[#111218] to-studio-citron/5">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-fg-muted">Credits this cycle</span>
-          <span>{remaining.toLocaleString()} / {total.toLocaleString()}</span>
-        </div>
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-raised">
-          <div className="h-full rounded-full bg-gradient-to-r from-studio-citron to-studio-coral" style={{ width: `${usedPct}%` }} />
-        </div>
-      </Panel>
+      <CreditMeter plan={plan} remaining={remaining} resetAt={subscription?.credits_reset_at} />
 
       <div>
         <div className="mb-4 flex items-end justify-between">

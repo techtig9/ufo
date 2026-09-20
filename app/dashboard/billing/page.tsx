@@ -1,14 +1,25 @@
 import { createClient } from '@/lib/supabase/server';
 import { Panel } from '@/components/ui/panel';
 import { EmptyState } from '@/components/ui/empty-state';
-import { PLAN_CARDS } from '@/lib/plan-features';
 import { PaddleCheckoutButton } from '@/components/dashboard/paddle-checkout-button';
+import { PlanPicker } from '@/components/dashboard/plan-picker';
+import type { BillingPeriod } from '@/lib/credits';
+import type { Plan } from '@/lib/types';
 import { CancelSubscriptionButton } from '@/components/dashboard/cancel-subscription-button';
 
-const PLAN_PRICE_IDS: Record<string, string | undefined> = {
-  starter: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER,
-  pro: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO,
-  business: process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS,
+// Read on the server, so one list decides what is configured and the picker
+// can name the exact missing variable for the period being viewed.
+const PLAN_PRICE_IDS: Record<BillingPeriod, Partial<Record<Plan, string>>> = {
+  monthly: {
+    starter: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER,
+    pro: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO,
+    business: process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS,
+  },
+  yearly: {
+    starter: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY,
+    pro: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEARLY,
+    business: process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS_YEARLY,
+  },
 };
 
 const TOPUPS = [
@@ -56,35 +67,12 @@ export default async function BillingPage() {
 
       <div>
         <h2 className="mb-4 text-lg font-medium">Plans</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {PLAN_CARDS.map((card) => {
-            const isCurrent = subscription?.plan === card.plan;
-            const priceId = PLAN_PRICE_IDS[card.plan];
-            return (
-              <Panel key={card.plan}>
-                <h3 className="font-medium">{card.label}</h3>
-                <p className="mt-1 text-2xl font-semibold">${card.price}<span className="text-sm text-fg-faint">/mo</span></p>
-                <p className="mt-1 text-xs text-fg-faint">{card.credits.toLocaleString()} credits</p>
-                <div className="mt-4">
-                  {isCurrent ? (
-                    <span className="text-xs text-accent-text">Current plan</span>
-                  ) : card.plan === 'free' ? (
-                    <span className="text-xs text-fg-faint">Cancel above to move to Free</span>
-                  ) : priceId ? (
-                    <PaddleCheckoutButton
-                      priceId={priceId}
-                      userId={user!.id}
-                      userEmail={user!.email!}
-                      label={`Choose ${card.label}`}
-                    />
-                  ) : (
-                    <span className="text-xs text-fg-faint">Set NEXT_PUBLIC_PADDLE_PRICE_{card.plan.toUpperCase()}</span>
-                  )}
-                </div>
-              </Panel>
-            );
-          })}
-        </div>
+        <PlanPicker
+          priceIds={PLAN_PRICE_IDS}
+          currentPlan={(subscription?.plan ?? null) as Plan | null}
+          userId={user!.id}
+          userEmail={user!.email!}
+        />
       </div>
 
       <div>
